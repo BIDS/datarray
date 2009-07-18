@@ -42,20 +42,23 @@ class Axis(object):
         return self.arr.shape[self.index]
     
     def __getitem__(self, key):
-        if isinstance(key, slice):
-            # Dimensionality of output is dimensionality of input
-            pass
-        else:
-            # Scalar indexing, output has 1-d less
-            if self.arr.ndim==1:
-                return self.arr[key]
-        # Make a slice
-        nullslice = slice(None)
-        fullslice = [nullslice] * self.arr.ndim
-        fullslice[self.index] = key
-        print 'FS:',fullslice
-        return self.arr[fullslice]
+        arr = self.arr # local for speed
+        
+        # The logic is: when using scalar indexing, the dimensionality of the
+        # output is arr.ndim-1, while when using slicing the output has
+        # the same number of dimensions as the input.  For this reason, the
+        # case when arr.ndim is 1 and the indexing is scalar needs to be
+        # handled separately, since the output will be 0-dimensional.  In that
+        # case, we must return the plain scalar and not build a slice object
+        # that would return a 1-element sub-array.
+        if arr.ndim == 1 and not isinstance(key, slice):
+            return arr[key]
 
+        # For other cases (slicing or scalar indexing of ndim>1 arrays), build
+        # the proper slicing object to cut into the managed array
+        fullslice = [slice(None)] * arr.ndim
+        fullslice[self.index] = key
+        return arr[fullslice]
         
 
 class UnnamedAxis(Axis):
@@ -135,20 +138,35 @@ class DataArray(np.ndarray):
 if 1:
     adata = [2,3]
     a = DataArray(adata, 'x', int)
-    print a.a_x[0]
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     
 def test1():
 
     adata = [2,3]
     a = DataArray(adata, 'x', int)
 
+    # Verify scalar extraction
     yield (nt.assert_true,isinstance(a.a_x[0],int))
-    
+
+    # Verify indexing of axis
     yield (nt.assert_equals, a.a_x.index, 0)
+
+    # Iteration checks
     for i,val in enumerate(a.a_x):
         yield (nt.assert_equals,val,adata[i])
         yield (nt.assert_true,isinstance(val,int))
 
-    b = DataArray([[1,2],[3,4]], 'xy')
+def test_2d():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield (nt.assert_equals, b.names, ['x','y'])
 
+    # Check row slicing
+    yield (npt.assert_equal, b.a_x[0], [1,2])
+
+    # Check column slicing
+    yield (npt.assert_equal, b.a_y[1], [2,4,6])
+
+    # Now, check that when slicing a row, we get the right names in the output
+    yield (nt.assert_equal, b.a_x[1:].names, ['x','y'])
+    yield (nt.assert_equal, b.a_x[0].names, ['y'])
+    
