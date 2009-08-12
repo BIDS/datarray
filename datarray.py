@@ -12,6 +12,33 @@ Questions
 - Iteration
 - Wrapping functions with 'axis=' kw.
 
+Combining named and unnamed arrays:
+
+narr = DataArray(np.zeros((1,2,3), names=('a','b','c'))
+res = narr + 5 # OK
+res = narr + np.zeros((1,2,3)) # OK
+n2 = DataArray(np.ones((1,2,3), names=('a','b','c'))
+res = narr + n2 # OK
+n3 = DataArray(np.ones((1,2,3), names=('x','b','c'))
+res = narr + n3 # Raises NamedAxisError
+
+Now, what about matching names, but different indices for the names?
+
+n4 = DataArray(np.ones((2,1,3), names=('b','a','c'))
+res = narr + n4 # is this OK?
+res.shape
+
+Maybe this is too much magic?  Probably the names and the position has
+to be the same, and the above example should raise an error.  At least
+for now we will raise an error, and review later.
+
+What about broadcasting between two named arrays, where the broadcasting
+adds an axis?
+
+a = DataArray(np.zeros((3,), names=('a',))
+b = DataArray(np.zeros((2,3), names=('a','b'))
+res = a + b
+res.names == ('a', 'b')
 """
 
 #-----------------------------------------------------------------------------
@@ -42,6 +69,19 @@ class Axis(object):
         return self.arr.shape[self.index]
     
     def __getitem__(self, key):
+        # `key` can be one of:
+        # * integer (more generally, any valid scalar index)
+        # * slice
+        # * list (fancy indexing)
+        # * array (fancy indexing)
+        #
+        # XXX We don't handle fancy indexing at the moment
+        # if isinstance(key, (np.ndarray, list)):
+        #    raise TypeError('We do not handle fancy indexing yet')
+        # If there is a change in dimensionality of the result, the
+        # answer will have to be a normal array
+        # If the dimensionality is preserved, we can keep the structure
+        # of the parent
         arr = self.arr # local for speed
         arr_ndim = arr.ndim
         # The logic is: when using scalar indexing, the dimensionality of the
@@ -51,11 +91,14 @@ class Axis(object):
         # handled separately, since the output will be 0-dimensional.  In that
         # case, we must return the plain scalar and not build a slice object
         # that would return a 1-element sub-array.
+        #
+        # XXX we do not here handle 0 dimensional arrays.
+        # XXX fancy indexing
         if arr_ndim == 1 and not isinstance(key, slice):
             return arr[key]
-
-        # For other cases (slicing or scalar indexing of ndim>1 arrays), build
-        # the proper slicing object to cut into the managed array
+        # XXX Fancy indexing
+        # For other cases (slicing or scalar indexing of ndim>1 arrays),
+        # build the proper slicing object to cut into the managed array
         fullslice = [slice(None)] * arr_ndim
         fullslice[self.index] = key
 
@@ -80,7 +123,35 @@ class Axis(object):
         
 
 class UnnamedAxis(Axis):
-    """A class to tag unnamed axes"""
+    """A class to tag unnamed axes
+
+    Consider this case:
+    narr = DataArray(np.zeros((1,2,3), names=('a',))
+
+    in that case axes 1,2 do not have names.
+
+    Options may be:
+    * narr.names == ('a', 'unnamed_0', 'unnamed_1')
+    * narr.names == ('a',)
+    * narr.names == ('a', None, None)
+    * narr.names == ('a', UnnamedAxis, UnnamedAxis)
+
+    Then:
+
+    narrt = narr.transpose()
+    narrt.shape == (3,2,1)
+    Now options may be:
+    * narr.names == ('unamed_1', 'unnamed_0', 'a')
+    * narr.names == ('a',)
+    * narr.names == (None, None, 'a')
+    * narr.names == (UnnamedAxis, UnnamedAxis, 'a')
+
+    Consider broadcasting:
+
+    narr = DataArray(np.zeros((3,), names=('a',))
+    res = narr + np.ones((5,3))
+    res.names == ?
+    """
     def __init__(self, index, arr):
         # XXX use super here?
         Axis.__init__(self,'unnamed_%s' % index,index, arr)
@@ -113,10 +184,12 @@ class DataArray(np.ndarray):
 
         # Sanity check: if names are given, it must be a sequence no  longer
         # than the array shape
+        # XXX check for len(names) == data.ndim ?
         if names is not None and len(names) > arr.ndim:
             raise ValueError("names list longer than array ndim")
 
         # Set the given names
+        # XXX what happens if there are no names
         if names is not None:
             names = list(names)
             for i,name in enumerate(names):
