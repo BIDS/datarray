@@ -14,17 +14,21 @@ Questions
 
 Combining named and unnamed arrays:
 
-narr = DataArray(np.zeros((1,2,3), names=('a','b','c'))
-res = narr + 5 # OK
-res = narr + np.zeros((1,2,3)) # OK
-n2 = DataArray(np.ones((1,2,3), names=('a','b','c'))
-res = narr + n2 # OK
-n3 = DataArray(np.ones((1,2,3), names=('x','b','c'))
-res = narr + n3 # Raises NamedAxisError
+>>> narr = DataArray(np.zeros((1,2,3)), names=('a','b','c'))
+>>> res = narr + 5 # OK
+>>> res = narr + np.zeros((1,2,3)) # OK
+>>> n2 = DataArray(np.ones((1,2,3)), names=('a','b','c'))
+>>> res = narr + n2 # OK
+
+>>> n3 = DataArray(np.ones((1,2,3)), names=('x','b','c'))
+
+res = narr + n3 # raises error
+(NamedAxisError should be raised)
+  ...
 
 Now, what about matching names, but different indices for the names?
 
-n4 = DataArray(np.ones((2,1,3), names=('b','a','c'))
+n4 = DataArray(np.ones((2,1,3)), names=('b','a','c'))
 res = narr + n4 # is this OK?
 res.shape
 
@@ -47,13 +51,17 @@ res.names == ('a', 'b')
 
 import copy
 
-import nose.tools as nt
 import numpy as np
-import numpy.testing as npt
 
 #-----------------------------------------------------------------------------
 # Classes and functions
 #-----------------------------------------------------------------------------
+
+ax_attr_prefix = 'ax_'
+
+class NamedAxisError(Exception):
+    pass
+
 
 class Axis(object):
     """Object to access a given axis of an array.
@@ -67,6 +75,29 @@ class Axis(object):
 
     def __len__(self):
         return self.arr.shape[self.index]
+
+    def __eq__(self, other):
+        ''' Axes are equal iff they have matching names and indices
+
+        Parameters
+        ----------
+        other : ``Axis`` object
+           Object to compare
+
+        Returns
+        -------
+        tf : bool
+           True if self == other
+
+        Examples
+        --------
+        >>> ax = Axis('x', 0, np.arange(10))
+        >>> ax == Axis('x', 0, np.arange(5))
+        True
+        >>> ax == Axis('x', 1, np.arange(10))
+        False
+        '''
+        return self.name == other.name and self.index == other.index
     
     def __getitem__(self, key):
         # `key` can be one of:
@@ -96,7 +127,7 @@ class Axis(object):
         # XXX fancy indexing
         if arr_ndim == 1 and not isinstance(key, slice):
             return arr[key]
-        # XXX Fancy indexing
+        # XXX TODO - fancy indexing
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
         fullslice = [slice(None)] * arr_ndim
@@ -110,7 +141,7 @@ class Axis(object):
             # We lost a dimension, drop the axis!
             kept_names = []
             for i,aname in enumerate(out.names):
-                a_name = 'a_%s' % aname
+                a_name = ax_attr_prefix + '%s' % aname
                 axis = getattr(out,a_name)
                 if i==key:
                     #print "Dropping axis:",a_name  # dbg
@@ -157,12 +188,23 @@ class UnnamedAxis(Axis):
         Axis.__init__(self,'unnamed_%s' % index,index, arr)
 
 
-def copy_names(src,dest):
-    dest.names = src.names
-    for i,name in enumerate(dest.names):
-        aname = 'a_%s' % name
-        newaxis = Axis(aname,i,dest)
-        setattr(dest, aname, newaxis)
+def copy_axes(src, dest):
+    """ Copy arrays from DataArray `src` to array `dest`
+
+    Creat axis objects to go with the names.
+    Overwrite the names and axis objects (if any) from `dest`.
+
+    Assumes that the Axes in `src` do in fact match the needed axes in
+    `dest` - that is, that they have the correct indices, and there are
+    the correct number of axes.
+    """
+    dest.names = src.names[:]
+    axes = []
+    for ax in src.axes:
+        new_ax = ax.__class__(ax.name, ax.index, dest)
+        axes.append(new_ax)
+        setattr(dest, ax_attr_prefix + '%s' % ax.name, new_ax)
+    dest.axes = axes
 
 
 def names2namedict(names):
@@ -181,7 +223,6 @@ class DataArray(np.ndarray):
     def __new__(cls, data, names=None, dtype=None, copy=False):
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
-
         # Sanity check: if names are given, it must be a sequence no  longer
         # than the array shape
         # XXX check for len(names) == data.ndim ?
@@ -190,23 +231,31 @@ class DataArray(np.ndarray):
 
         # Set the given names
         # XXX what happens if there are no names
+        axes = []
         if names is not None:
             names = list(names)
             for i,name in enumerate(names):
-                setattr(arr,'a_%s' % name,Axis(name, i, arr))
+                ax = Axis(name, i, arr)
+                setattr(arr, ax_attr_prefix + '%s' % name, ax)
+                axes.append(ax)
             arr.names = names
-
+            arr.axes = axes
         # Or if the input had named axes, copy them over
-        elif hasattr(data,'names'):
-            copy_names(data, arr)
-            
+        elif hasattr(data,'axes'):
+            copy_axes(data, arr)
         return arr
 
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
 
-        self: new object just made.
-        obj: old object from which self was made.
+        Parameters
+        ----------
+        self : ``DataArray``
+           Newly create instance of ``DataArray``
+        obj : ndarray or None
+           any ndarray object (if view casting)
+           ``DataArray`` instance, if new-from-template
+           None if from DataArray(*args, **kwargs) call
         """
         
         #print "finalizing DataArray" # dbg
@@ -216,51 +265,22 @@ class DataArray(np.ndarray):
         # provide info for what's happening
         #print "finalize:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
         # provide more info
-        if hasattr(obj,'names'):
-            copy_names(obj,self)
-
+        if obj is None: # own constructor, we're done
+            return
+        if not isinstance(obj, DataArray): # looks like view cast
+            # XXX - here we have to decide what to do about axes without
+            # names - unnamed axis?  None?  empty?
+            self.axes = []
+            self.names = []
+            return
+        # new-from-template: we need to know what's been done here. For
+        # the moment, we'll assume no reducing operations or axis
+        # changing manipulations have occurred.
+        if self.shape != obj.shape:
+            print 'Shapes do not match', self.shape, obj.shape
+        copy_axes(obj, self)
+            
     def transpose(self, *axes):
         raise NotImplementedError()
 
 
-#-----------------------------------------------------------------------------
-# Tests
-#-----------------------------------------------------------------------------
-if 1:
-    adata = [2,3]
-    a = DataArray(adata, 'x', int)
-    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    b0 = b.a_x[0]
-    b1 = b.a_x[1:]
-    
-def test_1d():
-
-    adata = [2,3]
-    a = DataArray(adata, 'x', int)
-
-    # Verify scalar extraction
-    yield (nt.assert_true,isinstance(a.a_x[0],int))
-
-    # Verify indexing of axis
-    yield (nt.assert_equals, a.a_x.index, 0)
-
-    # Iteration checks
-    for i,val in enumerate(a.a_x):
-        yield (nt.assert_equals,val,adata[i])
-        yield (nt.assert_true,isinstance(val,int))
-
-
-def test_2d():
-    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield (nt.assert_equals, b.names, ['x','y'])
-
-    # Check row slicing
-    yield (npt.assert_equal, b.a_x[0], [1,2])
-
-    # Check column slicing
-    yield (npt.assert_equal, b.a_y[1], [2,4,6])
-
-    # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.a_x[1:].names, ['x','y'])
-    yield (nt.assert_equal, b.a_x[0].names, ['y'])
-    
