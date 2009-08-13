@@ -176,6 +176,20 @@ class UnnamedAxis(Axis):
         Axis.__init__(self,'unnamed_%s' % index,index, arr)
 
 
+def _names_to_numbers(axes, ax_ids):
+    ''' Convert any axis names to axis indices '''
+    proc_ids = []
+    for ax_id in ax_ids:
+        if isinstance(ax_id, basestring):
+            matches = [ax for ax in axes if ax.name == ax_id]
+            if not matches:
+                raise NamedAxisError('No axis named %s' % ax_id)
+            proc_ids.append(matches[0].index)
+        else:
+            proc_ids.append(ax_id)
+    return proc_ids
+
+
 def _pull_axis(axes, target_axis):
     ''' Return axes removing any axis matching `target_axis`'''
     axes = axes[:]
@@ -242,7 +256,7 @@ class DataArray(np.ndarray):
         obj : ndarray or None
            any ndarray object (if view casting)
            ``DataArray`` instance, if new-from-template
-           None if from DataArray(*args, **kwargs) call
+           None if triggered from DataArray.__new__ call
         """
         
         #print "finalizing DataArray" # dbg
@@ -262,6 +276,47 @@ class DataArray(np.ndarray):
         _set_axes(self, obj.axes)
             
     def transpose(self, *axes):
-        raise NotImplementedError()
+        """ accept integer or named axes, reorder axes """
+        # implement tuple-or-*args logic of np.transpose
+        axes = list(axes)
+        if not axes:
+            axes = range(self.ndim)
+        # expand sequence if sequence passed as first and only arg
+        elif len(axes) == 1:
+            try:
+                axes = axes[0][:]
+            except TypeError:
+                pass
+        proc_axids = _names_to_numbers(self.axes, axes)
+        out = self.transpose(proc_axids)
+        _set_axes(out, _reordered_axes(self.axes, proc_axids))
+        return out
 
 
+def _reordered_axes(axes, axis_indices):
+    ''' Perform axis reordering according to `axis_indices`
+
+    Parameters
+    ----------
+    axes : sequence of axes
+       The axis indices in this list reflect the axis ordering before
+       the permutation given by `axis_indices`
+    axis_indices : sequence of ints
+       indices giving new order of axis numbers
+
+    Returns
+    -------
+    ro_axes : sequence of axes
+       sequence of axes in arbitrary order with axis indices reflecting
+       reordering given by `axis_indices`
+
+    Examples
+    --------
+    >>> a = Axis('x', 0, None)
+    >>> b = Axis('y', 1, None)
+    >>> c = Axis('z', 2, None)
+    >>> res = _reordered_axes([a,b,c], (1,2,0))
+    '''
+    for new_ind, old_ind in enumerate(axis_indices):
+        pass
+    raise NotImplementedError

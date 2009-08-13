@@ -3,7 +3,7 @@
 import numpy as np
 
 from datarray import Axis, DataArray, NamedAxisError, \
-    _pull_axis
+    _pull_axis, _reordered_axes
 
 import nose.tools as nt
 import numpy.testing as npt
@@ -102,4 +102,13 @@ def test__pull_axis():
     yield nt.assert_equal, axes[:-1], _pull_axis(axes, c)
     new_axes = [a, Axis('z', 1, None)]
     yield nt.assert_equal, new_axes, _pull_axis(axes, t_pos)
+    
+
+def test__reordered_axes():
+    a = Axis('x', 0, None)
+    b = Axis('y', 1, None)
+    c = Axis('z', 2, None)
+    res = _reordered_axes([a,b,c], (1,2,0))
+    names_inds = [(ax.name, ax.index) for ax in res]
+    yield assert_equal, set(names_inds), set(('y',0),('z',1),('x',2))
     
