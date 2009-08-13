@@ -132,24 +132,12 @@ class Axis(object):
         # build the proper slicing object to cut into the managed array
         fullslice = [slice(None)] * arr_ndim
         fullslice[self.index] = key
-
         #print 'getting output'  # dbg
         out = arr[fullslice]
         #print 'returning output'  # dbg
-
         if out.ndim != arr_ndim:
             # We lost a dimension, drop the axis!
-            kept_names = []
-            for i,aname in enumerate(out.names):
-                a_name = ax_attr_prefix + '%s' % aname
-                axis = getattr(out,a_name)
-                if i==key:
-                    #print "Dropping axis:",a_name  # dbg
-                    delattr(out,a_name)
-                else:
-                    kept_names.append(aname)
-            out.names = kept_names
-        
+            _set_axes(out, _pull_axis(arr.axes, self))
         return out
         
 
@@ -188,24 +176,34 @@ class UnnamedAxis(Axis):
         Axis.__init__(self,'unnamed_%s' % index,index, arr)
 
 
-def copy_axes(src, dest):
-    """ Copy arrays from DataArray `src` to array `dest`
+def _pull_axis(axes, target_axis):
+    ''' Return axes removing any axis matching `target_axis`'''
+    axes = axes[:]
+    try:
+        ind = axes.remove(target_axis)
+    except ValueError:
+        return axes
+    rm_i = target_axis.index
+    for i, ax in enumerate(axes):
+        if ax.index >=rm_i:
+            axes[i] = ax.__class__(ax.name, ax.index-1, ax.arr)
+    return axes
 
-    Creat axis objects to go with the names.
-    Overwrite the names and axis objects (if any) from `dest`.
 
-    Assumes that the Axes in `src` do in fact match the needed axes in
-    `dest` - that is, that they have the correct indices, and there are
-    the correct number of axes.
-    """
-    dest.names = src.names[:]
+def _set_axes(dest, in_axes):
+    # XXX here is where the logic is implemented for missing names.
+    # Here there are no named axis objects if there are fewer names than
+    # axes in the array
     axes = []
-    for ax in src.axes:
+    names = []
+    for ax in in_axes:
         new_ax = ax.__class__(ax.name, ax.index, dest)
         axes.append(new_ax)
+        names.append(ax.name)
         setattr(dest, ax_attr_prefix + '%s' % ax.name, new_ax)
     dest.axes = axes
-
+    dest.names = names
+    
 
 def names2namedict(names):
     """Make a name map out of any name input.
@@ -223,26 +221,15 @@ class DataArray(np.ndarray):
     def __new__(cls, data, names=None, dtype=None, copy=False):
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
-        # Sanity check: if names are given, it must be a sequence no  longer
-        # than the array shape
-        # XXX check for len(names) == data.ndim ?
-        if names is not None and len(names) > arr.ndim:
-            raise ValueError("names list longer than array ndim")
-
-        # Set the given names
-        # XXX what happens if there are no names
-        axes = []
-        if names is not None:
-            names = list(names)
-            for i,name in enumerate(names):
-                ax = Axis(name, i, arr)
-                setattr(arr, ax_attr_prefix + '%s' % name, ax)
-                axes.append(ax)
-            arr.names = names
-            arr.axes = axes
-        # Or if the input had named axes, copy them over
-        elif hasattr(data,'axes'):
-            copy_axes(data, arr)
+        if names is None:
+            if hasattr(data,'axes'):
+                _set_axes(arr, data.axes)
+                return arr
+            names = []
+        elif len(names) > arr.ndim:
+            raise NamedAxisError("names list longer than array ndim")
+        axes = [Axis(name, i, arr) for i, name in enumerate(names)]
+        _set_axes(arr, axes)
         return arr
 
     def __array_finalize__(self, obj):
@@ -267,18 +254,12 @@ class DataArray(np.ndarray):
         # provide more info
         if obj is None: # own constructor, we're done
             return
-        if not isinstance(obj, DataArray): # looks like view cast
-            # XXX - here we have to decide what to do about axes without
-            # names - unnamed axis?  None?  empty?
-            self.axes = []
-            self.names = []
+        if not hasattr(obj, 'axes'): # looks like view cast
+            _set_axes(self, [])
             return
-        # new-from-template: we need to know what's been done here. For
-        # the moment, we'll assume no reducing operations or axis
-        # changing manipulations have occurred.
-        if self.shape != obj.shape:
-            print 'Shapes do not match', self.shape, obj.shape
-        copy_axes(obj, self)
+        # new-from-template: we just copy the names from the template,
+        # and hope the calling rountine knows what to do with the output
+        _set_axes(self, obj.axes)
             
     def transpose(self, *axes):
         raise NotImplementedError()

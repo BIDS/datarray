@@ -1,8 +1,9 @@
-''' Tests for dataarray '''
+''' Tests for DataArray and friends '''
 
 import numpy as np
 
-from datarray import Axis, DataArray, NamedAxisError
+from datarray import Axis, DataArray, NamedAxisError, \
+    _pull_axis
 
 import nose.tools as nt
 import numpy.testing as npt
@@ -69,10 +70,36 @@ def test_1d():
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield (nt.assert_equals, b.names, ['x','y'])
-    # Check row slicing
-    yield (npt.assert_equal, b.ax_x[0], [1,2])
-    # Check column slicing
-    yield (npt.assert_equal, b.ax_y[1], [2,4,6])
+    # Check row named slicing
+    rs = b.ax_x[0]
+    yield (npt.assert_equal, rs, [1,2])
+    yield nt.assert_equal, rs.names, ['y']
+    yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
     # Now, check that when slicing a row, we get the right names in the output
     yield (nt.assert_equal, b.ax_x[1:].names, ['x','y'])
-    yield (nt.assert_equal, b.ax_x[0].names, ['y'])
+    # Check column named slicing
+    cs = b.ax_y[1]
+    yield (npt.assert_equal, cs, [2,4,6])
+    yield nt.assert_equal, cs.names, ['x']
+    yield nt.assert_equal, cs.axes, [Axis('x', 0, cs)]
+    # What happens if we do normal slicing?
+    rs = b[0]
+    yield (npt.assert_equal, rs, [1,2])
+    yield nt.assert_equal, rs.names, ['y']
+    yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
+    
+
+def test__pull_axis():
+    a = Axis('x', 0, None)
+    b = Axis('y', 1, None)
+    c = Axis('z', 2, None)
+    t_pos = Axis('y', 1, None)
+    t_neg = Axis('x', 5, None)
+    axes = [a, b, c]
+    yield nt.assert_true, t_pos in axes
+    yield nt.assert_false, t_neg in axes
+    yield nt.assert_equal, axes, _pull_axis(axes, t_neg)
+    yield nt.assert_equal, axes[:-1], _pull_axis(axes, c)
+    new_axes = [a, Axis('z', 1, None)]
+    yield nt.assert_equal, new_axes, _pull_axis(axes, t_pos)
+    
