@@ -12,9 +12,19 @@ Questions
 - Iteration
 - Wrapping functions with 'axis=' kw.
 
-Combining named and unnamed arrays:
+Basic array creation and axis access:
 
 >>> narr = DataArray(np.zeros((1,2,3)), names=('a','b','c'))
+>>> narr.axis.a
+Axis 'a': index 0, length 1
+>>> narr.axis.b
+Axis 'b': index 1, length 2
+>>> narr.axis.c
+Axis 'c': index 2, length 3
+>>> narr.shape
+(1, 2, 3)
+
+Combining named and unnamed arrays:
 >>> res = narr + 5 # OK
 >>> res = narr + np.zeros((1,2,3)) # OK
 >>> n2 = DataArray(np.ones((1,2,3)), names=('a','b','c'))
@@ -57,10 +67,42 @@ import numpy as np
 # Classes and functions
 #-----------------------------------------------------------------------------
 
-ax_attr_prefix = 'ax_'
-
 class NamedAxisError(Exception):
     pass
+
+
+class KeyStruct(object):
+    """A slightly enhanced version of a struct-like class with named key access.
+
+    Examples
+    --------
+    
+    >>> a = KeyStruct()
+    >>> a.x = 1
+    >>> a['x']
+    1
+    >>> a['y'] = 2
+    >>> a.y
+    2
+    >>> a[3] = 3
+    Traceback (most recent call last):
+      ... 
+    TypeError: attribute name must be string, not 'int'
+
+    >>> b = KeyStruct(x=1, y=2)
+    >>> b.x
+    1
+    >>> b['y']
+    2
+    """
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, val):
+        setattr(self, key, val)
 
 
 class Axis(object):
@@ -98,6 +140,12 @@ class Axis(object):
         False
         '''
         return self.name == other.name and self.index == other.index
+
+    def __str__(self):
+        return 'Axis %r: index %i, length %i' % \
+               (self.name, self.index, len(self))
+
+    __repr__ = __str__
     
     def __getitem__(self, key):
         # `key` can be one of:
@@ -205,18 +253,34 @@ def _pull_axis(axes, target_axis):
 
 
 def _set_axes(dest, in_axes):
+    """Set the axes in `dest` from `in_axes`.
+
+    WARNING: The destination is modified in-place!  The following attributes
+    are added to it:
+
+    - axis: a KeyStruct with each axis as a named attribute.
+    - axes: a list of all axis instances.
+    - names: a list of all the axis names.
+
+    Parameters
+    ----------
+      dest : array
+      in_axes : sequence of axis objects
+    """
     # XXX here is where the logic is implemented for missing names.
     # Here there are no named axis objects if there are fewer names than
     # axes in the array
     axes = []
     names = []
+    ax_holder = KeyStruct()
     for ax in in_axes:
         new_ax = ax.__class__(ax.name, ax.index, dest)
         axes.append(new_ax)
         names.append(ax.name)
-        setattr(dest, ax_attr_prefix + '%s' % ax.name, new_ax)
+        ax_holder[ax.name] = new_ax
     dest.axes = axes
     dest.names = names
+    dest.axis = ax_holder
     
 
 def names2namedict(names):
@@ -319,4 +383,4 @@ def _reordered_axes(axes, axis_indices):
     '''
     for new_ind, old_ind in enumerate(axis_indices):
         pass
-    raise NotImplementedError
+    #raise NotImplementedError

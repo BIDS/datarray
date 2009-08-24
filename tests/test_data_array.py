@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from datarray import Axis, DataArray, NamedAxisError, \
+from datarray.datarray import Axis, DataArray, NamedAxisError, \
     _pull_axis, _reordered_axes
 
 import nose.tools as nt
@@ -34,10 +34,10 @@ def test_basic():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield nt.assert_equal, b.names, ['x','y']
     # integer slicing
-    b0 = b.ax_x[0]
+    b0 = b.axis.x[0]
     yield npt.assert_equal, b0, [1,2]
     # slice slicing
-    b1 = b.ax_x[1:]
+    b1 = b.axis.x[1:]
     yield npt.assert_equal, b1, [[3,4], [5,6]]
 
 
@@ -58,11 +58,11 @@ def test_1d():
     adata = [2,3]
     a = DataArray(adata, 'x', int)
     # Verify scalar extraction
-    yield (nt.assert_true,isinstance(a.ax_x[0],int))
+    yield (nt.assert_true,isinstance(a.axis.x[0],int))
     # Verify indexing of axis
-    yield (nt.assert_equals, a.ax_x.index, 0)
+    yield (nt.assert_equals, a.axis.x.index, 0)
     # Iteration checks
-    for i,val in enumerate(a.ax_x):
+    for i,val in enumerate(a.axis.x):
         yield (nt.assert_equals,val,adata[i])
         yield (nt.assert_true,isinstance(val,int))
 
@@ -71,14 +71,14 @@ def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield (nt.assert_equals, b.names, ['x','y'])
     # Check row named slicing
-    rs = b.ax_x[0]
+    rs = b.axis.x[0]
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.names, ['y']
     yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
     # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.ax_x[1:].names, ['x','y'])
+    yield (nt.assert_equal, b.axis.x[1:].names, ['x','y'])
     # Check column named slicing
-    cs = b.ax_y[1]
+    cs = b.axis.y[1]
     yield (npt.assert_equal, cs, [2,4,6])
     yield nt.assert_equal, cs.names, ['x']
     yield nt.assert_equal, cs.axes, [Axis('x', 0, cs)]
