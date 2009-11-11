@@ -53,6 +53,47 @@ a = DataArray(np.zeros((3,), names=('a',))
 b = DataArray(np.zeros((2,3), names=('a','b'))
 res = a + b
 res.names == ('a', 'b')
+
+ToDo
+====
+
+- Implementing axes with values in them (a la Per Sederberg)
+
+- Support DataArray instances with mixed axes: simple ones with no values and
+'fancy' ones with data in them.  Syntax?
+
+DataArray.from_names(data, names=['a','b','c'])
+
+DataArray(data, axes=[('a',[1,2,3]), ('b',['one','two']),
+('c',['red','black'])])
+
+DataArray(data, axes=[('a',[1,2,3]), ('b',None), ('c',['red','black'])])
+
+- We need to support unnamed axes.
+
+- Units support (Darren's)
+
+- Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
+access data via the .axis objects alone.
+
+- "Enum dtype", could be useful for event selection.
+
+- "Ordered factors"? Something R supports.
+
+
+- How many axis classes?
+
+
+Axis api: if a is an axis from an array: a = x.axis.a
+
+a.at(key): return the slice at that key, with one less dimension than x
+a.keep(keys): join slices for given keys, dims=dims(x)
+a.drop(keys): like keep, but the opposite
+
+a[i] valid cases:
+i: integer => normal numpy scalar indexing, one less dim than x
+i: slice: numpy view slicing.  same dims as x, must recover the ticks 
+i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 """
 
 #-----------------------------------------------------------------------------
@@ -110,13 +151,43 @@ class Axis(object):
 
     Key point: every axis contains a  reference to its parent array!
     """
-    def __init__(self, name, index, arr):
+    def __init__(self, name, index, parent_arr, ticks=None):
         self.name = name
         self.index = index
-        self.arr = arr
+        self.parent_arr = parent_arr
+        # This will raise if the ticks are invalid:
+        self._tick_dict = self._validate_ticks(ticks)
+        self.ticks = ticks
+
+    def _validate_ticks(self, ticks):
+        """Validate constraints on ticks.
+
+        Ensure:
+
+        - uniqueness
+        - length
+        """
+        if ticks is None:
+            return None
+        # We always store ticks as numpy arrays
+        #ticks = np.asarray(ticks)
+
+        nticks = len(ticks)
+        # Sanity check: the first dimension must match that of the parent array
+        if nticks != self.parent_arr.shape[self.index]:
+            e = "Dimension mismatch between ticks and data at index %i" % \
+                self.index
+            raise ValueError(e)
+        
+        # Validate uniqueness
+        t_dict = dict(zip(ticks, range(nticks)))
+        if len(t_dict) != nticks:
+            raise ValueError("non-unique tick values not supported")
+        return t_dict
+        
 
     def __len__(self):
-        return self.arr.shape[self.index]
+        return self.parent_arr.shape[self.index]
 
     def __eq__(self, other):
         ''' Axes are equal iff they have matching names and indices
@@ -161,31 +232,31 @@ class Axis(object):
         # answer will have to be a normal array
         # If the dimensionality is preserved, we can keep the structure
         # of the parent
-        arr = self.arr # local for speed
-        arr_ndim = arr.ndim
+        parent_arr = self.parent_arr # local for speed
+        parent_arr_ndim = parent_arr.ndim
         # The logic is: when using scalar indexing, the dimensionality of the
-        # output is arr.ndim-1, while when using slicing the output has
+        # output is parent_arr.ndim-1, while when using slicing the output has
         # the same number of dimensions as the input.  For this reason, the
-        # case when arr.ndim is 1 and the indexing is scalar needs to be
+        # case when parent_arr.ndim is 1 and the indexing is scalar needs to be
         # handled separately, since the output will be 0-dimensional.  In that
         # case, we must return the plain scalar and not build a slice object
         # that would return a 1-element sub-array.
         #
         # XXX we do not here handle 0 dimensional arrays.
         # XXX fancy indexing
-        if arr_ndim == 1 and not isinstance(key, slice):
-            return arr[key]
+        if parent_arr_ndim == 1 and not isinstance(key, slice):
+            return parent_arr[key]
         # XXX TODO - fancy indexing
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
-        fullslice = [slice(None)] * arr_ndim
+        fullslice = [slice(None)] * parent_arr_ndim
         fullslice[self.index] = key
         #print 'getting output'  # dbg
-        out = arr[fullslice]
+        out = parent_arr[fullslice]
         #print 'returning output'  # dbg
-        if out.ndim != arr_ndim:
+        if out.ndim != parent_arr_ndim:
             # We lost a dimension, drop the axis!
-            _set_axes(out, _pull_axis(arr.axes, self))
+            _set_axes(out, _pull_axis(parent_arr.axes, self))
         return out
         
 
@@ -219,9 +290,9 @@ class UnnamedAxis(Axis):
     res = narr + np.ones((5,3))
     res.names == ?
     """
-    def __init__(self, index, arr):
+    def __init__(self, index, parent_arr):
         # XXX use super here?
-        Axis.__init__(self,'unnamed_%s' % index,index, arr)
+        Axis.__init__(self,'unnamed_%s' % index,index, parent_arr)
 
 
 def _names_to_numbers(axes, ax_ids):
@@ -242,13 +313,14 @@ def _pull_axis(axes, target_axis):
     ''' Return axes removing any axis matching `target_axis`'''
     axes = axes[:]
     try:
+        # XXX - what is this? remove returns None!  And ind isn't used below
         ind = axes.remove(target_axis)
     except ValueError:
         return axes
     rm_i = target_axis.index
     for i, ax in enumerate(axes):
         if ax.index >=rm_i:
-            axes[i] = ax.__class__(ax.name, ax.index-1, ax.arr)
+            axes[i] = ax.__class__(ax.name, ax.index-1, ax.parent_arr)
     return axes
 
 
