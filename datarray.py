@@ -86,6 +86,7 @@ access data via the .axis objects alone.
 
 Axis api: if a is an axis from an array: a = x.axis.a
 
+a.index_at(key): returns the index corresponding to the requested key
 a.at(key): return the slice at that key, with one less dimension than x
 a.keep(keys): join slices for given keys, dims=dims(x)
 a.drop(keys): like keep, but the opposite
@@ -159,6 +160,18 @@ class Axis(object):
         self._tick_dict = self._validate_ticks(ticks)
         self.ticks = ticks
 
+    @staticmethod
+    def from_args(descr, index, parent_arr, ticks=None):
+        """
+        Create an Axis or UnnamedAxis. If
+        descr is None or descr.find(UNNAMED_PREFIX)==0, then
+        this returns an UnnamedAxis.
+        """
+        if descr is None or descr.find(UNNAMED_PREFIX)==0:
+            return UnnamedAxis(index, parent_arr, ticks=ticks)
+        else:
+            return Axis(descr, index, parent_arr, ticks=ticks)
+
     def _validate_ticks(self, ticks):
         """Validate constraints on ticks.
 
@@ -213,8 +226,11 @@ class Axis(object):
         return self.name == other.name and self.index == other.index
 
     def __str__(self):
-        return 'Axis %r: index %i, length %i' % \
-               (self.name, self.index, len(self))
+        if self.parent_arr is not None:
+            return 'Axis %r: index %i, length %i' % \
+                   (self.name, self.index, len(self))
+        else:
+            return 'Axis %r: index %i' % (self.name, self.index)
 
     __repr__ = __str__
     
@@ -260,6 +276,7 @@ class Axis(object):
         return out
         
 
+UNNAMED_PREFIX = "unnamed"
 class UnnamedAxis(Axis):
     """A class to tag unnamed axes
 
@@ -290,10 +307,20 @@ class UnnamedAxis(Axis):
     res = narr + np.ones((5,3))
     res.names == ?
     """
-    def __init__(self, index, parent_arr):
+    def __init__(self, index, parent_arr, ticks=None):
         # XXX use super here?
-        Axis.__init__(self,'unnamed_%s' % index,index, parent_arr)
+        Axis.__init__(self,'%s_%s' % (UNNAMED_PREFIX,index),index, parent_arr,
+                      ticks=ticks)
 
+
+    def __str__(self):
+        if self.parent_arr is not None:
+            return 'UnnamedAxis: index %i, length %i' % \
+                   (self.index, len(self))
+        else:
+            return 'UnnamedAxis: index %i' % (self.index)
+
+    __repr__ = __str__
 
 def _names_to_numbers(axes, ax_ids):
     ''' Convert any axis names to axis indices '''
@@ -320,7 +347,7 @@ def _pull_axis(axes, target_axis):
     rm_i = target_axis.index
     for i, ax in enumerate(axes):
         if ax.index >=rm_i:
-            axes[i] = ax.__class__(ax.name, ax.index-1, ax.parent_arr)
+            axes[i] =  Axis.from_args(ax.name, ax.index-1, ax.parent_arr)
     return axes
 
 
@@ -346,7 +373,7 @@ def _set_axes(dest, in_axes):
     names = []
     ax_holder = KeyStruct()
     for ax in in_axes:
-        new_ax = ax.__class__(ax.name, ax.index, dest)
+        new_ax = Axis.from_args(ax.name, ax.index, dest)
         axes.append(new_ax)
         names.append(ax.name)
         ax_holder[ax.name] = new_ax
@@ -363,12 +390,16 @@ def names2namedict(names):
 
 class DataArray(np.ndarray):
 
+    # XXX- UnnamedAxes can be specified either by None or beginning
+    # with UNNAMED_PREFIX
+
     # XXX- we need to figure out where in the numpy C code .T is defined!
     @property
     def T(self):
         return self.transpose()
 
     def __new__(cls, data, names=None, dtype=None, copy=False):
+        
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
         if names is None:
@@ -377,8 +408,10 @@ class DataArray(np.ndarray):
                 return arr
             names = []
         elif len(names) > arr.ndim:
-            raise NamedAxisError("names list longer than array ndim")
-        axes = [Axis(name, i, arr) for i, name in enumerate(names)]
+            raise NamedAxisError("names list should have length < array ndim")
+        
+        names = list(names) + [None]*(arr.ndim - len(names))
+        axes = [Axis.from_args(name, i, arr) for i, name in enumerate(names)]
         _set_axes(arr, axes)
         return arr
 
@@ -411,7 +444,7 @@ class DataArray(np.ndarray):
         # and hope the calling rountine knows what to do with the output
         _set_axes(self, obj.axes)
             
-    def transpose(self, *axes):
+    def transpose(self, axes):
         """ accept integer or named axes, reorder axes """
         # implement tuple-or-*args logic of np.transpose
         axes = list(axes)
@@ -423,8 +456,9 @@ class DataArray(np.ndarray):
                 axes = axes[0][:]
             except TypeError:
                 pass
+            # XXX stop
         proc_axids = _names_to_numbers(self.axes, axes)
-        out = self.transpose(proc_axids)
+        out = np.ndarray.transpose(self, proc_axids)
         _set_axes(out, _reordered_axes(self.axes, proc_axids))
         return out
 
@@ -443,16 +477,22 @@ def _reordered_axes(axes, axis_indices):
     Returns
     -------
     ro_axes : sequence of axes
-       sequence of axes in arbitrary order with axis indices reflecting
+       sequence of axes (with parent array = None)
+       in arbitrary order with axis indices reflecting
        reordering given by `axis_indices`
 
     Examples
     --------
     >>> a = Axis('x', 0, None)
     >>> b = Axis('y', 1, None)
-    >>> c = Axis('z', 2, None)
+    >>> c = UnnamedAxis('z', 2, None)
     >>> res = _reordered_axes([a,b,c], (1,2,0))
     '''
+    
+    new_axes = []
     for new_ind, old_ind in enumerate(axis_indices):
-        pass
-    #raise NotImplementedError
+        ax = axes[old_ind]
+        new_ax = Axis.from_args(ax.name, new_ind, None)
+        new_axes.append(new_ax)
+    return new_axes
+
