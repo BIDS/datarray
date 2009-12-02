@@ -86,7 +86,6 @@ access data via the .axis objects alone.
 
 Axis api: if a is an axis from an array: a = x.axis.a
 
-a.index_at(key): returns the index corresponding to the requested key
 a.at(key): return the slice at that key, with one less dimension than x
 a.keep(keys): join slices for given keys, dims=dims(x)
 a.drop(keys): like keep, but the opposite
@@ -146,33 +145,38 @@ class KeyStruct(object):
     def __setitem__(self, key, val):
         setattr(self, key, val)
 
+UNNAMED_PREFIX = ""
+
 
 class Axis(object):
     """Object to access a given axis of an array.
 
     Key point: every axis contains a  reference to its parent array!
     """
-    def __init__(self, name, index, parent_arr, ticks=None):
-        self.name = name
+    def __init__(self, label, index, parent_arr, ticks=None):
+        # Axis should be a string or None
+        if not isinstance(label, basestring) and label is not None:
+            raise ValueError('label must be a string or None')
+        self.label = label
         self.index = index
         self.parent_arr = parent_arr
+
+        # If ticks is not None, label should be a string
+        if ticks is not None and label is None:
+            raise ValueError('ticks only supported when Axis has a label')
+
         # This will raise if the ticks are invalid:
-        self._tick_dict = self._validate_ticks(ticks)
+        self._tick_dict, self._tick_dict_reverse = self._validate_ticks(ticks)
         self.ticks = ticks
 
-    @staticmethod
-    def from_args(descr, index, parent_arr, ticks=None):
-        """
-        Create an Axis or UnnamedAxis. If
-        descr is None or descr.find(UNNAMED_PREFIX)==0, then
-        this returns an UnnamedAxis.
-        """
-        if descr is None or descr.find(UNNAMED_PREFIX)==0:
-            return UnnamedAxis(index, parent_arr, ticks=ticks)
+    def _getname(self):
+        if self.label is not None:
+            return str(self.label)
         else:
-            return Axis(descr, index, parent_arr, ticks=ticks)
+            return "%s_%s" % (UNNAMED_PREFIX, self.index)
+    name = property(_getname)
 
-    def _validate_ticks(self, ticks):
+    def _validate_ticks(self, ticks, check_length=False):
         """Validate constraints on ticks.
 
         Ensure:
@@ -181,13 +185,16 @@ class Axis(object):
         - length
         """
         if ticks is None:
-            return None
+            return None, None
         # We always store ticks as numpy arrays
         #ticks = np.asarray(ticks)
 
         nticks = len(ticks)
         # Sanity check: the first dimension must match that of the parent array
-        if nticks != self.parent_arr.shape[self.index]:
+        # XXX this causes exceptions when slicing:
+        # XXX maybe ticks of each axis should be validated in __array_finalize__?
+
+        if check_length and nticks != self.parent_arr.shape[self.index]:
             e = "Dimension mismatch between ticks and data at index %i" % \
                 self.index
             raise ValueError(e)
@@ -196,14 +203,14 @@ class Axis(object):
         t_dict = dict(zip(ticks, range(nticks)))
         if len(t_dict) != nticks:
             raise ValueError("non-unique tick values not supported")
-        return t_dict
+        t_dict_reverse = dict(zip(range(nticks), ticks))
+        return t_dict, t_dict_reverse
         
-
     def __len__(self):
         return self.parent_arr.shape[self.index]
 
     def __eq__(self, other):
-        ''' Axes are equal iff they have matching names and indices
+        ''' Axes are equal iff they have matching labels and indices
 
         Parameters
         ----------
@@ -223,14 +230,11 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.name == other.name and self.index == other.index
+        return self.label == other.label and self.index == other.index
 
     def __str__(self):
-        if self.parent_arr is not None:
-            return 'Axis %r: index %i, length %i' % \
-                   (self.name, self.index, len(self))
-        else:
-            return 'Axis %r: index %i' % (self.name, self.index)
+        return 'Axis(label=%r, index=%i, ticks=%r)' % \
+               (self.label, self.index, self.ticks)
 
     __repr__ = __str__
     
@@ -275,52 +279,91 @@ class Axis(object):
             _set_axes(out, _pull_axis(parent_arr.axes, self))
         return out
         
+    def at(self, tick):
+        """
+        Return data at a given tick.
 
-UNNAMED_PREFIX = "unnamed"
-class UnnamedAxis(Axis):
-    """A class to tag unnamed axes
+        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> arr = narr.axis.b.at('c')
+        >>> arr.axes
+        [Axis(label='a', index=0, ticks=None)]
+        >>>     
 
-    Consider this case:
-    narr = DataArray(np.zeros((1,2,3), names=('a',))
+        """
+        if not self.ticks:
+            raise ValueError('axis must have ticks to extract data at a given tick')
 
-    in that case axes 1,2 do not have names.
+        # the index of the tick in the axis
+        try:
+            idx = self._tick_dict[tick]
+        except KeyError:
+            raise KeyError('tick %s not found in axis "%s"' % (`tick`, self.name))
 
-    Options may be:
-    * narr.names == ('a', 'unnamed_0', 'unnamed_1')
-    * narr.names == ('a',)
-    * narr.names == ('a', None, None)
-    * narr.names == ('a', UnnamedAxis, UnnamedAxis)
+        parent_arr = self.parent_arr # local for speed
+        parent_arr_ndim = parent_arr.ndim
 
-    Then:
+        fullslice = [slice(None)] * parent_arr_ndim
+        fullslice[self.index] = idx
+        out = parent_arr[fullslice]
 
-    narrt = narr.transpose()
-    narrt.shape == (3,2,1)
-    Now options may be:
-    * narr.names == ('unamed_1', 'unnamed_0', 'a')
-    * narr.names == ('a',)
-    * narr.names == (None, None, 'a')
-    * narr.names == (UnnamedAxis, UnnamedAxis, 'a')
+        # we will have lost a dimension and drop the current axis
+        _set_axes(out, _pull_axis(parent_arr.axes, self))
+        return out
 
-    Consider broadcasting:
+    def keep(self, ticks):
+        """
+        Keep only certain ticks of an axis.
 
-    narr = DataArray(np.zeros((3,), names=('a',))
-    res = narr + np.ones((5,3))
-    res.names == ?
-    """
-    def __init__(self, index, parent_arr, ticks=None):
-        # XXX use super here?
-        Axis.__init__(self,'%s_%s' % (UNNAMED_PREFIX,index),index, parent_arr,
-                      ticks=ticks)
+        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> arr = narr.axis.b.keep('cd')
+        >>> [a.ticks for a in arr.axes]
+        [None, 'cd']
+        >>> arr.axis.a.at('tick')
+        ...
+        ValueError: axis must have ticks to extract data at a given tick
 
+        >>>                 
+        """
 
-    def __str__(self):
-        if self.parent_arr is not None:
-            return 'UnnamedAxis: index %i, length %i' % \
-                   (self.index, len(self))
-        else:
-            return 'UnnamedAxis: index %i' % (self.index)
+        if not self.ticks:
+            raise ValueError('axis must have ticks to keep certain ticks')
 
-    __repr__ = __str__
+        idxs = [self._tick_dict[tick] for tick in ticks]
+
+        parent_arr = self.parent_arr # local for speed
+        parent_arr_ndim = parent_arr.ndim
+
+        fullslice = [slice(None)] * parent_arr_ndim
+        fullslice[self.index] = idxs
+        out = parent_arr[fullslice]
+
+        # just change the current axes
+
+        new_axes = [Axis(a.label, a.index, a.parent_arr, ticks=a.ticks) for a in out.axes]
+        new_axes[self.index] = Axis(self.label, self.index, self.parent_arr, ticks=ticks)
+        _set_axes(out, new_axes)
+        return out
+
+    def drop(self, ticks):
+        """
+        Keep only certain ticks of an axis.
+
+        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> arr1 = narr.axis.b.keep('cd')
+        >>> arr2 = narr.axis.b.drop('abe')
+        >>> np.all
+        np.all       np.allclose  np.alltrue
+        >>> np.alltrue(np.equal(arr1, arr2))
+        True
+        >>>                                   
+
+        """
+
+        if not self.ticks:
+            raise ValueError('axis must have ticks to drop ticks')
+
+        kept = [t for t in self.ticks if t not in ticks]
+        return self.keep(kept)
 
 def _names_to_numbers(axes, ax_ids):
     ''' Convert any axis names to axis indices '''
@@ -347,7 +390,7 @@ def _pull_axis(axes, target_axis):
     rm_i = target_axis.index
     for i, ax in enumerate(axes):
         if ax.index >=rm_i:
-            axes[i] =  Axis.from_args(ax.name, ax.index-1, ax.parent_arr)
+            axes[i] =  ax.__class__(ax.label, ax.index-1, ax.parent_arr, ticks=ax.ticks)
     return axes
 
 
@@ -373,7 +416,7 @@ def _set_axes(dest, in_axes):
     names = []
     ax_holder = KeyStruct()
     for ax in in_axes:
-        new_ax = Axis.from_args(ax.name, ax.index, dest)
+        new_ax = ax.__class__(ax.label, ax.index, dest, ticks=ax.ticks)
         axes.append(new_ax)
         names.append(ax.name)
         ax_holder[ax.name] = new_ax
@@ -398,20 +441,31 @@ class DataArray(np.ndarray):
     def T(self):
         return self.transpose()
 
-    def __new__(cls, data, names=None, dtype=None, copy=False):
-        
+    def __new__(cls, data, labels=None, dtype=None, copy=False):
+        # XXX if an entry of labels is a tuple, it is interpreted
+        # as a (label, ticks) tuple 
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
-        if names is None:
+        if labels is None:
             if hasattr(data,'axes'):
                 _set_axes(arr, data.axes)
                 return arr
-            names = []
-        elif len(names) > arr.ndim:
-            raise NamedAxisError("names list should have length < array ndim")
+            labels = []
+        elif len(labels) > arr.ndim:
+            raise NamedAxisError("labels list should have length < array ndim")
         
-        names = list(names) + [None]*(arr.ndim - len(names))
-        axes = [Axis.from_args(name, i, arr) for i, name in enumerate(names)]
+        labels = list(labels) + [None]*(arr.ndim - len(labels))
+        axes = []
+        for i, label_spec in enumerate(labels):
+            if type(label_spec) == type(()):
+                if len(label_spec) != 2:
+                    raise ValueError("if the label specification is a tuple, it must be of the form (label, ticks)")
+                label, ticks = label_spec
+            else:
+                label = label_spec
+                ticks = None
+            axes.append(Axis(label, i, arr, ticks=ticks))
+
         _set_axes(arr, axes)
         return arr
 
@@ -440,7 +494,7 @@ class DataArray(np.ndarray):
         if not hasattr(obj, 'axes'): # looks like view cast
             _set_axes(self, [])
             return
-        # new-from-template: we just copy the names from the template,
+        # new-from-template: we just copy the labels from the template,
         # and hope the calling rountine knows what to do with the output
         _set_axes(self, obj.axes)
             
@@ -456,16 +510,16 @@ class DataArray(np.ndarray):
                 axes = axes[0][:]
             except TypeError:
                 pass
-            # XXX stop
+            stop
         proc_axids = _names_to_numbers(self.axes, axes)
         out = np.ndarray.transpose(self, proc_axids)
-        _set_axes(out, _reordered_axes(self.axes, proc_axids))
+        _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
         return out
 
 
-def _reordered_axes(axes, axis_indices):
+def _reordered_axes(axes, axis_indices, parent=None):
     ''' Perform axis reordering according to `axis_indices`
-
+    Checks to ensure that all axes have the same parent array.
     Parameters
     ----------
     axes : sequence of axes
@@ -473,11 +527,13 @@ def _reordered_axes(axes, axis_indices):
        the permutation given by `axis_indices`
     axis_indices : sequence of ints
        indices giving new order of axis numbers
+    parent : ndarray or None
+       if not None, used as parent for all created axes
 
     Returns
     -------
     ro_axes : sequence of axes
-       sequence of axes (with parent array = None)
+       sequence of axes (with the same parent array)
        in arbitrary order with axis indices reflecting
        reordering given by `axis_indices`
 
@@ -485,14 +541,18 @@ def _reordered_axes(axes, axis_indices):
     --------
     >>> a = Axis('x', 0, None)
     >>> b = Axis('y', 1, None)
-    >>> c = UnnamedAxis('z', 2, None)
+    >>> c = Axis(None, 2, None)
     >>> res = _reordered_axes([a,b,c], (1,2,0))
     '''
-    
+
     new_axes = []
     for new_ind, old_ind in enumerate(axis_indices):
         ax = axes[old_ind]
-        new_ax = Axis.from_args(ax.name, new_ind, None)
+        if parent is None:
+            parent_arr = ax.parent_arr
+        else:
+            parent_arr = parent
+        new_ax = ax.__class__(ax.label, new_ind, parent_arr, ticks=ax.ticks)
         new_axes.append(new_ax)
     return new_axes
 
