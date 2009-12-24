@@ -14,33 +14,50 @@ Questions
 
 Basic array creation and axis access:
 
->>> narr = DataArray(np.zeros((1,2,3)), names=('a','b','c'))
+>>> narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
+>>> narr.labels
+['a', 'b', 'c']
 >>> narr.axis.a
-Axis 'a': index 0, length 1
+Axis(label='a', index=0, ticks=None)
 >>> narr.axis.b
-Axis 'b': index 1, length 2
+Axis(label='b', index=1, ticks=None)
 >>> narr.axis.c
-Axis 'c': index 2, length 3
+Axis(label='c', index=2, ticks=None)
 >>> narr.shape
 (1, 2, 3)
+
+Not all axes must necessarily be explicitly labeled, since None is a valid axis
+label:
+>>> narr2 = DataArray(np.zeros((1,2,3)), labels=('a', None, 'b' ))
+>>> narr2.labels
+['a', None, 'b']
+
+If no label is given for an axis, None is implicitly assumed.  So trailing axes
+without labels will be labeled as None:
+>>> narr2 = DataArray(np.zeros((1,2,3,2)), labels=('a','b' ))
+>>> narr2.labels
+['a', 'b', None, None]
 
 Combining named and unnamed arrays:
 >>> res = narr + 5 # OK
 >>> res = narr + np.zeros((1,2,3)) # OK
->>> n2 = DataArray(np.ones((1,2,3)), names=('a','b','c'))
+>>> n2 = DataArray(np.ones((1,2,3)), labels=('a','b','c'))
 >>> res = narr + n2 # OK
 
->>> n3 = DataArray(np.ones((1,2,3)), names=('x','b','c'))
+>>> n3 = DataArray(np.ones((1,2,3)), labels=('x','b','c'))
 
-res = narr + n3 # raises error
-(NamedAxisError should be raised)
-  ...
+>>> res = narr + n3
+Traceback (most recent call last):
+...
+ValueError: mismatched labels: arrays can not be broadcast to matching label set
 
 Now, what about matching names, but different indices for the names?
 
-n4 = DataArray(np.ones((2,1,3)), names=('b','a','c'))
-res = narr + n4 # is this OK?
-res.shape
+>>> n4 = DataArray(np.ones((2,1,3)), labels=('b','a','c'))
+>>> res = narr + n4 # is this OK?
+Traceback (most recent call last):
+...
+ValueError: mismatched labels: arrays can not be broadcast to matching label set
 
 Maybe this is too much magic?  Probably the names and the position has
 to be the same, and the above example should raise an error.  At least
@@ -49,10 +66,31 @@ for now we will raise an error, and review later.
 What about broadcasting between two named arrays, where the broadcasting
 adds an axis?
 
-a = DataArray(np.zeros((3,), names=('a',))
-b = DataArray(np.zeros((2,3), names=('a','b'))
-res = a + b
-res.names == ('a', 'b')
+>>> a = DataArray(np.zeros((3,)), labels=('a',))
+>>> b = DataArray(np.zeros((2,3)), labels=('a','b'))
+>>> res = a + b
+Traceback (most recent call last):
+...
+ValueError: mismatched labels: arrays can not be broadcast to matching label set
+
+Slicing
+>>> narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
+
+>>> narr.axis.a
+Axis(label='a', index=0, ticks=None)
+>>> narr.axis.a[0]
+DataArray([[ 0.,  0.,  0.],
+       [ 0.,  0.,  0.]])
+>>> narr.axis.a[0].axes
+[Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None)]
+
+>>> narr[0,:].shape
+(2, 3)
+>>> narr[0,:].axes
+[Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None)]
+
+>>> narr.axis.a[0].axes == narr[0,:].axes
+True
 
 ToDo
 ====
@@ -62,7 +100,7 @@ ToDo
 - Support DataArray instances with mixed axes: simple ones with no values and
 'fancy' ones with data in them.  Syntax?
 
-DataArray.from_names(data, names=['a','b','c'])
+DataArray.from_names(data, labels=['a','b','c'])
 
 DataArray(data, axes=[('a',[1,2,3]), ('b',['one','two']),
 ('c',['red','black'])])
@@ -79,7 +117,6 @@ access data via the .axis objects alone.
 - "Enum dtype", could be useful for event selection.
 
 - "Ordered factors"? Something R supports.
-
 
 - How many axis classes?
 
@@ -103,6 +140,7 @@ i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 import copy
 
 import numpy as np
+import nose.tools as nt
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -145,8 +183,6 @@ class KeyStruct(object):
     def __setitem__(self, key, val):
         setattr(self, key, val)
 
-UNNAMED_PREFIX = ""
-
 
 class Axis(object):
     """Object to access a given axis of an array.
@@ -169,12 +205,12 @@ class Axis(object):
         self._tick_dict, self._tick_dict_reverse = self._validate_ticks(ticks)
         self.ticks = ticks
 
-    def _getname(self):
+    @property
+    def name(self):
         if self.label is not None:
             return str(self.label)
         else:
-            return "%s_%s" % (UNNAMED_PREFIX, self.index)
-    name = property(_getname)
+            return "_%d" %  self.index
 
     def _validate_ticks(self, ticks, check_length=False):
         """Validate constraints on ticks.
@@ -246,8 +282,8 @@ class Axis(object):
         # * array (fancy indexing)
         #
         # XXX We don't handle fancy indexing at the moment
-        # if isinstance(key, (np.ndarray, list)):
-        #    raise TypeError('We do not handle fancy indexing yet')
+        if isinstance(key, (np.ndarray, list)):
+            raise NotImplementedError('We do not handle fancy indexing yet')
         # If there is a change in dimensionality of the result, the
         # answer will have to be a normal array
         # If the dimensionality is preserved, we can keep the structure
@@ -265,17 +301,35 @@ class Axis(object):
         # XXX we do not here handle 0 dimensional arrays.
         # XXX fancy indexing
         if parent_arr_ndim == 1 and not isinstance(key, slice):
-            return parent_arr[key]
+            return np.ndarray.__getitem__(parent_arr, key)
+
         # XXX TODO - fancy indexing
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
         fullslice = [slice(None)] * parent_arr_ndim
         fullslice[self.index] = key
         #print 'getting output'  # dbg
-        out = parent_arr[fullslice]
+        out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
         #print 'returning output'  # dbg
+
+        if isinstance(key, slice):
+            newaxes = []
+            # we need to find the ticks, if any
+            if self.ticks:
+                newticks = self.ticks[key]
+            else:
+                newticks = None
+            newaxis = self.__class__(self.label, self.index, parent_arr, ticks=newticks)
+            newaxes = []
+            for a in parent_arr.axes:
+                newaxes.append(a.__class__(a.label, a.index, parent_arr, ticks=a.ticks))
+            newaxes[self.index] = newaxis
+
+            _set_axes(out, newaxes)
+
         if out.ndim != parent_arr_ndim:
             # We lost a dimension, drop the axis!
+            print 'Dropping axes' # dbg
             _set_axes(out, _pull_axis(parent_arr.axes, self))
         return out
         
@@ -304,7 +358,7 @@ class Axis(object):
 
         fullslice = [slice(None)] * parent_arr_ndim
         fullslice[self.index] = idx
-        out = parent_arr[fullslice]
+        out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
 
         # we will have lost a dimension and drop the current axis
         _set_axes(out, _pull_axis(parent_arr.axes, self))
@@ -314,15 +368,16 @@ class Axis(object):
         """
         Keep only certain ticks of an axis.
 
-        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> narr = DataArray(np.random.standard_normal((4,5)),
+        ...                  labels=['a', ('b', 'abcde')])
         >>> arr = narr.axis.b.keep('cd')
         >>> [a.ticks for a in arr.axes]
         [None, 'cd']
+        
         >>> arr.axis.a.at('tick')
+        Traceback (most recent call last):
         ...
         ValueError: axis must have ticks to extract data at a given tick
-
-        >>>                 
         """
 
         if not self.ticks:
@@ -335,7 +390,7 @@ class Axis(object):
 
         fullslice = [slice(None)] * parent_arr_ndim
         fullslice[self.index] = idxs
-        out = parent_arr[fullslice]
+        out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
 
         # just change the current axes
 
@@ -348,15 +403,12 @@ class Axis(object):
         """
         Keep only certain ticks of an axis.
 
-        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> narr = DataArray(np.random.standard_normal((4,5)),
+        ...                  labels=['a', ('b', 'abcde')])
         >>> arr1 = narr.axis.b.keep('cd')
         >>> arr2 = narr.axis.b.drop('abe')
-        >>> np.all
-        np.all       np.allclose  np.alltrue
         >>> np.alltrue(np.equal(arr1, arr2))
         True
-        >>>                                   
-
         """
 
         if not self.ticks:
@@ -364,6 +416,7 @@ class Axis(object):
 
         kept = [t for t in self.ticks if t not in ticks]
         return self.keep(kept)
+
 
 def _names_to_numbers(axes, ax_ids):
     ''' Convert any axis names to axis indices '''
@@ -379,20 +432,27 @@ def _names_to_numbers(axes, ax_ids):
     return proc_ids
 
 
+def _validate_axes(axes):
+    """
+    This should always be true our axis lists....
+    """
+    p = axes[0].parent_arr
+    for i, a in enumerate(axes):
+        nt.assert_equals(i, a.index)
+        nt.assert_true(p is a.parent_arr)
+        ## if a.ticks:
+        ##     a._validate_ticks(a.ticks, check_length=True)
+
 def _pull_axis(axes, target_axis):
     ''' Return axes removing any axis matching `target_axis`'''
-    axes = axes[:]
-    try:
-        # XXX - what is this? remove returns None!  And ind isn't used below
-        ind = axes.remove(target_axis)
-    except ValueError:
-        return axes
-    rm_i = target_axis.index
-    for i, ax in enumerate(axes):
-        if ax.index >=rm_i:
-            axes[i] =  ax.__class__(ax.label, ax.index-1, ax.parent_arr, ticks=ax.ticks)
-    return axes
-
+    newaxes = []
+    parent_arr = target_axis.parent_arr
+    c = 0
+    for a in axes:
+        if a.index != target_axis.index:
+            newaxes.append(a.__class__(a.label, c, parent_arr, ticks=a.ticks))
+            c += 1
+    return newaxes
 
 def _set_axes(dest, in_axes):
     """Set the axes in `dest` from `in_axes`.
@@ -402,7 +462,7 @@ def _set_axes(dest, in_axes):
 
     - axis: a KeyStruct with each axis as a named attribute.
     - axes: a list of all axis instances.
-    - names: a list of all the axis names.
+    - labels: a list of all the axis labels.
 
     Parameters
     ----------
@@ -413,15 +473,17 @@ def _set_axes(dest, in_axes):
     # Here there are no named axis objects if there are fewer names than
     # axes in the array
     axes = []
-    names = []
+    labels = []
     ax_holder = KeyStruct()
+    # Create the containers for various axis-related info
     for ax in in_axes:
         new_ax = ax.__class__(ax.label, ax.index, dest, ticks=ax.ticks)
         axes.append(new_ax)
-        names.append(ax.name)
+        labels.append(ax.label)
         ax_holder[ax.name] = new_ax
+    # Store these containers as attributes of the destination array
     dest.axes = axes
-    dest.names = names
+    dest.labels = labels
     dest.axis = ax_holder
     
 
@@ -432,9 +494,6 @@ def names2namedict(names):
 
 
 class DataArray(np.ndarray):
-
-    # XXX- UnnamedAxes can be specified either by None or beginning
-    # with UNNAMED_PREFIX
 
     # XXX- we need to figure out where in the numpy C code .T is defined!
     @property
@@ -467,6 +526,10 @@ class DataArray(np.ndarray):
             axes.append(Axis(label, i, arr, ticks=ticks))
 
         _set_axes(arr, axes)
+
+        # validate the axes
+        _validate_axes(axes)
+
         return arr
 
     def __array_finalize__(self, obj):
@@ -482,12 +545,13 @@ class DataArray(np.ndarray):
            None if triggered from DataArray.__new__ call
         """
         
-        #print "finalizing DataArray" # dbg
+        print "finalizing DataArray" # dbg
         
         # Ref: see http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
         
         # provide info for what's happening
-        #print "finalize:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "finalize:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "obj     :", obj.shape  # dbg
         # provide more info
         if obj is None: # own constructor, we're done
             return
@@ -496,8 +560,12 @@ class DataArray(np.ndarray):
             return
         # new-from-template: we just copy the labels from the template,
         # and hope the calling rountine knows what to do with the output
+        print 'setting axes on self from obj' # dbg
         _set_axes(self, obj.axes)
             
+        # validate the axes
+        _validate_axes(self.axes)
+        
     def transpose(self, axes):
         """ accept integer or named axes, reorder axes """
         # implement tuple-or-*args logic of np.transpose
@@ -516,7 +584,31 @@ class DataArray(np.ndarray):
         _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
         return out
 
+    def __getitem__(self, key):
+        """Support x[k] access."""
+        # Cases
+        if isinstance(key, list) or isinstance(key, np.ndarray):
+            # fancy indexing
+            # XXX need to be cast to an "ordinary" ndarray
+            raise NotImplementedError
 
+        if isinstance(key, tuple):
+            # data is accessed recursively, starting with
+            # the full array
+            arr = self
+
+            # we must copy of the names of the axes
+            # before looping through the elements of key,
+            # as the index of a given axis may change
+
+            names = [a.name for a in self.axes]
+            for slice_or_int, name in zip(key, names):
+                arr = arr.axis[name][slice_or_int]
+        else:
+            arr = self.axes[0][key]
+        return arr
+    
+    
 def _reordered_axes(axes, axis_indices, parent=None):
     ''' Perform axis reordering according to `axis_indices`
     Checks to ensure that all axes have the same parent array.
