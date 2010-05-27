@@ -29,10 +29,10 @@ def test_axis_equal():
 def test_basic():
     adata = [2,3]
     a = DataArray(adata, 'x', float)
-    yield nt.assert_equal, a.names, ['x']
+    yield nt.assert_equal, a.labels, ['x']
     yield nt.assert_equal, a.dtype, np.dtype(float)
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield nt.assert_equal, b.names, ['x','y']
+    yield nt.assert_equal, b.labels, ['x','y']
     # integer slicing
     b0 = b.axis.x[0]
     yield npt.assert_equal, b0, [1,2]
@@ -42,8 +42,8 @@ def test_basic():
 
 
 def test_combination():
-    narr = DataArray(np.zeros((1,2,3)), names=('a','b','c'))
-    n3 = DataArray(np.ones((1,2,3)), names=('x','b','c'))
+    narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
+    n3 = DataArray(np.ones((1,2,3)), labels=('x','b','c'))
     yield nt.assert_raises, NamedAxisError, np.add, narr, n3
     # addition of scalar
     res = narr + 2
@@ -69,23 +69,23 @@ def test_1d():
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield (nt.assert_equals, b.names, ['x','y'])
+    yield (nt.assert_equals, b.labels, ['x','y'])
     # Check row named slicing
     rs = b.axis.x[0]
     yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.names, ['y']
+    yield nt.assert_equal, rs.labels, ['y']
     yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
     # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.axis.x[1:].names, ['x','y'])
+    yield (nt.assert_equal, b.axis.x[1:].labels, ['x','y'])
     # Check column named slicing
     cs = b.axis.y[1]
     yield (npt.assert_equal, cs, [2,4,6])
-    yield nt.assert_equal, cs.names, ['x']
+    yield nt.assert_equal, cs.labels, ['x']
     yield nt.assert_equal, cs.axes, [Axis('x', 0, cs)]
     # What happens if we do normal slicing?
     rs = b[0]
     yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.names, ['y']
+    yield nt.assert_equal, rs.labels, ['y']
     yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
     
 
@@ -109,6 +109,6 @@ def test__reordered_axes():
     b = Axis('y', 1, None)
     c = Axis('z', 2, None)
     res = _reordered_axes([a,b,c], (1,2,0))
-    names_inds = [(ax.name, ax.index) for ax in res]
+    names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
     
