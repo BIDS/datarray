@@ -565,6 +565,31 @@ class DataArray(np.ndarray):
             
         # validate the axes
         _validate_axes(self.axes)
+
+    def __array_prepare__(self, obj, context=None):
+        """Called at the beginning of each ufunc.
+        """
+
+        print "preparing DataArray" # dbg
+
+        # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
+
+        # provide info for what's happening
+        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "obj     :", obj.shape  # dbg
+        print "context :", context
+        
+        if len(context[1]) > 1:
+            "binary ufunc operation"
+            other = context[1][1]
+            print "other   :", other.__class__
+
+            if isinstance(other,DataArray):
+                print "found DataArray, comparing labels"
+                if self.labels != other.labels:
+                    raise NamedAxisError('labels must agree, received %s vs %s'%(self.labels,other.labels))
+
+        return obj
         
     def transpose(self, axes):
         """ accept integer or named axes, reorder axes """
