@@ -110,5 +110,5 @@ def test__reordered_axes():
     c = Axis('z', 2, None)
     res = _reordered_axes([a,b,c], (1,2,0))
     names_inds = [(ax.name, ax.index) for ax in res]
-    yield assert_equal, set(names_inds), set(('y',0),('z',1),('x',2))
+    yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
     
