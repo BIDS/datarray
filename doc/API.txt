@@ -1,0 +1,38 @@
+named / labeled arrays
+
+ndarrays extended to have an explicit "hypercross" of axes, each with names (possibly defaulted). 
+
+* for methods in which an "axis" is denoted, an axis name may be used
+
+* for all manners under which dimension numbers and lengths must match, also the hypercrosses must be consistent
+
+* broadcasting will "inherit" labels from the super-hyper-cross
+
+* padding dimensions will insert "dummy" dimensions, eg:
+
+a = datarray( np.random.randn(10,10), ('time', 'temp') )
+a[:,None,:].axes --> ('time', '__temp_dim_0', 'temp') 
+
+* axes may be transposed
+
+
+datarrays with ticks
+
+each named axis has tick labels
+
+* numpy, fancy and slice-like indexing on each axis
+
+x.named_axis[...]
+--> does any kind of numpy indexing on the axis
+x.named_axis.at( *args )
+--> returns essentially "fancy" indexing along the axis, at valid ticks in args
+x.named_axis.t_slice( start, stop, [step])
+--> where arguments are valid ticks, performs a slicing-like operation along the axis
+
+* mixed indexing on the array
+
+x.at( *args )
+--> len(args) <= x.ndim -- for each indexing spec in args, perform that indexing
+       on the enumerated axes
+x.t_slice( *args )
+--> same as above, but perform t_slice slicing on the enumerated axes
