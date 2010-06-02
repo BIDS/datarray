@@ -417,6 +417,8 @@ class Axis(object):
         kept = [t for t in self.ticks if t not in ticks]
         return self.keep(kept)
 
+    def __int__(self):
+        return self.index
 
 def _names_to_numbers(axes, ax_ids):
     ''' Convert any axis names to axis indices '''
@@ -430,6 +432,7 @@ def _names_to_numbers(axes, ax_ids):
         else:
             proc_ids.append(ax_id)
     return proc_ids
+
 
 
 def _validate_axes(axes):

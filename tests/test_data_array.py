@@ -112,3 +112,9 @@ def test__reordered_axes():
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
     
+
+def test_axis_as_index():
+    narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]),
+                     labels=('a', 'b'))
+    npt.assert_array_equal(np.sum(narr, axis=narr.axis.a),
+                           [5, 7, 9])
