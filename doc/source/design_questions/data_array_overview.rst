@@ -10,9 +10,13 @@ ndarrays extended to have an explicit "hypercross" of axes, each with names (pos
 
 * for methods in which an "axis" is denoted, an axis name may be used
 
-* for all manners under which dimension numbers and lengths must match, also the hypercrosses must be consistent
+* indexing/slicing along a named axis returns that slicing, at that axis, along
+  with slice(None) slicing along all other axes    
 
-* broadcasting will "inherit" labels from the super-hyper-cross
+* for all arithmetic/binary-op matters under which dimension numbers and lengths
+  must match, also the hypercrosses must be consistent
+
+* broadcasting will "inherit" labels from the super-hyper-cross (look at np.broadcast)
 
 * padding dimensions will insert "dummy" dimensions, eg: ::
 
@@ -60,3 +64,48 @@ The smart indexing implemented by Larry is very full featured. I believe the des
 * It does not broadcast
 
 
+Ideas
+^^^^^
+
+Axis Slicing
+************
+
+Use Case: chained axis slicing
+------------------------------
+
+slicing on an axis returns a new DataArray
+
+::
+
+  arr = DataArray(np.random.randn(10,10), labels=('time', 'freq'))
+  arr.axis.time[:5] --> new DataArray with (time, freq) axes
+
+However, slicing on the special slicing object "aix" returns a new Special Tuple (stuple). 
+
+Stuple:
+
+* is len-N, for ND arrays
+* only one entry is (potentially) not ``slice(None)``
+* has knowledge of its own index
+* has knowledge of other axes (static or dynamically generated attributes)
+* can be composed with other stuples in a special way (??) --
+
+::
+
+  s1 --> ( slice(0,4), slice(None) )
+  s2 --> ( slice(None), slice(3,10) )
+  s1 <compose> s2 --> ( slice(0,4), slice(3,10) )
+
+* can be given a "parent" stuple when constructed, into which the new stuple
+  merges its own slicing in ``__getitem__``
+
+To chain slicing, the syntax would be like this:
+::
+
+  arr.aix.time[:4].freq[3:8]
+  --OR--
+  arr[ arr.aix.time[:4].freq[3:8] ]
+
+Chaining an axis on itself **will not** be implemented yet (possibly ever)::
+
+  arr.aix.time[:4].time[:2] --> raise error
