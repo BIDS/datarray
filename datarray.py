@@ -197,7 +197,7 @@ class Axis(object):
         self.index = index
         self.parent_arr = parent_arr
 
-        # If ticks is not None, label should be a string
+        # If ticks is not None, label should be defined
         if ticks is not None and label is None:
             raise ValueError('ticks only supported when Axis has a label')
 
@@ -236,10 +236,10 @@ class Axis(object):
             raise ValueError(e)
         
         # Validate uniqueness
-        t_dict = dict(zip(ticks, range(nticks)))
+        t_dict = dict(zip(ticks, xrange(nticks)))
         if len(t_dict) != nticks:
             raise ValueError("non-unique tick values not supported")
-        t_dict_reverse = dict(zip(range(nticks), ticks))
+        t_dict_reverse = dict(zip(xrange(nticks), ticks))
         return t_dict, t_dict_reverse
         
     def __len__(self):
