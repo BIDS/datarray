@@ -99,6 +99,10 @@ Stuple:
 * can be given a "parent" stuple when constructed, into which the new stuple
   merges its own slicing in ``__getitem__``
 
+Constructor prototype::
+
+  def __init__(self, *args, parent=None, index=None, name=None) ??
+
 To chain slicing, the syntax would be like this:
 ::
 
