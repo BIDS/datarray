@@ -112,3 +112,9 @@ def test__reordered_axes():
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
     
+def test_transpose():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    bt = b.T
+    yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
+    yield nt.assert_true, bt.shape == (2,3)
+    
