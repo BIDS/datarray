@@ -102,7 +102,7 @@ def test__pull_axis():
     yield nt.assert_equal, axes[:-1], _pull_axis(axes, c)
     new_axes = [a, Axis('z', 1, None)]
     yield nt.assert_equal, new_axes, _pull_axis(axes, t_pos)
-    
+
 
 def test__reordered_axes():
     a = Axis('x', 0, None)
@@ -111,10 +111,18 @@ def test__reordered_axes():
     res = _reordered_axes([a,b,c], (1,2,0))
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
-    
 
+    
 def test_axis_as_index():
     narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]),
                      labels=('a', 'b'))
     npt.assert_array_equal(np.sum(narr, axis=narr.axis.a),
                            [5, 7, 9])
+
+
+def test_transpose():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    bt = b.T
+    yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
+    yield nt.assert_true, bt.shape == (2,3)
+    

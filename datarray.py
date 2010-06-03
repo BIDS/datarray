@@ -594,12 +594,12 @@ class DataArray(np.ndarray):
 
         return obj
         
-    def transpose(self, axes):
+    def transpose(self, *axes):
         """ accept integer or named axes, reorder axes """
         # implement tuple-or-*args logic of np.transpose
         axes = list(axes)
         if not axes:
-            axes = range(self.ndim)
+            axes = range(self.ndim-1,-1,-1)
         # expand sequence if sequence passed as first and only arg
         elif len(axes) == 1:
             try:
