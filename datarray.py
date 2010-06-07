@@ -589,21 +589,99 @@ class DataArray(np.ndarray):
         # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
 
         # provide info for what's happening
-##         print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-##         print "obj     :", obj.shape  # dbg
-##         print "context :", context
+        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "obj     :", obj.shape  # dbg
+        print "context :", context
         
         if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
             other = context[1][1]
 ##             print "other   :", other.__class__
 
-            if isinstance(other,DataArray):
+            if not isinstance(other,DataArray):
+                return obj
+            
 ##                 print "found DataArray, comparing labels"
-                if self.labels != other.labels:
-                    raise NamedAxisError('labels must agree, received %s vs %s'%(self.labels,other.labels))
 
+            # walk back from the last axis on each array, check
+            # that the label and shape are acceptible for broadcasting
+            these_axes = self.axes[:]
+            those_axes = other.axes[:]
+            while these_axes and those_axes:
+                that_ax = those_axes.pop(-1)
+                this_ax = these_axes.pop(-1)
+                this_dim = self.shape[this_ax.index]
+                that_dim = other.shape[that_ax.index]
+                if that_ax.label != this_ax.label:
+                    # A valid label can be mis-matched IFF the other
+                    # (label, length) pair is (None, 1).
+                    # In this case, the singleton dimension should
+                    # adopt the label of the matching dimension in the
+                    # other array
+                    if (that_ax.label, that_dim) != (None, 1) and \
+                       (this_ax.label, this_dim) != (None, 1):
+                        raise NamedAxisError(
+                            'Axis labels are incompatible for '\
+                            'a binary operation: ' \
+                            '%s, %s'%(self.labels, other.labels)
+                            )
+
+                # XYZ: Does this dimension compatibility check happen
+                # before __array_prepare__ is even called???
+                if this_dim==1 or that_dim==1 or this_dim==that_dim:
+                    continue
+                raise NamedAxisError('Dimension with label %s has a '\
+                                     'mis-matched shape: ' \
+                                     '(%d, %d) '%(this_ax.label,
+                                                  this_dim,
+                                                  that_dim))
         return obj
+                    
+
+    def __array_wrap__(self, obj, context=None):
+        # provide info for what's happening
+        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "obj     :", obj.shape  # dbg
+        print "context :", context
+        
+        if context is not None and len(context[1]) > 1:
+            "binary ufunc operation"
+            other = context[1][1]
+##             print "other   :", other.__class__
+
+            if not isinstance(other,DataArray):
+                return obj
+            
+##                 print "found DataArray, comparing labels"
+
+            # walk back from the last axis on each array to get the
+            # correct labels/ticks
+            these_axes = self.axes[:]
+            those_axes = other.axes[:]
+            ax_spec = []
+            while these_axes and those_axes:
+                this_ax = these_axes.pop(-1)
+                that_ax = those_axes.pop(-1)
+                if this_ax.label is None:
+                    ax_spec.append(that_ax)
+                else:
+                    ax_spec.append(this_ax)
+            ax_spec = ax_spec[::-1]
+            # if the axes are not totally consumed on one array or the other,
+            # then grab those labels/ticks for the rest of the dims
+            if these_axes:
+                ax_spec = these_axes + ax_spec
+            elif those_axes:
+                ax_spec = those_axes + ax_spec
+        else:
+            ax_spec = self.axes[:]
+
+        res = obj.view(type(self))
+        new_axes = []
+        for i, ax in enumerate(ax_spec):
+            new_axes.append( Axis(ax.label, i, res, ticks=ax.ticks) )
+        _set_axes(res, new_axes)
+        return res
         
     def transpose(self, *axes):
         """ accept integer or named axes, reorder axes """

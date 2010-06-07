@@ -111,17 +111,15 @@ def test__reordered_axes():
     res = _reordered_axes([a,b,c], (1,2,0))
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
+
     
 def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     bt = b.T
     yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
     yield nt.assert_true, bt.shape == (2,3)
-    
-## def test_broadcast():
-##     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-##     a = DataArray([1, 1, 1], 'x')
 
+    
 def test_newaxis_slicing():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     b2 = b[np.newaxis]
@@ -131,3 +129,30 @@ def test_newaxis_slicing():
     b2 = b[:,np.newaxis]
     yield nt.assert_true, b2.shape == (3,1,2)
     yield nt.assert_true, (b2[:,0,:]==b).all()
+
+
+def test_broadcast():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    a = DataArray([1,0], 'y')
+    # both of these should work
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', 'y'], 'simple broadcast failed'
+    c = a + b
+    yield nt.assert_true, c.labels == ['x', 'y'], 'backwards simple broadcast failed'
+    
+    a = DataArray([1, 1, 1], 'x')
+    # this should work too
+    c = a[:,np.newaxis] + b
+    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast1 failed'
+    c = b + a[:,np.newaxis] 
+    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast2 failed'
+
+    b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
+    a = DataArray(np.random.randn(2,4), [None, 'y'])
+    # this should work
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with unlabeled dimensions failed'
+    # and this
+    a = DataArray(np.random.randn(2,1), [None, 'y'])
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with matched label, but singleton dimension failed'
