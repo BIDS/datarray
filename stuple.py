@@ -1,4 +1,4 @@
-## __all__ = ['stuple']
+__all__ = ['stuple', 'StupleSlicingError']
 from copy import copy
 
 class StupleSlicingError(Exception):
@@ -41,6 +41,5 @@ class proxy_stuple(object):
 
     def __getitem__(self, key):
         stup = stuple(*self._args, **self._kwargs)
-        print stup._axis, key
         return stup[key]
 

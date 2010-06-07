@@ -118,3 +118,16 @@ def test_transpose():
     yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
     yield nt.assert_true, bt.shape == (2,3)
     
+## def test_broadcast():
+##     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+##     a = DataArray([1, 1, 1], 'x')
+
+def test_newaxis_slicing():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    b2 = b[np.newaxis]
+    yield nt.assert_true, b2.shape == (1,) + b.shape
+    yield nt.assert_true, b2.axes[0].label == None
+
+    b2 = b[:,np.newaxis]
+    yield nt.assert_true, b2.shape == (3,1,2)
+    yield nt.assert_true, (b2[:,0,:]==b).all()

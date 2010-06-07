@@ -33,7 +33,8 @@ def test_slice_shapes():
     s_all = stuple( ( slice(None), )*len(axes), axes=axes )
 
     sub_arr = d_arr[ s_all.u[0].v[1] ]
-    yield assert_true, sub_arr.shape == (3,2)
+    exp_shape = d_arr.shape[:2]
+    yield assert_true,sub_arr.shape==exp_shape,'wrong slice shape'
 
     dt = d_arr.T
     # have to recreate stuple slicer with refs to new Axis objects..
@@ -41,7 +42,7 @@ def test_slice_shapes():
     s_all = stuple( ( slice(None), )*len(axes), axes=dt.axes )
 
     sub_arr = dt[ s_all.u[0].v[1] ]
-    yield assert_true, sub_arr.shape == (2,3)
+    yield assert_true,sub_arr.shape==exp_shape[::-1],'wrong slice shape in transpose'
 
 def test_slice_op():
     axes = d_arr.axes
