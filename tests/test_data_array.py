@@ -156,3 +156,37 @@ def test_broadcast():
     a = DataArray(np.random.randn(2,1), [None, 'y'])
     c = b + a
     yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with matched label, but singleton dimension failed'
+
+@nt.raises(NamedAxisError)
+def test_broadcast_fails1():
+    a = DataArray( np.random.randn(2,5,6), 'xyz' )
+    b = DataArray( np.random.randn(5,6), 'xz' )
+    c = a + b
+
+@nt.raises(ValueError)
+def test_broadcast_fails2():
+    a = DataArray( np.random.randn(2,5,6), 'xy' ) # last axis is unlabeled
+    b = DataArray( np.random.randn(2,6,6), 'xy' )
+    # this should fail simply because the dimensions are not matched
+    c = a + b
+    
+
+def test_axis_slicing():
+    np_arr = np.random.randn(3,4,5)
+    a = DataArray(np_arr, 'xyz')
+    b = a[ a.aix.y[:2].x[::2] ]
+    yield nt.assert_true, (b==a[::2,:2]).all(), 'unordered axis slicing failed'
+
+    b = a[ a.aix.z[:2] ]
+    yield nt.assert_true, (b==a.axis.z[:2]).all(), 'axis slicing inconsistent'
+    yield nt.assert_true, b.labels == ['x', 'y', 'z']
+
+def test_axis_slicing_both_ways():
+    a = DataArray(np.random.randn(3,4,5), 'xyz')
+
+    b1 = a.axis.y[::2].axis.x[1:]
+    b2 = a[ a.aix.y[::2].x[1:] ]
+
+    yield nt.assert_true, (b1==b2).all()
+    yield nt.assert_true, b1.labels == b2.labels
+    

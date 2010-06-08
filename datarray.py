@@ -334,16 +334,16 @@ class Axis(object):
             # We lost a dimension, drop the axis!
 ##             print 'Dropping axes' # dbg
             _set_axes(out, _pull_axis(parent_arr.axes, self))
-##         elif out.ndim > parent_arr_ndim:
-##             # We were indexed by a newaxis (None),
-##             # need to insert an unlabeled axis
-##             new_axis = self.__class__(None, out.ndim-1, parent_arr)
-##             newaxes = parent_arr.axes[:]
-##             new_ax_order = [ax.index for ax in newaxes]
-##             new_ax_order.insert(self.index, out.ndim-1)
-##             newaxes.append(new_axis)
-##             ro_axes = _reordered_axes(newaxes, new_ax_order)
-##             _set_axes(out, ro_axes)
+        elif out.ndim > parent_arr_ndim:
+            # We were indexed by a newaxis (None),
+            # need to insert an unlabeled axis before this axis
+            new_axis = self.__class__(None, out.ndim-1, parent_arr)
+            newaxes = parent_arr.axes[:]
+            new_ax_order = [ax.index for ax in newaxes]
+            new_ax_order.insert(self.index, out.ndim-1)
+            newaxes.append(new_axis)
+            ro_axes = _reordered_axes(newaxes, new_ax_order)
+            _set_axes(out, ro_axes)
             
         return out
         
@@ -546,6 +546,13 @@ class DataArray(np.ndarray):
 
         return arr
 
+    @property
+    def aix(self):
+        # Returns an anonymous slicing tuple that knows
+        # about this array's geometry
+        return stuple( ( slice(None), ) * self.ndim,
+                       axes = self.axes )
+
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
 
@@ -643,15 +650,14 @@ class DataArray(np.ndarray):
         print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
         print "obj     :", obj.shape  # dbg
         print "context :", context
-        
+
+        other = None
         if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
             other = context[1][1]
 ##             print "other   :", other.__class__
-
-            if not isinstance(other,DataArray):
-                return obj
             
+        if isinstance(other,DataArray):            
 ##                 print "found DataArray, comparing labels"
 
             # walk back from the last axis on each array to get the
@@ -800,6 +806,24 @@ def _reordered_axes(axes, axis_indices, parent=None):
     return new_axes
 
 def _make_singleton_axes(arr, key):
+    """
+    Parse the slicing key to determine whether the array should be
+    padded with singleton dimensions prior to slicing.
+
+    Parameters
+    ----------
+    arr : DataArray
+    key : slicing tuple
+
+    Returns
+    -------
+    (shape, axes, key)
+
+    These are the new shape, with singleton axes included; the new axes,
+    with an unlabeled Axis at each singleton dimension; and the new
+    slicing key, with `newaxis` keys replaced by slice(None)
+    """
+    
     if len(key) <= arr.ndim and None not in key:
         return arr.shape, arr.axes[:], key
 
@@ -819,7 +843,6 @@ def _make_singleton_axes(arr, key):
     new_axes = arr.axes[:]
     ax_order = []
     for k in key:
-##         new_key.append( slice(None) if k is None else k )
         if k is None:
             new_key.append(slice(None))
             new_dims.append(1)
@@ -836,9 +859,7 @@ def _make_singleton_axes(arr, key):
                 d_cnt += 1
             except IndexError:
                 raise IndexError('too many indices')
-##     arr.shape = tuple(new_dims)
     ro_axes = _reordered_axes(new_axes, ax_order)
-##     _set_axes(arr, ro_axes)
     return tuple(new_dims), ro_axes, tuple(new_key)
     
     

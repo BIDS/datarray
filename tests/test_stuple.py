@@ -12,13 +12,23 @@ def test_a_stuple_is_a_tuple():
     s = stuple( (1,2,3,4) )
     yield assert_true, s == (1,2,3,4)
 
-@raises(StupleSlicingError)
-def test_slicing_exception1():
+## @raises(StupleSlicingError)
+## def test_slicing_exception1():
+##     axes = d_arr.axes
+##     # s_anon is not registered with an index, and so
+##     # one should not be able to slice it
+##     s_anon = stuple( ( slice(None), )*len(axes), axes=axes )
+##     s_anon[0]
+
+def test_slicing_behavior():
     axes = d_arr.axes
-    # s_anon is not registered with an index, and so
-    # one should not be able to slice it
     s_anon = stuple( ( slice(None), )*len(axes), axes=axes )
-    s_anon[0]
+    sx = s_anon.x[::2]
+    yield assert_true, sx == (slice(None,None,2),) + (slice(None),)*3
+    # now, since sx is not registered with an axis,
+    # it slices as a tuple (not a stuple)
+    yield assert_true, sx[0] == slice(None,None,2)
+    
 
 @raises(StupleSlicingError)
 def test_slicing_exception2():
