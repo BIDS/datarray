@@ -587,22 +587,21 @@ class DataArray(np.ndarray):
         #   names set up in this method remains static
 
         
-##         print key
         # Cases
         if isinstance(key, list) or isinstance(key, np.ndarray):
             # fancy indexing
             # XXX need to be cast to an "ordinary" ndarray
             raise NotImplementedError
-        if not isinstance(key, tuple):
+        if key is None:
             key = (key,)
 
-        old_shape = self.shape
-        old_axes = self.axes[:]
-        new_shape, new_axes, key = _make_singleton_axes(self, key)
-        # Will undo this later
-        self.shape = new_shape
-        _set_axes(self, new_axes)
         if isinstance(key, tuple):
+            old_shape = self.shape
+            old_axes = self.axes[:]
+            new_shape, new_axes, key = _make_singleton_axes(self, key)
+            # Will undo this later
+            self.shape = new_shape
+            _set_axes(self, new_axes)
             # data is accessed recursively, starting with
             # the full array
             arr = self
@@ -612,13 +611,29 @@ class DataArray(np.ndarray):
             # as the index of a given axis may change.
             names = [a.name for a in self.axes]
 
+            # If an Axis gets sliced out entirely, then any following
+            # unlabeled Axis in the array will spontaneously change name.
+            # So anticipate the name change here.
+            reduction = 0
+            adjustments = []
+            for k in key:
+                adjustments.append(reduction)
+                if not isinstance(k, slice):
+                    # reduce the idx # on the remaining default labels
+                    reduction -= 1
+
+            names = [n if a.label else '_%d'%(a.index+r)
+                     for n, a, r in zip(names, self.axes, adjustments)]
+
             for slice_or_int, name in zip(key, names):
                 arr = arr.axis[name][slice_or_int]
+
+            # restore old shape and axes
+            self.shape = old_shape
+            _set_axes(self, old_axes)
         else:
             arr = self.axes[0][key]
 
-        self.shape = old_shape
-        _set_axes(self, old_axes)
         return arr
 
     def __str__(self):
@@ -670,10 +685,27 @@ def _reordered_axes(axes, axis_indices, parent=None):
         new_axes.append(new_ax)
     return new_axes
 
+def _expand_ellipsis(key, ndim):
+    "Expand the slicing tuple if the Ellipsis object is present."
+    # Ellipsis can only occur once (not totally the same as NumPy),
+    # which apparently allows multiple Ellipses to follow one another
+    kl = list(key)
+    ecount = kl.count(Ellipsis)
+    if ecount > 1:
+        raise IndexError('invalid index')
+    if ecount < 1:
+        return key
+    e_index = kl.index(Ellipsis)
+    kl_end = kl[e_index+1:] if e_index < len(key)-1 else []
+    kl_beg = kl[:e_index]
+    kl_middle = [slice(None)] * (ndim - len(kl_end) - len(kl_beg))
+    return tuple( kl_beg + kl_middle + kl_end )
+
 def _make_singleton_axes(arr, key):
     """
     Parse the slicing key to determine whether the array should be
-    padded with singleton dimensions prior to slicing.
+    padded with singleton dimensions prior to slicing. Also expands
+    any Ellipses in the slicing key.
 
     Parameters
     ----------
@@ -689,6 +721,7 @@ def _make_singleton_axes(arr, key):
     slicing key, with `newaxis` keys replaced by slice(None)
     """
     
+    key = _expand_ellipsis(key, arr.ndim)
     if len(key) <= arr.ndim and None not in key:
         return arr.shape, arr.axes[:], key
 
@@ -696,7 +729,6 @@ def _make_singleton_axes(arr, key):
     # Boost up the slices to full "rank" ( can cut it down later for savings )
     n_new_dims = len(filter(lambda x: x is None, key))
     key = key + (slice(None),) * (arr.ndim + n_new_dims - len(key))
-    
     # wherever there is a None in the key,
     # * replace it with slice(None)
     # * place a new dimension with length 1 in the shape,
@@ -725,6 +757,10 @@ def _make_singleton_axes(arr, key):
             except IndexError:
                 raise IndexError('too many indices')
     ro_axes = _reordered_axes(new_axes, ax_order)
+    # it seems we have to leave in at least one slicing element
+    # in order to get a new array
+    while len(new_key)>1 and new_key[-1] == slice(None):
+        new_key.pop()
     return tuple(new_dims), ro_axes, tuple(new_key)
     
     
