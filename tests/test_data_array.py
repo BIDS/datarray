@@ -125,4 +125,143 @@ def test_transpose():
     bt = b.T
     yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
     yield nt.assert_true, bt.shape == (2,3)
+
+# -- Tests for slicing with "newaxis" ----------------------------------------
+def test_newaxis_slicing():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    b2 = b[np.newaxis]
+    yield nt.assert_true, b2.shape == (1,) + b.shape
+    yield nt.assert_true, b2.axes[0].label == None
+
+    b2 = b[:,np.newaxis]
+    yield nt.assert_true, b2.shape == (3,1,2)
+    yield nt.assert_true, (b2[:,0,:]==b).all()
+
+# -- Testing broadcasting features -------------------------------------------
+def test_broadcast():
+    b = DataArray([[1,2],[3,4],[5,6]], 'xy')
+    a = DataArray([1,0], 'y')
+    # both of these should work
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', 'y'], 'simple broadcast failed'
+    c = a + b
+    yield nt.assert_true, c.labels == ['x', 'y'], 'backwards simple broadcast failed'
     
+    a = DataArray([1, 1, 1], 'x')
+    # this should work too
+    c = a[:,np.newaxis] + b
+    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast1 failed'
+    c = b + a[:,np.newaxis] 
+    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast2 failed'
+
+    b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
+    a = DataArray(np.random.randn(2,4), [None, 'y'])
+    # this should work
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with unlabeled dimensions failed'
+    # and this
+    a = DataArray(np.random.randn(2,1), [None, 'y'])
+    c = b + a
+    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with matched label, but singleton dimension failed'
+
+# -- Testing slicing failures ------------------------------------------------
+@nt.raises(NamedAxisError)
+def test_broadcast_fails1():
+    a = DataArray( np.random.randn(2,5,6), 'xyz' )
+    b = DataArray( np.random.randn(5,6), 'xz' )
+    c = a + b
+
+@nt.raises(ValueError)
+def test_broadcast_fails2():
+    a = DataArray( np.random.randn(2,5,6), 'xy' ) # last axis is unlabeled
+    b = DataArray( np.random.randn(2,6,6), 'xy' )
+    # this should fail simply because the dimensions are not matched
+    c = a + b
+
+@nt.raises(IndexError)
+def test_indexing_fails():
+    a = DataArray( np.random.randn(2,5,6), 'xy' )
+    a[:2,:1,:2,:5]
+
+@nt.raises(IndexError)
+def test_ambiguous_ellipsis_fails():
+    a = DataArray( np.random.randn(2,5,6), 'xy' )
+    a[...,0,...]
+
+def test_ellipsis_slicing():
+    a = DataArray( np.random.randn(2,5,6), 'xy' )
+    yield nt.assert_true, (a[...,0] == a[:,:,0]).all(), \
+          'slicing with ellipsis failed'
+    yield nt.assert_true, (a[0,...] == a[0]).all(), \
+          'slicing with ellipsis failed'
+    yield nt.assert_true, (a[0,...,0] == a[0,:,0]).all(), \
+          'slicing with ellipsis failed'
+
+def test_shifty_labels():
+    arr = np.random.randn(2,5,6)
+    a = DataArray( arr, 'xy' )
+    # slicing out the "x" Axis triggered the unlabeled axis to change
+    # name from "_2" to "_1".. make sure that this change is mapped
+    b = a[0,:2]
+    assert (b == arr[0,:2]).all(), 'shift labels strike again!'
+
+# -- Tests with "aix" slicing ------------------------------------------------
+def test_axis_slicing():
+    np_arr = np.random.randn(3,4,5)
+    a = DataArray(np_arr, 'xyz')
+    b = a[ a.aix.y[:2].x[::2] ]
+    yield nt.assert_true, (b==a[::2,:2]).all(), 'unordered axis slicing failed'
+
+    b = a[ a.aix.z[:2] ]
+    yield nt.assert_true, (b==a.axis.z[:2]).all(), 'axis slicing inconsistent'
+    yield nt.assert_true, b.labels == ['x', 'y', 'z']
+
+def test_axis_slicing_both_ways():
+    a = DataArray(np.random.randn(3,4,5), 'xyz')
+
+    b1 = a.axis.y[::2].axis.x[1:]
+    b2 = a[ a.aix.y[::2].x[1:] ]
+
+    yield nt.assert_true, (b1==b2).all()
+    yield nt.assert_true, b1.labels == b2.labels
+    
+# -- Testing utility functions -----------------------------------------------
+from datarray.datarray import _expand_ellipsis, _make_singleton_axes
+
+def test_ellipsis_expansion():
+    slicing = ( slice(2), Ellipsis, 2 )
+    fixed = _expand_ellipsis(slicing, 4)
+    should_be = ( slice(2), slice(None), slice(None), 2 )
+    yield nt.assert_true, fixed==should_be, 'wrong slicer1'
+    fixed = _expand_ellipsis(slicing, 2)
+    should_be = ( slice(2), 2 )
+    yield nt.assert_true, fixed==should_be, 'wrong slicer2'
+
+def test_singleton_axis_prep():
+    b = DataArray( np.random.randn(5,6), 'xz' )
+    slicing = ( None, )
+    shape, axes, key = _make_singleton_axes(b, slicing)
+
+    key_should_be = (slice(None), ) # should be trimmed
+    shape_should_be = (1,5,6)
+    ax_should_be = [ Axis(l, i, b) for i, l in enumerate((None, 'x', 'z')) ]
+
+    yield nt.assert_true, key_should_be==key, 'key translated poorly'
+    yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
+    yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
+          'axes computed poorly'
+
+def test_singleton_axis_prep2():
+    # a little more complicated
+    b = DataArray( np.random.randn(5,6), 'xz' )
+    slicing = ( 0, None )
+    shape, axes, key = _make_singleton_axes(b, slicing)
+
+    key_should_be = (0, ) # should be trimmed
+    shape_should_be = (5,1,6)
+    ax_should_be = [ Axis(l, i, b) for i, l in enumerate(('x', None, 'z')) ]
+
+    yield nt.assert_true, key_should_be==key, 'key translated poorly'
+    yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
+    yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
+          'axes computed poorly'

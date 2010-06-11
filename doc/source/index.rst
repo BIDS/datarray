@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 1
 
    design_questions/index.rst
+   basic_data_array.rst
 
 Indices and tables
 ==================

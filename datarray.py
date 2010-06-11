@@ -1,138 +1,3 @@
-"""Data arrays...
-
-Questions
-
-- How to handle broadcasting? Use UnnamedAxis OK?
-
-- Slicing
-- Broadcasting
-- Transposition
-- Swapaxes
-- Rollaxes
-- Iteration
-- Wrapping functions with 'axis=' kw.
-
-Basic array creation and axis access:
-
->>> narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
->>> narr.labels
-['a', 'b', 'c']
->>> narr.axis.a
-Axis(label='a', index=0, ticks=None)
->>> narr.axis.b
-Axis(label='b', index=1, ticks=None)
->>> narr.axis.c
-Axis(label='c', index=2, ticks=None)
->>> narr.shape
-(1, 2, 3)
-
-Not all axes must necessarily be explicitly labeled, since None is a valid axis
-label:
->>> narr2 = DataArray(np.zeros((1,2,3)), labels=('a', None, 'b' ))
->>> narr2.labels
-['a', None, 'b']
-
-If no label is given for an axis, None is implicitly assumed.  So trailing axes
-without labels will be labeled as None:
->>> narr2 = DataArray(np.zeros((1,2,3,2)), labels=('a','b' ))
->>> narr2.labels
-['a', 'b', None, None]
-
-Combining named and unnamed arrays:
->>> res = narr + 5 # OK
->>> res = narr + np.zeros((1,2,3)) # OK
->>> n2 = DataArray(np.ones((1,2,3)), labels=('a','b','c'))
->>> res = narr + n2 # OK
-
->>> n3 = DataArray(np.ones((1,2,3)), labels=('x','b','c'))
-
->>> res = narr + n3
-Traceback (most recent call last):
-...
-ValueError: mismatched labels: arrays can not be broadcast to matching label set
-
-Now, what about matching names, but different indices for the names?
-
->>> n4 = DataArray(np.ones((2,1,3)), labels=('b','a','c'))
->>> res = narr + n4 # is this OK?
-Traceback (most recent call last):
-...
-ValueError: mismatched labels: arrays can not be broadcast to matching label set
-
-Maybe this is too much magic?  Probably the names and the position has
-to be the same, and the above example should raise an error.  At least
-for now we will raise an error, and review later.
-
-What about broadcasting between two named arrays, where the broadcasting
-adds an axis?
-
->>> a = DataArray(np.zeros((3,)), labels=('a',))
->>> b = DataArray(np.zeros((2,3)), labels=('a','b'))
->>> res = a + b
-Traceback (most recent call last):
-...
-ValueError: mismatched labels: arrays can not be broadcast to matching label set
-
-Slicing
->>> narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
-
->>> narr.axis.a
-Axis(label='a', index=0, ticks=None)
->>> narr.axis.a[0]
-DataArray([[ 0.,  0.,  0.],
-       [ 0.,  0.,  0.]])
->>> narr.axis.a[0].axes
-[Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None)]
-
->>> narr[0,:].shape
-(2, 3)
->>> narr[0,:].axes
-[Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None)]
-
->>> narr.axis.a[0].axes == narr[0,:].axes
-True
-
-ToDo
-====
-
-- Implementing axes with values in them (a la Per Sederberg)
-
-- Support DataArray instances with mixed axes: simple ones with no values and
-'fancy' ones with data in them.  Syntax?
-
-DataArray.from_names(data, labels=['a','b','c'])
-
-DataArray(data, axes=[('a',[1,2,3]), ('b',['one','two']),
-('c',['red','black'])])
-
-DataArray(data, axes=[('a',[1,2,3]), ('b',None), ('c',['red','black'])])
-
-- We need to support unnamed axes.
-
-- Units support (Darren's)
-
-- Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
-access data via the .axis objects alone.
-
-- "Enum dtype", could be useful for event selection.
-
-- "Ordered factors"? Something R supports.
-
-- How many axis classes?
-
-
-Axis api: if a is an axis from an array: a = x.axis.a
-
-a.at(key): return the slice at that key, with one less dimension than x
-a.keep(keys): join slices for given keys, dims=dims(x)
-a.drop(keys): like keep, but the opposite
-
-a[i] valid cases:
-i: integer => normal numpy scalar indexing, one less dim than x
-i: slice: numpy view slicing.  same dims as x, must recover the ticks 
-i: list/array: numpy fancy indexing, as long as the index list is 1d only.
-"""
-
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
@@ -141,6 +6,8 @@ import copy
 
 import numpy as np
 import nose.tools as nt
+
+from stuple import *
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -278,6 +145,7 @@ class Axis(object):
         # `key` can be one of:
         # * integer (more generally, any valid scalar index)
         # * slice
+        # * np.newaxis (ie, None)
         # * list (fancy indexing)
         # * array (fancy indexing)
         #
@@ -327,10 +195,21 @@ class Axis(object):
 
             _set_axes(out, newaxes)
 
-        if out.ndim != parent_arr_ndim:
+        if out.ndim < parent_arr_ndim:
             # We lost a dimension, drop the axis!
-            print 'Dropping axes' # dbg
+##             print 'Dropping axes' # dbg
             _set_axes(out, _pull_axis(parent_arr.axes, self))
+        elif out.ndim > parent_arr_ndim:
+            # We were indexed by a newaxis (None),
+            # need to insert an unlabeled axis before this axis
+            new_axis = self.__class__(None, out.ndim-1, parent_arr)
+            newaxes = parent_arr.axes[:]
+            new_ax_order = [ax.index for ax in newaxes]
+            new_ax_order.insert(self.index, out.ndim-1)
+            newaxes.append(new_axis)
+            ro_axes = _reordered_axes(newaxes, new_ax_order)
+            _set_axes(out, ro_axes)
+            
         return out
         
     def at(self, tick):
@@ -455,7 +334,7 @@ def _pull_axis(axes, target_axis):
         if a.index != target_axis.index:
             newaxes.append(a.__class__(a.label, c, parent_arr, ticks=a.ticks))
             c += 1
-    return newaxes
+    return newaxes    
 
 def _set_axes(dest, in_axes):
     """Set the axes in `dest` from `in_axes`.
@@ -514,7 +393,7 @@ class DataArray(np.ndarray):
                 return arr
             labels = []
         elif len(labels) > arr.ndim:
-            raise NamedAxisError("labels list should have length < array ndim")
+            raise NamedAxisError("labels list should have length <= array ndim")
         
         labels = list(labels) + [None]*(arr.ndim - len(labels))
         axes = []
@@ -535,6 +414,13 @@ class DataArray(np.ndarray):
 
         return arr
 
+    @property
+    def aix(self):
+        # Returns an anonymous slicing tuple that knows
+        # about this array's geometry
+        return stuple( ( slice(None), ) * self.ndim,
+                       axes = self.axes )
+
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
 
@@ -548,13 +434,13 @@ class DataArray(np.ndarray):
            None if triggered from DataArray.__new__ call
         """
         
-        print "finalizing DataArray" # dbg
+##         print "finalizing DataArray" # dbg
         
         # Ref: see http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
         
         # provide info for what's happening
-        print "finalize:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
+##         print "finalize:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+##         print "obj     :", obj.shape  # dbg
         # provide more info
         if obj is None: # own constructor, we're done
             return
@@ -563,7 +449,7 @@ class DataArray(np.ndarray):
             return
         # new-from-template: we just copy the labels from the template,
         # and hope the calling rountine knows what to do with the output
-        print 'setting axes on self from obj' # dbg
+##         print 'setting axes on self from obj' # dbg
         _set_axes(self, obj.axes)
             
         # validate the axes
@@ -573,7 +459,7 @@ class DataArray(np.ndarray):
         """Called at the beginning of each ufunc.
         """
 
-        print "preparing DataArray" # dbg
+##         print "preparing DataArray" # dbg
 
         # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
 
@@ -582,17 +468,94 @@ class DataArray(np.ndarray):
         print "obj     :", obj.shape  # dbg
         print "context :", context
         
-        if len(context[1]) > 1:
+        if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
             other = context[1][1]
-            print "other   :", other.__class__
+##             print "other   :", other.__class__
 
-            if isinstance(other,DataArray):
-                print "found DataArray, comparing labels"
-                if self.labels != other.labels:
-                    raise NamedAxisError('labels must agree, received %s vs %s'%(self.labels,other.labels))
+            if not isinstance(other,DataArray):
+                return obj
+            
+##                 print "found DataArray, comparing labels"
 
+            # walk back from the last axis on each array, check
+            # that the label and shape are acceptible for broadcasting
+            these_axes = self.axes[:]
+            those_axes = other.axes[:]
+            while these_axes and those_axes:
+                that_ax = those_axes.pop(-1)
+                this_ax = these_axes.pop(-1)
+                this_dim = self.shape[this_ax.index]
+                that_dim = other.shape[that_ax.index]
+                if that_ax.label != this_ax.label:
+                    # A valid label can be mis-matched IFF the other
+                    # (label, length) pair is (None, 1).
+                    # In this case, the singleton dimension should
+                    # adopt the label of the matching dimension in the
+                    # other array
+                    if (that_ax.label, that_dim) != (None, 1) and \
+                       (this_ax.label, this_dim) != (None, 1):
+                        raise NamedAxisError(
+                            'Axis labels are incompatible for '\
+                            'a binary operation: ' \
+                            '%s, %s'%(self.labels, other.labels)
+                            )
+
+                # XYZ: Does this dimension compatibility check happen
+                # before __array_prepare__ is even called???
+                if this_dim==1 or that_dim==1 or this_dim==that_dim:
+                    continue
+                raise NamedAxisError('Dimension with label %s has a '\
+                                     'mis-matched shape: ' \
+                                     '(%d, %d) '%(this_ax.label,
+                                                  this_dim,
+                                                  that_dim))
         return obj
+                    
+
+    def __array_wrap__(self, obj, context=None):
+        # provide info for what's happening
+        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        print "obj     :", obj.shape  # dbg
+        print "context :", context
+
+        other = None
+        if context is not None and len(context[1]) > 1:
+            "binary ufunc operation"
+            other = context[1][1]
+##             print "other   :", other.__class__
+            
+        if isinstance(other,DataArray):            
+##                 print "found DataArray, comparing labels"
+
+            # walk back from the last axis on each array to get the
+            # correct labels/ticks
+            these_axes = self.axes[:]
+            those_axes = other.axes[:]
+            ax_spec = []
+            while these_axes and those_axes:
+                this_ax = these_axes.pop(-1)
+                that_ax = those_axes.pop(-1)
+                if this_ax.label is None:
+                    ax_spec.append(that_ax)
+                else:
+                    ax_spec.append(this_ax)
+            ax_spec = ax_spec[::-1]
+            # if the axes are not totally consumed on one array or the other,
+            # then grab those labels/ticks for the rest of the dims
+            if these_axes:
+                ax_spec = these_axes + ax_spec
+            elif those_axes:
+                ax_spec = those_axes + ax_spec
+        else:
+            ax_spec = self.axes[:]
+
+        res = obj.view(type(self))
+        new_axes = []
+        for i, ax in enumerate(ax_spec):
+            new_axes.append( Axis(ax.label, i, res, ticks=ax.ticks) )
+        _set_axes(res, new_axes)
+        return res
         
     def transpose(self, *axes):
         """ accept integer or named axes, reorder axes """
@@ -614,28 +577,77 @@ class DataArray(np.ndarray):
 
     def __getitem__(self, key):
         """Support x[k] access."""
+        # Slicing keys:
+        # * a single int
+        # * a single newaxis
+        # * a tuple with length <= self.ndim (may have newaxes)
+        # * a tuple with length > self.ndim (MUST have newaxes)
+        # * list, array, etc for fancy indexing (not implemented)
+
+        # Prickly points..
+        # * When slicing causes a None-labeled dimension to
+        #   change name, say from _1 to _0, but the list of
+        #   names set up in this method remains static
+
+        
         # Cases
         if isinstance(key, list) or isinstance(key, np.ndarray):
             # fancy indexing
             # XXX need to be cast to an "ordinary" ndarray
             raise NotImplementedError
+        if key is None:
+            key = (key,)
 
         if isinstance(key, tuple):
+            old_shape = self.shape
+            old_axes = self.axes[:]
+            new_shape, new_axes, key = _make_singleton_axes(self, key)
+            # Will undo this later
+            self.shape = new_shape
+            _set_axes(self, new_axes)
             # data is accessed recursively, starting with
             # the full array
             arr = self
 
-            # we must copy of the names of the axes
+            # We must copy of the names of the axes
             # before looping through the elements of key,
-            # as the index of a given axis may change
-
+            # as the index of a given axis may change.
             names = [a.name for a in self.axes]
+
+            # If an Axis gets sliced out entirely, then any following
+            # unlabeled Axis in the array will spontaneously change name.
+            # So anticipate the name change here.
+            reduction = 0
+            adjustments = []
+            for k in key:
+                adjustments.append(reduction)
+                if not isinstance(k, slice):
+                    # reduce the idx # on the remaining default labels
+                    reduction -= 1
+
+            names = [n if a.label else '_%d'%(a.index+r)
+                     for n, a, r in zip(names, self.axes, adjustments)]
+
             for slice_or_int, name in zip(key, names):
                 arr = arr.axis[name][slice_or_int]
+
+            # restore old shape and axes
+            self.shape = old_shape
+            _set_axes(self, old_axes)
         else:
             arr = self.axes[0][key]
+
         return arr
-    
+
+    def __str__(self):
+        s = super(DataArray, self).__str__()
+        s = '\n'.join([s, str(self.labels)])
+        return s
+
+    def __repr__(self):
+        s = super(DataArray, self).__repr__()
+        s = '\n'.join([s, str(self.labels)])
+        return s
     
 def _reordered_axes(axes, axis_indices, parent=None):
     ''' Perform axis reordering according to `axis_indices`
@@ -676,3 +688,84 @@ def _reordered_axes(axes, axis_indices, parent=None):
         new_axes.append(new_ax)
     return new_axes
 
+def _expand_ellipsis(key, ndim):
+    "Expand the slicing tuple if the Ellipsis object is present."
+    # Ellipsis can only occur once (not totally the same as NumPy),
+    # which apparently allows multiple Ellipses to follow one another
+    kl = list(key)
+    ecount = kl.count(Ellipsis)
+    if ecount > 1:
+        raise IndexError('invalid index')
+    if ecount < 1:
+        return key
+    e_index = kl.index(Ellipsis)
+    kl_end = kl[e_index+1:] if e_index < len(key)-1 else []
+    kl_beg = kl[:e_index]
+    kl_middle = [slice(None)] * (ndim - len(kl_end) - len(kl_beg))
+    return tuple( kl_beg + kl_middle + kl_end )
+
+def _make_singleton_axes(arr, key):
+    """
+    Parse the slicing key to determine whether the array should be
+    padded with singleton dimensions prior to slicing. Also expands
+    any Ellipses in the slicing key.
+
+    Parameters
+    ----------
+    arr : DataArray
+    key : slicing tuple
+
+    Returns
+    -------
+    (shape, axes, key)
+
+    These are the new shape, with singleton axes included; the new axes,
+    with an unlabeled Axis at each singleton dimension; and the new
+    slicing key, with `newaxis` keys replaced by slice(None)
+    """
+    
+    key = _expand_ellipsis(key, arr.ndim)
+    if len(key) <= arr.ndim and None not in key:
+        return arr.shape, arr.axes[:], key
+
+    # The full slicer will be length=arr.ndim + # of dummy-dims..
+    # Boost up the slices to full "rank" ( can cut it down later for savings )
+    n_new_dims = len(filter(lambda x: x is None, key))
+    key = key + (slice(None),) * (arr.ndim + n_new_dims - len(key))
+    # wherever there is a None in the key,
+    # * replace it with slice(None)
+    # * place a new dimension with length 1 in the shape,
+    # * and add a new unlabeled Axis to the axes
+    new_dims = []
+    new_key = []
+    d_cnt = 0
+    new_ax_pos = arr.ndim
+    new_axes = arr.axes[:]
+    ax_order = []
+    for k in key:
+        if k is None:
+            new_key.append(slice(None))
+            new_dims.append(1)
+            # add a new Axis at the end of the list, then reorder
+            # the list later to ensure the Axis indices are accurate
+            new_axes.append(Axis(None, new_ax_pos, arr))
+            ax_order.append(new_ax_pos)
+            new_ax_pos += 1
+        else:
+            new_key.append(k)
+            try:
+                new_dims.append(arr.shape[d_cnt])
+                ax_order.append(d_cnt)
+                d_cnt += 1
+            except IndexError:
+                raise IndexError('too many indices')
+    ro_axes = _reordered_axes(new_axes, ax_order)
+    # it seems we have to leave in at least one slicing element
+    # in order to get a new array
+    while len(new_key)>1 and new_key[-1] == slice(None):
+        new_key.pop()
+    return tuple(new_dims), ro_axes, tuple(new_key)
+    
+    
+
+    
