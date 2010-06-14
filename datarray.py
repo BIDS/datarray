@@ -13,6 +13,32 @@ from stuple import *
 # Classes and functions
 #-----------------------------------------------------------------------------
 
+def _apply_operation(opname):
+    
+    super_op = getattr(np.ndarray, opname)
+    def runs_op(*args, **kwargs):
+        inst = args[0]
+        axis = kwargs.pop('axis', None)
+        if not isinstance(inst, DataArray):
+            # do nothing special
+            return super_op(*args, **kwargs)
+        # is this correct?
+        if axis is None:
+            return super_op(*args, **kwargs)
+
+        axes = copy.copy(inst.axes)
+        # try to convert a named Axis to an integer..
+        # don't try to catch an error
+        axis_idx = _names_to_numbers(inst.axes, [axis])[0]
+        axes = _pull_axis(axes, inst.axes[axis_idx])
+        kwargs['axis'] = axis_idx
+        arr = super_op(*args, **kwargs)
+        _set_axes(arr, axes)
+        return arr
+    runs_op.func_name = opname
+    runs_op.func_doc = super_op.__doc__
+    return runs_op
+
 class NamedAxisError(Exception):
     pass
 
@@ -298,7 +324,9 @@ class Axis(object):
 
 
 def _names_to_numbers(axes, ax_ids):
-    ''' Convert any axis names to axis indices '''
+    """
+    Convert any axis names to axis indices. Pass through any integer ax_id.
+    """
     proc_ids = []
     for ax_id in ax_ids:
         if isinstance(ax_id, basestring):
@@ -554,24 +582,6 @@ class DataArray(np.ndarray):
         _set_axes(res, new_axes)
         return res
         
-    def transpose(self, *axes):
-        """ accept integer or named axes, reorder axes """
-        # implement tuple-or-*args logic of np.transpose
-        axes = list(axes)
-        if not axes:
-            axes = range(self.ndim-1,-1,-1)
-        # expand sequence if sequence passed as first and only arg
-        elif len(axes) == 1:
-            try:
-                axes = axes[0][:]
-            except TypeError:
-                pass
-            stop
-        proc_axids = _names_to_numbers(self.axes, axes)
-        out = np.ndarray.transpose(self, proc_axids)
-        _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
-        return out
-
     def __getitem__(self, key):
         """Support x[k] access."""
         # Slicing keys:
@@ -580,12 +590,6 @@ class DataArray(np.ndarray):
         # * a tuple with length <= self.ndim (may have newaxes)
         # * a tuple with length > self.ndim (MUST have newaxes)
         # * list, array, etc for fancy indexing (not implemented)
-
-        # Prickly points..
-        # * When slicing causes a None-labeled dimension to
-        #   change name, say from _1 to _0, but the list of
-        #   names set up in this method remains static
-
         
         # Cases
         if isinstance(key, list) or isinstance(key, np.ndarray):
@@ -645,6 +649,58 @@ class DataArray(np.ndarray):
         s = super(DataArray, self).__repr__()
         s = '\n'.join([s, str(self.labels)])
         return s
+
+    # Methods from ndarray
+
+    def transpose(self, *axes):
+        # implement tuple-or-*args logic of np.transpose
+        axes = list(axes)
+        if not axes:
+            axes = range(self.ndim-1,-1,-1)
+        # expand sequence if sequence passed as first and only arg
+        elif len(axes) == 1:
+            try:
+                axes = axes[0][:]
+            except TypeError:
+                pass
+            stop
+        proc_axids = _names_to_numbers(self.axes, axes)
+        out = np.ndarray.transpose(self, proc_axids)
+        _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
+        return out
+
+    transpose.func_doc = np.ndarray.transpose.__doc__
+
+    def swapaxes(self, axis1, axis2):
+        # form a transpose operation with axes specified
+        # by (axis1, axis2) swapped
+        axis1, axis2 = _names_to_numbers(self.axes, [axis1, axis2])
+        ax_idx = range(self.ndim)
+        tmp = ax_idx[axis1]
+        ax_idx[axis1] = ax_idx[axis2]
+        ax_idx[axis2] = tmp
+        out = np.ndarray.transpose(self, ax_idx)
+        _set_axes(out, _reordered_axes(self.axes, ax_idx, parent=out))
+        return out
+
+    swapaxes.func_doc = np.ndarray.swapaxes.__doc__
+
+    mean = _apply_operation('mean')
+    var = _apply_operation('var')
+    std = _apply_operation('std')
+
+##     ptp = _apply_operation('ptp') # FAILING IN __array_prepare__
+    min = _apply_operation('min')
+    max = _apply_operation('max')
+
+    sum = _apply_operation('sum')
+    prod = _apply_operation('prod')
+    
+    ### these change the meaning of the axes..
+    ### should probably return ndarrays
+    argmax = _apply_operation('argmax')
+    argmin = _apply_operation('argmin')
+    argsort = _apply_operation('argsort')
     
 def _reordered_axes(axes, axis_indices, parent=None):
     ''' Perform axis reordering according to `axis_indices`
@@ -763,6 +819,4 @@ def _make_singleton_axes(arr, key):
         new_key.pop()
     return tuple(new_dims), ro_axes, tuple(new_key)
     
-    
-
     

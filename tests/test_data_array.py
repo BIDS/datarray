@@ -8,7 +8,6 @@ from datarray.datarray import Axis, DataArray, NamedAxisError, \
 import nose.tools as nt
 import numpy.testing as npt
 
-
 def test_axis_equal():
     ax1 = Axis('aname', 0, None)
     ax2 = Axis('aname', 0, None)
@@ -116,9 +115,61 @@ def test__reordered_axes():
 def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     bt = b.T
+    c = DataArray([ [1,3,5], [2,4,6] ], 'yx')
     yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
     yield nt.assert_true, bt.shape == (2,3)
+    yield nt.assert_true, (bt==c).all()
 
+def test_swapaxes():
+    n_arr = np.random.randn(2,4,3)
+    a = DataArray(n_arr, 'xyz')
+    b = a.swapaxes('x', 'z')
+    c = DataArray(n_arr.transpose(2,1,0), 'zyx')
+    yield nt.assert_true, (c==b).all(), 'data not equal in swapaxes test'
+    for ax1, ax2 in zip(b.axes, c.axes):
+        yield nt.assert_true, ax1==ax2, 'axes not equal in swapaxes test'
+
+# -- Tests for wrapped ndarray methods ---------------------------------------
+
+_failing_methods = ['ptp']
+_other_wraps = ['argmax', 'argmin', 'argsort']
+_methods = ['mean', 'var', 'std', 'min', 'max', 'sum', 'prod'] + _other_wraps
+def assert_data_correct(d_arr, op, axis):
+    from datarray.datarray import _names_to_numbers 
+    super_opr = getattr(np.ndarray, op)
+    axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
+    d1 = np.asarray(super_opr(d_arr, axis=axis_idx))
+    opr = getattr(d_arr, op)
+    d2 = np.asarray(opr(axis=axis))
+    assert (d1==d2).all(), 'data computed incorrectly on operation %s'%op
+
+def assert_axes_correct(d_arr, op, axis):
+    from datarray.datarray import _names_to_numbers, _pull_axis
+    opr = getattr(d_arr, op)
+    d = opr(axis=axis)
+    axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
+    axes = _pull_axis(d_arr.axes, d_arr.axes[axis_idx])
+    assert all( [ax1==ax2 for ax1, ax2 in zip(d.axes, axes)] ), \
+           'mislabeled axes from operation %s'%op
+
+def test_wrapped_ops_data():
+    a = DataArray(np.random.randn(4,2,6), 'xyz')
+    for m in _methods:
+        yield assert_data_correct, a, m, 'x'
+    for m in _methods:
+        yield assert_data_correct, a, m, 'y'
+    for m in _methods:
+        yield assert_data_correct, a, m, 'z'
+
+def test_wrapped_ops_axes():
+    a = DataArray(np.random.randn(4,2,6), 'xyz')
+    for m in _methods:
+        yield assert_axes_correct, a, m, 'x'
+    for m in _methods:
+        yield assert_axes_correct, a, m, 'y'
+    for m in _methods:
+        yield assert_axes_correct, a, m, 'z'
+    
 # -- Tests for slicing with "newaxis" ----------------------------------------
 def test_newaxis_slicing():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
