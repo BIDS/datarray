@@ -111,6 +111,30 @@ def test__reordered_axes():
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
 
+def test_axis_make_slice():
+    p_arr = np.random.randn(2,4,5)
+    ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    d_arr = DataArray(p_arr, [None, None, ax_spec])
+    a = d_arr.axis.capitols
+    sl = a.make_slice( slice('london', 'moscow')  )
+    should_be = ( slice(None), slice(None), slice(1,4) )
+    yield nt.assert_equal, should_be, sl, 'slicing tuple from ticks not correct'
+    sl = a.make_slice( slice(1,4) )
+    yield nt.assert_equal, should_be, sl, 'slicing tuple from idx not correct'
+
+# also test with the slicing syntax
+def test_ticks_slicing():
+    p_arr = np.random.randn(2,4,5)
+    ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    d_arr = DataArray(p_arr, [None, None, ax_spec])
+    a = d_arr.axis.capitols
+    sub_arr = d_arr.axis.capitols['washington'::2]
+    yield (nt.assert_equal,
+           sub_arr.axis.capitols.ticks,
+           a.ticks[0::2])
+    yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
+
+# -- Tests for redefined methods ---------------------------------------------
     
 def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')

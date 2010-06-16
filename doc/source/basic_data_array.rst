@@ -8,11 +8,9 @@ Questions
 * :ref:`Constructing and Combining <init_ufuncs>`
 * :ref:`Slicing <slicing>`
 * :ref:`Broadcasting <broadcasting>`
-* :ref:`Transposition <transposition>`
-* Rollaxes (would be handled by transpose)
-* Swapaxes
-* Iteration
-* Wrapping functions with 'axis=' kw.
+* :ref:`Transposition, Rollaxes, Swapaxes <transposition>`
+* :ref:`Iteration <iteration>`
+* :doc:`Wrapping functions with 'axis=' kw<ndarray_methods>`
 
 .. _init_ufuncs:
 
@@ -46,6 +44,17 @@ without labels will be labeled as None::
   >>> narr2 = DataArray(np.zeros((1,2,3,2)), labels=('a','b' ))
   >>> narr2.labels
   ['a', 'b', None, None]
+
+With "ticks"
+````````````
+
+Constructing a DataArray such that an Axis has ticks, for example::
+
+  >>> cap_ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+  >>> time_ax_spec = 'time', ['0015', '0615', '1215', '1815']
+  >>> time_caps = DataArray(np.arange(4*5).reshape(4,5), [time_ax_spec, cap_ax_spec])
+  >>> time_caps.axes
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']), Axis(label='capitols', index=1, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
 
 Combining named and unnamed arrays::
 
@@ -168,6 +177,70 @@ I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the 
   >>> b.axis.y[np.newaxis].shape
   (3, 1, 2, 4)
 
+Slicing and ticks
+`````````````````
+
+It is also possible to use ticks in any of the slicing syntax above. 
+
+::
+
+  >>> time_caps
+  DataArray([[ 0,  1,  2,  3,  4],
+	 [ 5,  6,  7,  8,  9],
+	 [10, 11, 12, 13, 14],
+	 [15, 16, 17, 18, 19]])
+  ['time', 'capitols']
+  >>> time_caps.axis.capitols['berlin'::-1]
+  DataArray([[ 2,  1,  0],
+	 [ 7,  6,  5],
+	 [12, 11, 10],
+	 [17, 16, 15]])
+  ['time', 'capitols']
+  >>> time_caps.axis.time['0015':'1815']
+  DataArray([[ 0,  1,  2,  3,  4],
+	 [ 5,  6,  7,  8,  9],
+	 [10, 11, 12, 13, 14]])
+  ['time', 'capitols']
+  >>> time_caps[:, 'london':3]
+  DataArray([[ 1,  2],
+	 [ 6,  7],
+	 [11, 12],
+	 [16, 17]])
+  ['time', 'capitols']
+
+
+The .start and .stop attributes of the slice object can be either None, an integer index, or a valid tick. They may even be mixed. The .step attribute, however, must be None or an nonzero integer.
+
+**Note: currently integer ticks clobber indices.** For example::
+
+  >>> centered_data = DataArray(np.random.randn(6), [ ('c_idx', range(-3,3)) ])
+  >>> centered_data.axis.c_idx.make_slice( slice(0, 6, None) )
+  (slice(3, 6, None),)
+
+make_slice() first tries to look up the key parameters as ticks, and then sees if the key parameters can be used as simple indices. Thus 0 is found as index 3, and 6 is passed through as index 6.
+
+Possible resolution 1
+*********************
+
+"larry" would make this distinction::
+
+  >>> centered_data.axis.c_idx[ [0]:[2] ]
+  >>> < returns underlying array from [3:5] >
+  >>> centered_data.axis.c_idx[ 0:2 ]
+  >>> < returns underlying array from [0:2] >
+
+And I believe mixing of ticks and is valid also.
+
+Possible resolution 2
+*********************
+
+Do not allow integer ticks -- cast to float perhaps
+
+Possible resolution 3
+*********************
+
+Restrict access to tick based slicing to another special slicing object.
+
 .. _broadcasting:
 
 Broadcasting
@@ -241,6 +314,50 @@ The rule for dimension compatibility is that any two axes match if one of the fo
 	 [ 2.,  2.,  2.]])
 
 The broadcasting rules currently allow this combination. I'm inclined to allow it. Even though the axes are different lengths in ``a`` and ``b``, and therefore *might* be considered different logical axes, there is no actual information collision from ``a.axis.y``.
+
+.. _iteration:
+
+Iteration
+---------
+
+seems to work::
+
+  >>> for foo in time_caps:
+  ...     print foo
+  ...     print foo.axes
+  ... 
+  [0 1 2 3 4]
+  ['capitols']
+  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  [5 6 7 8 9]
+  ['capitols']
+  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  [10 11 12 13 14]
+  ['capitols']
+  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  [15 16 17 18 19]
+  ['capitols']
+  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  >>> for foo in time_caps.T:
+      print foo
+      print foo.axes
+  ... 
+  [ 0  5 10 15]
+  ['time']
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815'])]
+  [ 1  6 11 16]
+  ['time']
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815'])]
+  [ 2  7 12 17]
+  ['time']
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815'])]
+  [ 3  8 13 18]
+  ['time']
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815'])]
+  [ 4  9 14 19]
+  ['time']
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815'])]
+
 
 .. _transposition:
 

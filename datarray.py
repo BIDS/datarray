@@ -200,8 +200,10 @@ class Axis(object):
         # XXX TODO - fancy indexing
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
-        fullslice = [slice(None)] * parent_arr_ndim
-        fullslice[self.index] = key
+        fullslice = self.make_slice(key)
+        key = fullslice[self.index]
+##         fullslice = [slice(None)] * parent_arr_ndim
+##         fullslice[self.index] = key
         #print 'getting output'  # dbg
         out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
         #print 'returning output'  # dbg
@@ -237,6 +239,69 @@ class Axis(object):
             _set_axes(out, ro_axes)
             
         return out
+
+    def make_slice(self, key):
+        """
+        Make a slicing tuple into the parent array such that
+        this Axis is cut up in the requested manner
+
+        Parameters
+        ----------
+        key : a slice object, single tick-like item, or None
+          This slice object may have arbitrary types for .start, .stop,
+          in which case tick labels will be looked up. The .step attribute
+          of course must be None or an integer.
+
+        Returns
+        -------
+        keys : parent_arr.ndim-length tuple for slicing
+        
+        """
+
+        full_slicing = [ slice(None) ] * self.parent_arr.ndim
+
+        # if no ticks, pop in the key and pray (will raise later)
+        if not self.ticks:
+            full_slicing[self.index] = key
+            return tuple(full_slicing)
+
+        # in either case, try to translate slicing key
+        if not isinstance(key, slice):
+            lookups = (key,)
+        else:
+            lookups = (key.start, key.stop)
+        
+        # XYZ!! What to do if the ticks are integers???
+        looked_up = []
+        for a in lookups:
+            if a is None:
+                looked_up.append(a)
+                continue
+            try:
+                idx = self._tick_dict[a]
+            except KeyError:
+                if not isinstance(a, int):
+                    raise IndexError(
+                        'Could not find an index to match %s'%str(a)
+                        )
+                idx = a
+            looked_up.append(idx)
+
+        # if not a slice object, then pop in the translated index and return
+        if not isinstance(key, slice):
+            full_slicing[self.index] = looked_up[0]
+            return tuple(full_slicing)
+        
+        # otherwise, go for the step size now
+        step = key.step
+        if not isinstance(step, (int, type(None))):
+            raise IndexError(
+                'Slicing step size must be an integer or None, not %s'%str(step)
+                )
+        looked_up = looked_up + [step]
+        new_key = slice(*looked_up)
+        full_slicing[self.index] = new_key
+        return tuple(full_slicing)
         
     def at(self, tick):
         """
@@ -251,23 +316,25 @@ class Axis(object):
         """
         if not self.ticks:
             raise ValueError('axis must have ticks to extract data at a given tick')
+        slicing = self.make_slice(tick)
+        return self.parent_arr[slicing]
+    
+##         # the index of the tick in the axis
+##         try:
+##             idx = self._tick_dict[tick]
+##         except KeyError:
+##             raise KeyError('tick %s not found in axis "%s"' % (`tick`, self.name))
 
-        # the index of the tick in the axis
-        try:
-            idx = self._tick_dict[tick]
-        except KeyError:
-            raise KeyError('tick %s not found in axis "%s"' % (`tick`, self.name))
+##         parent_arr = self.parent_arr # local for speed
+##         parent_arr_ndim = parent_arr.ndim
 
-        parent_arr = self.parent_arr # local for speed
-        parent_arr_ndim = parent_arr.ndim
+##         fullslice = [slice(None)] * parent_arr_ndim
+##         fullslice[self.index] = idx
+##         out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
 
-        fullslice = [slice(None)] * parent_arr_ndim
-        fullslice[self.index] = idx
-        out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
-
-        # we will have lost a dimension and drop the current axis
-        _set_axes(out, _pull_axis(parent_arr.axes, self))
-        return out
+##         # we will have lost a dimension and drop the current axis
+##         _set_axes(out, _pull_axis(parent_arr.axes, self))
+##         return out
 
     def keep(self, ticks):
         """
@@ -663,7 +730,6 @@ class DataArray(np.ndarray):
                 axes = axes[0][:]
             except TypeError:
                 pass
-            stop
         proc_axids = _names_to_numbers(self.axes, axes)
         out = np.ndarray.transpose(self, proc_axids)
         _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))

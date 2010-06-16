@@ -19,7 +19,7 @@ class stuple(tuple):
     def __getitem__(self, key):
         # getitem has some subtle behavior..
 
-        # This case seems to allow a construction of a top-level
+        # 1st case seems to allow a construction of a top-level
         # stuple as such: stuple( (), axes=arr.axes ).
         # -------
         # In either case, list-ify the sequence to make it mutable
@@ -35,6 +35,7 @@ class stuple(tuple):
         # Otherwise, slice it with special slicing tuple (stuple)
         if slicer[self._axis.index] != slice(None):
             raise StupleSlicingError("This axis has already been sliced")
+        
         slicer[self._axis.index] = key
         return stuple(slicer, axes=self._all_axes)
 
@@ -53,3 +54,9 @@ class proxy_stuple(object):
         stup = stuple(*self._args, **self._kwargs)
         return stup[key]
 
+
+class pass_slice(object):
+
+    def __getitem__(self, key):
+        print key
+        return key
