@@ -23,15 +23,29 @@ def test_axis_equal():
     yield nt.assert_not_equal, ax1, ax5
     # and obviously both
     yield nt.assert_not_equal, ax4, ax5
-    
 
+def test_bad_ticks1():
+    d = np.zeros(5)
+    # bad ticks length
+    nt.assert_raises(ValueError, DataArray, d, labels=[('a', 'uvw')])
+
+def test_bad_ticks2():
+    d = np.zeros(5)
+    # uniqueness error
+    nt.assert_raises(ValueError, DataArray, d, labels=[('a', ['u']*5)])
+
+def test_bad_ticks3():
+    d = np.zeros(5)
+    # type error
+    nt.assert_raises(ValueError, DataArray, d, labels=[('a', [1, 1, 1, 1, 1])])
+    
 def test_basic():
     adata = [2,3]
     a = DataArray(adata, 'x', float)
-    yield nt.assert_equal, a.labels, ['x']
+    yield nt.assert_equal, a.labels, ('x',)
     yield nt.assert_equal, a.dtype, np.dtype(float)
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield nt.assert_equal, b.labels, ['x','y']
+    yield nt.assert_equal, b.labels, ('x','y')
     # integer slicing
     b0 = b.axis.x[0]
     yield npt.assert_equal, b0, [1,2]
@@ -68,24 +82,24 @@ def test_1d():
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield (nt.assert_equals, b.labels, ['x','y'])
+    yield (nt.assert_equals, b.labels, ('x','y'))
     # Check row named slicing
     rs = b.axis.x[0]
     yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.labels, ['y']
-    yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
+    yield nt.assert_equal, rs.labels, ('y',)
+    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
     # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.axis.x[1:].labels, ['x','y'])
+    yield (nt.assert_equal, b.axis.x[1:].labels, ('x','y'))
     # Check column named slicing
     cs = b.axis.y[1]
     yield (npt.assert_equal, cs, [2,4,6])
-    yield nt.assert_equal, cs.labels, ['x']
-    yield nt.assert_equal, cs.axes, [Axis('x', 0, cs)]
+    yield nt.assert_equal, cs.labels, ('x',)
+    yield nt.assert_equal, cs.axes, (Axis('x', 0, cs),)
     # What happens if we do normal slicing?
     rs = b[0]
     yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.labels, ['y']
-    yield nt.assert_equal, rs.axes, [Axis('y', 0, rs)]
+    yield nt.assert_equal, rs.labels, ('y',)
+    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
     
 
 def test__pull_axis():
@@ -113,9 +127,9 @@ def test__reordered_axes():
 
 def test_axis_make_slice():
     p_arr = np.random.randn(2,4,5)
-    ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
-    a = d_arr.axis.capitols
+    a = d_arr.axis.capitals
     sl = a.make_slice( slice('london', 'moscow')  )
     should_be = ( slice(None), slice(None), slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from ticks not correct'
@@ -125,12 +139,12 @@ def test_axis_make_slice():
 # also test with the slicing syntax
 def test_ticks_slicing():
     p_arr = np.random.randn(2,4,5)
-    ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
-    a = d_arr.axis.capitols
-    sub_arr = d_arr.axis.capitols['washington'::2]
+    a = d_arr.axis.capitals
+    sub_arr = d_arr.axis.capitals['washington'::2]
     yield (nt.assert_equal,
-           sub_arr.axis.capitols.ticks,
+           sub_arr.axis.capitals.ticks,
            a.ticks[0::2])
     yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
 
@@ -211,26 +225,29 @@ def test_broadcast():
     a = DataArray([1,0], 'y')
     # both of these should work
     c = b + a
-    yield nt.assert_true, c.labels == ['x', 'y'], 'simple broadcast failed'
+    yield nt.assert_true, c.labels == ('x', 'y'), 'simple broadcast failed'
     c = a + b
-    yield nt.assert_true, c.labels == ['x', 'y'], 'backwards simple broadcast failed'
+    yield nt.assert_true, c.labels == ('x', 'y'), \
+          'backwards simple broadcast failed'
     
     a = DataArray([1, 1, 1], 'x')
     # this should work too
     c = a[:,np.newaxis] + b
-    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast1 failed'
+    yield nt.assert_true, c.labels == ('x', 'y'), 'forward broadcast1 failed'
     c = b + a[:,np.newaxis] 
-    yield nt.assert_true, c.labels == ['x', 'y'], 'forward broadcast2 failed'
+    yield nt.assert_true, c.labels == ('x', 'y'), 'forward broadcast2 failed'
 
     b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
     a = DataArray(np.random.randn(2,4), [None, 'y'])
     # this should work
     c = b + a
-    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with unlabeled dimensions failed'
+    yield nt.assert_true, c.labels == ('x', None, 'y'), \
+          'broadcast with unlabeled dimensions failed'
     # and this
     a = DataArray(np.random.randn(2,1), [None, 'y'])
     c = b + a
-    yield nt.assert_true, c.labels == ['x', None, 'y'], 'broadcast with matched label, but singleton dimension failed'
+    yield nt.assert_true, c.labels == ('x', None, 'y'), \
+          'broadcast with matched label, but singleton dimension failed'
 
 # -- Testing slicing failures ------------------------------------------------
 @nt.raises(NamedAxisError)
@@ -271,7 +288,7 @@ def test_shifty_labels():
     # slicing out the "x" Axis triggered the unlabeled axis to change
     # name from "_2" to "_1".. make sure that this change is mapped
     b = a[0,:2]
-    assert (b == arr[0,:2]).all(), 'shift labels strike again!'
+    assert (b == arr[0,:2]).all(), 'shifty labels strike again!'
 
 # -- Tests with "aix" slicing ------------------------------------------------
 def test_axis_slicing():
@@ -282,7 +299,7 @@ def test_axis_slicing():
 
     b = a[ a.aix.z[:2] ]
     yield nt.assert_true, (b==a.axis.z[:2]).all(), 'axis slicing inconsistent'
-    yield nt.assert_true, b.labels == ['x', 'y', 'z']
+    yield nt.assert_true, b.labels == ('x', 'y', 'z')
 
 def test_axis_slicing_both_ways():
     a = DataArray(np.random.randn(3,4,5), 'xyz')

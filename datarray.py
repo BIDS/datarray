@@ -66,6 +66,11 @@ class KeyStruct(object):
     1
     >>> b['y']
     2
+    >>> b['y'] = 4
+    Traceback (most recent call last):
+      ...
+    AttributeError: KeyStruct already has atribute 'y'
+
     """
     def __init__(self, **kw):
         self.__dict__.update(kw)
@@ -74,8 +79,12 @@ class KeyStruct(object):
         return self.__dict__[key]
 
     def __setitem__(self, key, val):
-        setattr(self, key, val)
+        if hasattr(self, key):
+            raise AttributeError('KeyStruct already has atribute %s'%repr(key))
+        self.__dict__[key] = val
 
+    def __setattr__(self, key, val):
+        self[key] = val
 
 class Axis(object):
     """Object to access a given axis of an array.
@@ -95,8 +104,44 @@ class Axis(object):
             raise ValueError('ticks only supported when Axis has a label')
 
         # This will raise if the ticks are invalid:
-        self._tick_dict, self._tick_dict_reverse = self._validate_ticks(ticks)
+        self._tick_dict = self._validate_ticks(ticks)
         self.ticks = ticks
+
+    def _copy(self, **kwargs):
+        """
+        Create a quick copy of this Axis without bothering to do
+        tick validation (these ticks are already known as valid).
+
+        Keyword args are replacements for constructor arguments
+
+        Examples
+        --------
+
+        >>> a1 = Axis('time', 0, None, ticks=[str(i) for i in xrange(10)])
+        >>> a1
+        Axis(label='time', index=0, ticks=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+        >>> a2 = a1._copy(ticks=a1.ticks[3:6])
+        >>> a2
+        Axis(label='time', index=0, ticks=['3', '4', '5'])
+        >>> a1 == a2
+        True
+        >>> a1 is a2
+        False
+
+        """
+        label = kwargs.pop('label', self.label)
+        index = kwargs.pop('index', self.index)
+        parent_arr = kwargs.pop('parent_arr', self.parent_arr)
+        cls = self.__class__ 
+        ax = cls(label, index, parent_arr)
+
+        ticks = kwargs.pop('ticks', copy.copy(self.ticks))
+        ax.ticks = ticks
+        if ticks and len(ticks) != len(self.ticks):
+            ax._tick_dict = dict( zip(ticks, xrange( len(ticks) )) )
+        else:
+            ax._tick_dict = copy.copy(self._tick_dict)
+        return ax
 
     @property
     def name(self):
@@ -105,16 +150,17 @@ class Axis(object):
         else:
             return "_%d" %  self.index
 
-    def _validate_ticks(self, ticks, check_length=False):
+    def _validate_ticks(self, ticks):
         """Validate constraints on ticks.
 
         Ensure:
 
         - uniqueness
         - length
+        - no tick is an integer
         """
         if ticks is None:
-            return None, None
+            return None
         # We always store ticks as numpy arrays
         #ticks = np.asarray(ticks)
 
@@ -123,17 +169,21 @@ class Axis(object):
         # XXX this causes exceptions when slicing:
         # XXX maybe ticks of each axis should be validated in __array_finalize__?
 
-        if check_length and nticks != self.parent_arr.shape[self.index]:
-            e = "Dimension mismatch between ticks and data at index %i" % \
+        if self.parent_arr is not None \
+               and nticks != self.parent_arr.shape[self.index]:
+            e = 'Dimension mismatch between ticks and data at index %i' % \
                 self.index
             raise ValueError(e)
+
+        # Validate types -- using generator for short circuiting
+        if any( (isinstance(t, int) for t in ticks) ):
+            raise ValueError('Ticks cannot be integers')
         
         # Validate uniqueness
         t_dict = dict(zip(ticks, xrange(nticks)))
         if len(t_dict) != nticks:
-            raise ValueError("non-unique tick values not supported")
-        t_dict_reverse = dict(zip(xrange(nticks), ticks))
-        return t_dict, t_dict_reverse
+            raise ValueError('non-unique tick values not supported')
+        return t_dict
         
     def __len__(self):
         return self.parent_arr.shape[self.index]
@@ -215,17 +265,18 @@ class Axis(object):
                 newticks = self.ticks[key]
             else:
                 newticks = None
-            newaxis = self.__class__(self.label, self.index, parent_arr, ticks=newticks)
+
             newaxes = []
             for a in parent_arr.axes:
-                newaxes.append(a.__class__(a.label, a.index, parent_arr, ticks=a.ticks))
+                newaxes.append( a._copy(parent_arr=parent_arr) )
+            # insert new axis
+            newaxis = self._copy(parent_arr=parent_arr, ticks=newticks)
             newaxes[self.index] = newaxis
 
             _set_axes(out, newaxes)
 
         if out.ndim < parent_arr_ndim:
             # We lost a dimension, drop the axis!
-##             print 'Dropping axes' # dbg
             _set_axes(out, _pull_axis(parent_arr.axes, self))
         elif out.ndim > parent_arr_ndim:
             # We were indexed by a newaxis (None),
@@ -319,23 +370,6 @@ class Axis(object):
         slicing = self.make_slice(tick)
         return self.parent_arr[slicing]
     
-##         # the index of the tick in the axis
-##         try:
-##             idx = self._tick_dict[tick]
-##         except KeyError:
-##             raise KeyError('tick %s not found in axis "%s"' % (`tick`, self.name))
-
-##         parent_arr = self.parent_arr # local for speed
-##         parent_arr_ndim = parent_arr.ndim
-
-##         fullslice = [slice(None)] * parent_arr_ndim
-##         fullslice[self.index] = idx
-##         out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
-
-##         # we will have lost a dimension and drop the current axis
-##         _set_axes(out, _pull_axis(parent_arr.axes, self))
-##         return out
-
     def keep(self, ticks):
         """
         Keep only certain ticks of an axis.
@@ -365,9 +399,8 @@ class Axis(object):
         out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
 
         # just change the current axes
-
-        new_axes = [Axis(a.label, a.index, a.parent_arr, ticks=a.ticks) for a in out.axes]
-        new_axes[self.index] = Axis(self.label, self.index, self.parent_arr, ticks=ticks)
+        new_axes = [a._copy() for a in out.axes]
+        new_axes[self.index] = self._copy(ticks=ticks)
         _set_axes(out, new_axes)
         return out
 
@@ -414,8 +447,6 @@ def _validate_axes(axes):
     for i, a in enumerate(axes):
         nt.assert_equals(i, a.index)
         nt.assert_true(p is a.parent_arr)
-        ## if a.ticks:
-        ##     a._validate_ticks(a.ticks, check_length=True)
 
 def _pull_axis(axes, target_axis):
     ''' Return axes removing any axis matching `target_axis`'''
@@ -424,7 +455,7 @@ def _pull_axis(axes, target_axis):
     c = 0
     for a in axes:
         if a.index != target_axis.index:
-            newaxes.append(a.__class__(a.label, c, parent_arr, ticks=a.ticks))
+            newaxes.append(a._copy(index=c, parent_arr=parent_arr))
             c += 1
     return newaxes    
 
@@ -443,21 +474,24 @@ def _set_axes(dest, in_axes):
       dest : array
       in_axes : sequence of axis objects
     """
-    # XXX here is where the logic is implemented for missing names.
-    # Here there are no named axis objects if there are fewer names than
-    # axes in the array
     axes = []
     labels = []
     ax_holder = KeyStruct()
     # Create the containers for various axis-related info
     for ax in in_axes:
-        new_ax = ax.__class__(ax.label, ax.index, dest, ticks=ax.ticks)
+        new_ax = ax._copy(parent_arr=dest)
         axes.append(new_ax)
         labels.append(ax.label)
-        ax_holder[ax.name] = new_ax
+        try:
+            ax_holder[ax.name] = new_ax
+        except AttributeError:
+            raise NamedAxisError(
+                'There is another Axis in this group with ' \
+                'the same name'
+                )
     # Store these containers as attributes of the destination array
-    dest.axes = axes
-    dest.labels = labels
+    dest.axes = tuple(axes)
+    dest.labels = tuple(labels)
     dest.axis = ax_holder
     
 
@@ -485,14 +519,17 @@ class DataArray(np.ndarray):
                 return arr
             labels = []
         elif len(labels) > arr.ndim:
-            raise NamedAxisError("labels list should have length <= array ndim")
+            raise NamedAxisError('labels list should have length <= array ndim')
         
         labels = list(labels) + [None]*(arr.ndim - len(labels))
         axes = []
         for i, label_spec in enumerate(labels):
             if type(label_spec) == type(()):
                 if len(label_spec) != 2:
-                    raise ValueError("if the label specification is a tuple, it must be of the form (label, ticks)")
+                    raise ValueError(
+                        'if the label specification is a tuple, it must be ' \
+                        'of the form (label, ticks)'
+                        )
                 label, ticks = label_spec
             else:
                 label = label_spec
@@ -503,6 +540,7 @@ class DataArray(np.ndarray):
 
         # validate the axes
         _validate_axes(axes)
+
 
         return arr
 
@@ -572,11 +610,13 @@ class DataArray(np.ndarray):
 
             # walk back from the last axis on each array, check
             # that the label and shape are acceptible for broadcasting
-            these_axes = self.axes[:]
-            those_axes = other.axes[:]
+            these_axes = list(self.axes)
+            those_axes = list(other.axes)
+            print self.shape, self.labels
             while these_axes and those_axes:
                 that_ax = those_axes.pop(-1)
                 this_ax = these_axes.pop(-1)
+                print self.shape
                 this_dim = self.shape[this_ax.index]
                 that_dim = other.shape[that_ax.index]
                 if that_ax.label != this_ax.label:
@@ -622,12 +662,15 @@ class DataArray(np.ndarray):
 
             # walk back from the last axis on each array to get the
             # correct labels/ticks
-            these_axes = self.axes[:]
-            those_axes = other.axes[:]
+            these_axes = list(self.axes)
+            those_axes = list(other.axes)
             ax_spec = []
             while these_axes and those_axes:
                 this_ax = these_axes.pop(-1)
                 that_ax = those_axes.pop(-1)
+                # If we've broadcasted this array against another, then
+                # this_ax.label may be None, in which case the new array's
+                # Axis label should take on the value of that_ax
                 if this_ax.label is None:
                     ax_spec.append(that_ax)
                 else:
@@ -640,12 +683,12 @@ class DataArray(np.ndarray):
             elif those_axes:
                 ax_spec = those_axes + ax_spec
         else:
-            ax_spec = self.axes[:]
+            ax_spec = self.axes
 
         res = obj.view(type(self))
         new_axes = []
         for i, ax in enumerate(ax_spec):
-            new_axes.append( Axis(ax.label, i, res, ticks=ax.ticks) )
+            new_axes.append( ax._copy(index=i, parent_arr=res) )
         _set_axes(res, new_axes)
         return res
         
@@ -668,7 +711,7 @@ class DataArray(np.ndarray):
 
         if isinstance(key, tuple):
             old_shape = self.shape
-            old_axes = self.axes[:]
+            old_axes = self.axes
             new_shape, new_axes, key = _make_singleton_axes(self, key)
             # Will undo this later
             self.shape = new_shape
@@ -725,9 +768,9 @@ class DataArray(np.ndarray):
         if not axes:
             axes = range(self.ndim-1,-1,-1)
         # expand sequence if sequence passed as first and only arg
-        elif len(axes) == 1:
+        elif len(axes) < self.ndim:
             try:
-                axes = axes[0][:]
+                axes = list(axes[0])
             except TypeError:
                 pass
         proc_axids = _names_to_numbers(self.axes, axes)
@@ -750,6 +793,17 @@ class DataArray(np.ndarray):
         return out
 
     swapaxes.func_doc = np.ndarray.swapaxes.__doc__
+
+    def ptp(self, axis=None, out=None):
+        mn = self.min(axis=axis)
+        mx = self.max(axis=axis, out=out)
+        if isinstance(mn, np.ndarray):
+            mx -= mn
+            return mx
+        else:
+            return mx-mn
+
+    ptp.func_doc = np.ndarray.ptp.__doc__
 
     mean = _apply_operation('mean')
     var = _apply_operation('var')
@@ -803,7 +857,7 @@ def _reordered_axes(axes, axis_indices, parent=None):
             parent_arr = ax.parent_arr
         else:
             parent_arr = parent
-        new_ax = ax.__class__(ax.label, new_ind, parent_arr, ticks=ax.ticks)
+        new_ax = ax._copy(index=new_ind, parent_arr=parent_arr)
         new_axes.append(new_ax)
     return new_axes
 
@@ -845,7 +899,7 @@ def _make_singleton_axes(arr, key):
     
     key = _expand_ellipsis(key, arr.ndim)
     if len(key) <= arr.ndim and None not in key:
-        return arr.shape, arr.axes[:], key
+        return arr.shape, arr.axes, key
 
     # The full slicer will be length=arr.ndim + # of dummy-dims..
     # Boost up the slices to full "rank" ( can cut it down later for savings )
@@ -859,7 +913,7 @@ def _make_singleton_axes(arr, key):
     new_key = []
     d_cnt = 0
     new_ax_pos = arr.ndim
-    new_axes = arr.axes[:]
+    new_axes = list(arr.axes)
     ax_order = []
     for k in key:
         if k is None:

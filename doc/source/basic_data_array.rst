@@ -10,6 +10,7 @@ Questions
 * :ref:`Broadcasting <broadcasting>`
 * :ref:`Transposition, Rollaxes, Swapaxes <transposition>`
 * :ref:`Iteration <iteration>`
+* :ref:`Label Changing <label_updates>`
 * :doc:`Wrapping functions with 'axis=' kw<ndarray_methods>`
 
 .. _init_ufuncs:
@@ -50,11 +51,11 @@ With "ticks"
 
 Constructing a DataArray such that an Axis has ticks, for example::
 
-  >>> cap_ax_spec = 'capitols', ['washington', 'london', 'berlin', 'paris', 'moscow']
+  >>> cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
   >>> time_ax_spec = 'time', ['0015', '0615', '1215', '1815']
   >>> time_caps = DataArray(np.arange(4*5).reshape(4,5), [time_ax_spec, cap_ax_spec])
   >>> time_caps.axes
-  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']), Axis(label='capitols', index=1, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  [Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']), Axis(label='capitals', index=1, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
 
 Combining named and unnamed arrays::
 
@@ -189,24 +190,24 @@ It is also possible to use ticks in any of the slicing syntax above.
 	 [ 5,  6,  7,  8,  9],
 	 [10, 11, 12, 13, 14],
 	 [15, 16, 17, 18, 19]])
-  ['time', 'capitols']
-  >>> time_caps.axis.capitols['berlin'::-1]
+  ['time', 'capitals']
+  >>> time_caps.axis.capitals['berlin'::-1]
   DataArray([[ 2,  1,  0],
 	 [ 7,  6,  5],
 	 [12, 11, 10],
 	 [17, 16, 15]])
-  ['time', 'capitols']
+  ['time', 'capitals']
   >>> time_caps.axis.time['0015':'1815']
   DataArray([[ 0,  1,  2,  3,  4],
 	 [ 5,  6,  7,  8,  9],
 	 [10, 11, 12, 13, 14]])
-  ['time', 'capitols']
+  ['time', 'capitals']
   >>> time_caps[:, 'london':3]
   DataArray([[ 1,  2],
 	 [ 6,  7],
 	 [11, 12],
 	 [16, 17]])
-  ['time', 'capitols']
+  ['time', 'capitals']
 
 
 The .start and .stop attributes of the slice object can be either None, an integer index, or a valid tick. They may even be mixed. The .step attribute, however, must be None or an nonzero integer.
@@ -235,6 +236,9 @@ Possible resolution 2
 *********************
 
 Do not allow integer ticks -- cast to float perhaps
+
+**Note**: this will be the solution. When validating ticks on an Axis, ensure that none of them ``isinstance(t, int)``
+
 
 Possible resolution 3
 *********************
@@ -327,17 +331,17 @@ seems to work::
   ...     print foo.axes
   ... 
   [0 1 2 3 4]
-  ['capitols']
-  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  ['capitals']
+  [Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
   [5 6 7 8 9]
-  ['capitols']
-  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  ['capitals']
+  [Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
   [10 11 12 13 14]
-  ['capitols']
-  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  ['capitals']
+  [Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
   [15 16 17 18 19]
-  ['capitols']
-  [Axis(label='capitols', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
+  ['capitals']
+  [Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow'])]
   >>> for foo in time_caps.T:
       print foo
       print foo.axes
@@ -375,7 +379,26 @@ Transposition of a DataArray preserves the dimension labels, and updates the cor
   >>> b.T.axes
   [Axis(label='y', index=0, ticks=None), Axis(label=None, index=1, ticks=None), Axis(label='x', index=2, ticks=None)]
 
+.. _label_updates:
 
+Changing Labels on DataArrays
+-----------------------------
+
+Tricky Attributes
+`````````````````
+
+* .labels -- currently a mutable list of Axis.name attributes
+* .axes -- currently a mutable list of Axis objects
+* .axis -- a key-to-attribute dictionary
+
+Need an event-ful way to change an Axis's label, such that all the above attributes are updated.
+
+**Proposed solution**: 
+
+1. use a set_label() method. This will consequently update the parent array's 
+    (labels, axes, axis) attributes. 
+1. make the mutable lists into *tuples* to deny write access.
+1. make the KeyStruct ``.axis`` have write-once access 
 
 ToDo
 ----
@@ -409,3 +432,5 @@ a[i] valid cases:
 i: integer => normal numpy scalar indexing, one less dim than x
 i: slice: numpy view slicing.  same dims as x, must recover the ticks 
 i: list/array: numpy fancy indexing, as long as the index list is 1d only.
+
+
