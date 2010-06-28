@@ -397,8 +397,8 @@ Need an event-ful way to change an Axis's label, such that all the above attribu
 
 1. use a set_label() method. This will consequently update the parent array's 
     (labels, axes, axis) attributes. 
-1. make the mutable lists into *tuples* to deny write access.
-1. make the KeyStruct ``.axis`` have write-once access 
+2. make the mutable lists into *tuples* to deny write access.
+3. make the KeyStruct ``.axis`` have write-once access 
 
 ToDo
 ----

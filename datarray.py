@@ -13,32 +13,6 @@ from stuple import *
 # Classes and functions
 #-----------------------------------------------------------------------------
 
-def _apply_operation(opname):
-    
-    super_op = getattr(np.ndarray, opname)
-    def runs_op(*args, **kwargs):
-        inst = args[0]
-        axis = kwargs.pop('axis', None)
-        if not isinstance(inst, DataArray):
-            # do nothing special
-            return super_op(*args, **kwargs)
-        # is this correct?
-        if axis is None:
-            return super_op(*args, **kwargs)
-
-        axes = copy.copy(inst.axes)
-        # try to convert a named Axis to an integer..
-        # don't try to catch an error
-        axis_idx = _names_to_numbers(inst.axes, [axis])[0]
-        axes = _pull_axis(axes, inst.axes[axis_idx])
-        kwargs['axis'] = axis_idx
-        arr = super_op(*args, **kwargs)
-        _set_axes(arr, axes)
-        return arr
-    runs_op.func_name = opname
-    runs_op.func_doc = super_op.__doc__
-    return runs_op
-
 class NamedAxisError(Exception):
     pass
 
@@ -92,13 +66,13 @@ class Axis(object):
     Key point: every axis contains a  reference to its parent array!
     """
     def __init__(self, label, index, parent_arr, ticks=None):
-        # Axis should be a string or None
+        # Axis label should be a string or None
         if not isinstance(label, basestring) and label is not None:
             raise ValueError('label must be a string or None')
         self.label = label
         self.index = index
         self.parent_arr = parent_arr
-
+        
         # If ticks is not None, label should be defined
         if ticks is not None and label is None:
             raise ValueError('ticks only supported when Axis has a label')
@@ -161,14 +135,10 @@ class Axis(object):
         """
         if ticks is None:
             return None
-        # We always store ticks as numpy arrays
-        #ticks = np.asarray(ticks)
-
+        
         nticks = len(ticks)
-        # Sanity check: the first dimension must match that of the parent array
-        # XXX this causes exceptions when slicing:
         # XXX maybe ticks of each axis should be validated in __array_finalize__?
-
+        # Sanity check: the first dimension must match that of the parent array
         if self.parent_arr is not None \
                and nticks != self.parent_arr.shape[self.index]:
             e = 'Dimension mismatch between ticks and data at index %i' % \
@@ -184,12 +154,28 @@ class Axis(object):
         if len(t_dict) != nticks:
             raise ValueError('non-unique tick values not supported')
         return t_dict
+
+    def set_label(self, label):
+        # XYZ: This makes some potentially scary changes to the parent
+        # array. It may end up being an insidious bug.
+        # Axis label should be a string or None
+        if not isinstance(label, basestring) and label is not None:
+            raise ValueError('label must be a string or None')
+        self.label = label
+        pa = self.parent_arr
+        nd = pa.ndim
+        newaxes = [pa.axes[i] for i in xrange(self.index)]
+        newaxes += [self]
+        newaxes += [pa.axes[i] for i in xrange(self.index+1,nd)]
+        _set_axes(pa, newaxes)
         
     def __len__(self):
         return self.parent_arr.shape[self.index]
 
     def __eq__(self, other):
-        ''' Axes are equal iff they have matching labels and indices
+        '''
+        Axes are equal iff they have matching labels and indices. They
+        do not need to have matching ticks.
 
         Parameters
         ----------
@@ -228,10 +214,6 @@ class Axis(object):
         # XXX We don't handle fancy indexing at the moment
         if isinstance(key, (np.ndarray, list)):
             raise NotImplementedError('We do not handle fancy indexing yet')
-        # If there is a change in dimensionality of the result, the
-        # answer will have to be a normal array
-        # If the dimensionality is preserved, we can keep the structure
-        # of the parent
         parent_arr = self.parent_arr # local for speed
         parent_arr_ndim = parent_arr.ndim
         # The logic is: when using scalar indexing, the dimensionality of the
@@ -246,48 +228,44 @@ class Axis(object):
         # XXX fancy indexing
         if parent_arr_ndim == 1 and not isinstance(key, slice):
             return np.ndarray.__getitem__(parent_arr, key)
-
-        # XXX TODO - fancy indexing
+        
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
         fullslice = self.make_slice(key)
+        # now get the translated key
         key = fullslice[self.index]
-##         fullslice = [slice(None)] * parent_arr_ndim
-##         fullslice[self.index] = key
-        #print 'getting output'  # dbg
         out = np.ndarray.__getitem__(parent_arr, tuple(fullslice))
-        #print 'returning output'  # dbg
 
+        newaxes = []
+        for a in parent_arr.axes:
+            newaxes.append( a._copy(parent_arr=parent_arr) )
+        
         if isinstance(key, slice):
-            newaxes = []
             # we need to find the ticks, if any
             if self.ticks:
                 newticks = self.ticks[key]
             else:
                 newticks = None
-
-            newaxes = []
-            for a in parent_arr.axes:
-                newaxes.append( a._copy(parent_arr=parent_arr) )
-            # insert new axis
+            # insert new Axis with sliced ticks
             newaxis = self._copy(parent_arr=parent_arr, ticks=newticks)
             newaxes[self.index] = newaxis
 
-            _set_axes(out, newaxes)
-
         if out.ndim < parent_arr_ndim:
             # We lost a dimension, drop the axis!
-            _set_axes(out, _pull_axis(parent_arr.axes, self))
+            newaxes = _pull_axis(newaxes, self)
+
         elif out.ndim > parent_arr_ndim:
             # We were indexed by a newaxis (None),
-            # need to insert an unlabeled axis before this axis
+            # need to insert an unlabeled axis before this axis.
+            # Do this by inserting an Axis at the end of the axes, then
+            # reindexing them
             new_axis = self.__class__(None, out.ndim-1, parent_arr)
-            newaxes = parent_arr.axes[:]
             new_ax_order = [ax.index for ax in newaxes]
             new_ax_order.insert(self.index, out.ndim-1)
             newaxes.append(new_axis)
-            ro_axes = _reordered_axes(newaxes, new_ax_order)
-            _set_axes(out, ro_axes)
+            newaxes = _reordered_axes(newaxes, new_ax_order)
+
+        _set_axes(out, newaxes)
             
         return out
 
@@ -322,7 +300,6 @@ class Axis(object):
         else:
             lookups = (key.start, key.stop)
         
-        # XYZ!! What to do if the ticks are integers???
         looked_up = []
         for a in lookups:
             if a is None:
@@ -422,6 +399,7 @@ class Axis(object):
         kept = [t for t in self.ticks if t not in ticks]
         return self.keep(kept)
 
+# -- Axis utilities ------------------------------------------------------------
 
 def _names_to_numbers(axes, ax_ids):
     """
@@ -449,7 +427,10 @@ def _validate_axes(axes):
         nt.assert_true(p is a.parent_arr)
 
 def _pull_axis(axes, target_axis):
-    ''' Return axes removing any axis matching `target_axis`'''
+    """
+    Return axes removing any axis matching `target_axis`. A match
+    is determined by the Axis.index
+    """
     newaxes = []
     parent_arr = target_axis.parent_arr
     c = 0
@@ -501,6 +482,52 @@ def names2namedict(names):
     raise NotImplementedError() 
 
 
+# -- Method Wrapping -----------------------------------------------------------
+
+def _apply_reduction(opname):
+    super_op = getattr(np.ndarray, opname)
+    def runs_op(*args, **kwargs):
+        inst = args[0]
+        axis = kwargs.pop('axis', None)
+        if not isinstance(inst, DataArray):
+            # do nothing special
+            return super_op(*args, **kwargs)
+        # this is a full reduction, so we lose all axes
+        if axis is None:
+            return super_op(*args, **kwargs)
+
+        axes = list(inst.axes)
+        # try to convert a named Axis to an integer..
+        # don't try to catch an error
+        axis_idx = _names_to_numbers(inst.axes, [axis])[0]
+        axes = _pull_axis(axes, inst.axes[axis_idx])
+        kwargs['axis'] = axis_idx
+        arr = super_op(*args, **kwargs)
+        _set_axes(arr, axes)
+        return arr
+    runs_op.func_name = opname
+    runs_op.func_doc = super_op.__doc__
+    return runs_op
+
+def _apply_sorting(opname):
+    super_op = getattr(np.ndarray, opname)
+    def runs_op(*args, **kwargs):
+        inst = args[0]
+        axis = kwargs.get('axis', -1)
+        if axis is not None:
+            axis = _names_to_numbers(inst.axes, [axis])[0]
+            kwargs['axis'] = axis
+        if axis is None or inst.axes[axis].ticks:
+            arr = np.asarray(inst).copy()
+            super_op(*args, **kwargs)
+            return arr
+        # otherwise, just do the op on this array
+        arr = super_op(*args, **kwargs)
+        return arr
+    runs_op.func_name = opname
+    runs_op.func_doc = super_op.__doc__
+    return runs_op
+
 class DataArray(np.ndarray):
 
     # XXX- we need to figure out where in the numpy C code .T is defined!
@@ -550,6 +577,9 @@ class DataArray(np.ndarray):
         # about this array's geometry
         return stuple( ( slice(None), ) * self.ndim,
                        axes = self.axes )
+
+    def set_label(self, i, label):
+        self.axes[i].set_label(label)
 
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
@@ -804,24 +834,65 @@ class DataArray(np.ndarray):
             return mx-mn
 
     ptp.func_doc = np.ndarray.ptp.__doc__
+    
+    # -- Sorting Ops ---------------------------------------------------------
+    # ndarray sort with axis==None flattens the array: return ndarray
+    
+    # Otherwise, if there are ticks at the axis in question, then
+    # the sample-to-tick correspondence becomes inconsistent across
+    # the remaining axes. Also return a plain ndarray.
+    
+    # Otherwise, order the axis in question--default axis is -1
+    def sort(self, **kwargs):
+        axis = kwargs.get('axis', -1)
+        if axis is not None:
+            axis = _names_to_numbers(self.axes, [axis])[0]
+            kwargs['axis'] = axis
+        if axis is None or self.axes[axis].ticks:
+            # Returning NEW ndarray
+            arr = np.asarray(self).copy()
+            arr.sort(**kwargs)
+            return arr
+        # otherwise, just do the op on this array
+        super(DataArray, self).sort(**kwargs)
 
-    mean = _apply_operation('mean')
-    var = _apply_operation('var')
-    std = _apply_operation('std')
+    def argsort(self, **kwargs):
+        axis = kwargs.get('axis', -1)
+        if axis is not None:
+            axis = _names_to_numbers(self.axes, [axis])[0]
+            kwargs['axis'] = axis
+        if axis is None or self.axes[axis].ticks:
+            # Returning NEW ndarray
+            arr = np.asarray(self)
+            return arr.argsort(**kwargs)
+        # otherwise, just do the op on this array
+        axes = list(self.axes)
+        arr = super(DataArray, self).argsort(**kwargs)
+        _set_axes(arr, axes)
+        return arr
 
-##     ptp = _apply_operation('ptp') # FAILING IN __array_prepare__
-    min = _apply_operation('min')
-    max = _apply_operation('max')
+    def reshape(self, *args, **kwargs):
+        print 'reshape called'
+        return super(DataArray, self).reshape(*args, **kwargs)
+    
+    # -- Reductions ----------------------------------------------------------
+    mean = _apply_reduction('mean')
+    var = _apply_reduction('var')
+    std = _apply_reduction('std')
 
-    sum = _apply_operation('sum')
-    prod = _apply_operation('prod')
+    min = _apply_reduction('min')
+    max = _apply_reduction('max')
+
+    sum = _apply_reduction('sum')
+    prod = _apply_reduction('prod')
     
     ### these change the meaning of the axes..
     ### should probably return ndarrays
-    argmax = _apply_operation('argmax')
-    argmin = _apply_operation('argmin')
-    argsort = _apply_operation('argsort')
-    
+    argmax = _apply_reduction('argmax')
+    argmin = _apply_reduction('argmin')
+
+# -- DataArray utilities -------------------------------------------------------
+
 def _reordered_axes(axes, axis_indices, parent=None):
     ''' Perform axis reordering according to `axis_indices`
     Checks to ensure that all axes have the same parent array.

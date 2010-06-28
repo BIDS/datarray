@@ -100,7 +100,6 @@ def test_2d():
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.labels, ('y',)
     yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
-    
 
 def test__pull_axis():
     a = Axis('x', 0, None)
@@ -116,7 +115,6 @@ def test__pull_axis():
     new_axes = [a, Axis('z', 1, None)]
     yield nt.assert_equal, new_axes, _pull_axis(axes, t_pos)
     
-
 def test__reordered_axes():
     a = Axis('x', 0, None)
     b = Axis('y', 1, None)
@@ -125,6 +123,20 @@ def test__reordered_axes():
     names_inds = [(ax.label, ax.index) for ax in res]
     yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
 
+def test_axis_set_label():
+    a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
+    a.axes[0].set_label('u')
+    yield nt.assert_equal, a.axes[0].label, 'u', 'label change failed'
+    yield nt.assert_equal, a.axis.u, a.axes[0], 'label remapping failed'
+    yield nt.assert_equal, a.axis.u.index, 0, 'label remapping failed'
+
+def test_array_set_label():
+    a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
+    a.set_label(0, 'u')
+    yield nt.assert_equal, a.axes[0].label, 'u', 'label change failed'
+    yield nt.assert_equal, a.axis.u, a.axes[0], 'label remapping failed'
+    yield nt.assert_equal, a.axis.u.index, 0, 'label remapping failed'
+    
 def test_axis_make_slice():
     p_arr = np.random.randn(2,4,5)
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
