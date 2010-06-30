@@ -20,7 +20,7 @@ Methods::
 * 'any',
 * :ref:`'argmax', <wrapped_reduction_special>`
 * :ref:`'argmin', <wrapped_reduction_special>`
-* :ref:`'argsort',<wrapped_reduction_special>`
+* :ref:`'argsort',<sorting_methods>`
 * 'astype',
 * 'byteswap',
 * :ref:`'choose',<wtf_methods>`
@@ -55,7 +55,7 @@ Methods::
 * :ref:`'searchsorted',<wtf_methods>`
 * 'setfield',
 * 'setflags',
-* 'sort',
+* :ref:`'sort',<sorting_methods>`
 * :ref:`'squeeze',<reshaping_methods>`
 * :ref:`'std',<wrapped_reduction>`
 * :ref:`'sum',<wrapped_reduction>`
@@ -68,6 +68,18 @@ Methods::
 * :ref:`'transpose',<explicitly_redef>`
 * :ref:`'var',<wrapped_reduction>`
 * 'view']
+
+.. _sorting_methods:
+
+Sorting
+-------
+
+sort() and argsort()
+
+These methods default to sorting the flattened array (returning an
+ndarray). If given an axis keyword, then it is possible to preserve
+the axes meta-data *only if* there are no ticks on the sorted
+Axis. Otherwise, an ndarray is returned.
 
 .. _explicitly_redef:
 
@@ -88,14 +100,18 @@ These methods are wrapped in a generic runner that pays attention to which axis 
 Special reductions (eg, argmin)
 -------------------------------
 
+These methods are currently wrapped as a generic reduction. 
+
 These methods return an index, or an array of indices into the array in question. That significantly changes the model of the array in question. Should the return type here NOT be DataArray?
 
 .. _incomplete_reductions:
 
-Strange per-axis operations (eg, cumsum)
-----------------------------------------
+Accumulations
+-------------
 
-These methods have the property of taking an "axis" keyword argument, and yet not eliminating that axis. They also default to working on the flattened array if the axis parameter is left unspecified. **No solution implemented**
+These methods are wrapped in a generic accumulator.
+
+These methods have the property of taking an "axis" keyword argument, and yet not eliminating that axis. They also default to working on the flattened array if the axis parameter is left unspecified.
 
 .. _wtf_methods:
 
@@ -109,5 +125,11 @@ Possibly N/A methods?
 Reshapes
 --------
 
-Reshaping is prickly.. I've already implemented certain slicing mechanisms that can insert unlabeled axes with length-1. This seems legitimate. Also squeezing out length-1 seems legitimate (**even if the Axis is labeled?**). **No solution implemented**
+Reshaping is prickly.. I've already implemented certain slicing
+mechanisms that can insert unlabeled axes with length-1. This seems
+legitimate. Also squeezing out length-1 seems legitimate (**even if
+the Axis is labeled?**). 
+
+The reshaping currently only trims or pads the array shape with 1s, or
+flattens the array entirely (returning an ndarray).
 

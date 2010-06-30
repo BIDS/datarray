@@ -60,6 +60,7 @@ class KeyStruct(object):
     def __setattr__(self, key, val):
         self[key] = val
 
+
 class Axis(object):
     """Object to access a given axis of an array.
 
@@ -137,7 +138,8 @@ class Axis(object):
             return None
         
         nticks = len(ticks)
-        # XXX maybe ticks of each axis should be validated in __array_finalize__?
+        # XXX maybe Axis ticks should be validated in __array_finalize__?
+
         # Sanity check: the first dimension must match that of the parent array
         if self.parent_arr is not None \
                and nticks != self.parent_arr.shape[self.index]:
@@ -156,8 +158,9 @@ class Axis(object):
         return t_dict
 
     def set_label(self, label):
-        # XYZ: This makes some potentially scary changes to the parent
-        # array. It may end up being an insidious bug.
+        # XXX: This makes some potentially scary changes to the parent
+        #      array. It may end up being an insidious bug.
+
         # Axis label should be a string or None
         if not isinstance(label, basestring) and label is not None:
             raise ValueError('label must be a string or None')
@@ -432,11 +435,14 @@ def _pull_axis(axes, target_axis):
     is determined by the Axis.index
     """
     newaxes = []
-    parent_arr = target_axis.parent_arr
+    if isinstance(target_axis, (list, tuple)):
+        pulled_indices = [ax.index for ax in target_axis]
+    else:
+        pulled_indices = [target_axis.index]
     c = 0
     for a in axes:
-        if a.index != target_axis.index:
-            newaxes.append(a._copy(index=c, parent_arr=parent_arr))
+        if a.index not in pulled_indices:
+            newaxes.append(a._copy(index=c))
             c += 1
     return newaxes    
 
@@ -455,6 +461,8 @@ def _set_axes(dest, in_axes):
       dest : array
       in_axes : sequence of axis objects
     """
+    # XXX: This method is called multiple times during a DataArray's lifetime.
+    #      Should rethink exactly when Axis copies need to be made
     axes = []
     labels = []
     ax_holder = KeyStruct()
@@ -462,14 +470,13 @@ def _set_axes(dest, in_axes):
     for ax in in_axes:
         new_ax = ax._copy(parent_arr=dest)
         axes.append(new_ax)
-        labels.append(ax.label)
-        try:
-            ax_holder[ax.name] = new_ax
-        except AttributeError:
+        if hasattr(ax_holder, ax.name):
             raise NamedAxisError(
                 'There is another Axis in this group with ' \
                 'the same name'
                 )
+        labels.append(ax.label)
+        ax_holder[ax.name] = new_ax
     # Store these containers as attributes of the destination array
     dest.axes = tuple(axes)
     dest.labels = tuple(labels)
@@ -484,17 +491,29 @@ def names2namedict(names):
 
 # -- Method Wrapping -----------------------------------------------------------
 
-def _apply_reduction(opname):
+# XXX: Need to convert from positional arguments to named arguments
+
+def _apply_reduction(opname, kwnames):
+    """
+    Wraps the reduction operator with name `opname`. Must supply the
+    method keyword argument names, since in many cases these methods
+    are called with the keyword args as positional args
+    """
     super_op = getattr(np.ndarray, opname)
+    if 'axis' not in kwnames:
+        raise ValueError(
+            'The "axis" keyword must be part of an ndarray reduction signature'
+            )
     def runs_op(*args, **kwargs):
         inst = args[0]
+        # re/place any additional args in the appropriate keyword arg
+        for nm, val in zip(kwnames, args[1:]):
+            kwargs[nm] = val
         axis = kwargs.pop('axis', None)
-        if not isinstance(inst, DataArray):
-            # do nothing special
-            return super_op(*args, **kwargs)
-        # this is a full reduction, so we lose all axes
-        if axis is None:
-            return super_op(*args, **kwargs)
+        if not isinstance(inst, DataArray) or axis is None:
+            # do nothing special if not a DataArray, otherwise
+            # this is a full reduction, so we lose all axes
+            return super_op(inst, **kwargs)
 
         axes = list(inst.axes)
         # try to convert a named Axis to an integer..
@@ -502,31 +521,41 @@ def _apply_reduction(opname):
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
         axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
-        arr = super_op(*args, **kwargs)
+        arr = super_op(inst, **kwargs)
         _set_axes(arr, axes)
         return arr
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
 
-def _apply_sorting(opname):
+def _apply_accumulation(opname, kwnames):
     super_op = getattr(np.ndarray, opname)
+    if 'axis' not in kwnames:
+        raise ValueError(
+            'The "axis" keyword must be part of an ndarray reduction signature'
+            )
     def runs_op(*args, **kwargs):
         inst = args[0]
-        axis = kwargs.get('axis', -1)
-        if axis is not None:
-            axis = _names_to_numbers(inst.axes, [axis])[0]
-            kwargs['axis'] = axis
-        if axis is None or inst.axes[axis].ticks:
-            arr = np.asarray(inst).copy()
-            super_op(*args, **kwargs)
-            return arr
-        # otherwise, just do the op on this array
-        arr = super_op(*args, **kwargs)
-        return arr
+        
+        # re/place any additional args in the appropriate keyword arg
+        for nm, val in zip(kwnames, args[1:]):
+            kwargs[nm] = val
+        axis = kwargs.pop('axis', None)
+        if axis is None:
+            # this will flatten the array and lose all dimensions
+            return super_op(np.asarray(inst), **kwargs)
+
+        axes = list(inst.axes)
+        # try to convert a named Axis to an integer..
+        # don't try to catch an error
+        axis_idx = _names_to_numbers(inst.axes, [axis])[0]
+        kwargs['axis'] = axis_idx
+        return super_op(inst, **kwargs)
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
+            
+    
 
 class DataArray(np.ndarray):
 
@@ -651,20 +680,22 @@ class DataArray(np.ndarray):
                 that_dim = other.shape[that_ax.index]
                 if that_ax.label != this_ax.label:
                     # A valid label can be mis-matched IFF the other
-                    # (label, length) pair is (None, 1).
-                    # In this case, the singleton dimension should
-                    # adopt the label of the matching dimension in the
-                    # other array
-                    if (that_ax.label, that_dim) != (None, 1) and \
-                       (this_ax.label, this_dim) != (None, 1):
+                    # (label, length) pair is:
+                    # * (None, 1)
+                    # * (None, {this,that}_dim).                    
+                    # In this case, the unlabeled Axis should
+                    # adopt the label of the matching Axis in the
+                    # other array (handled in elsewhere)
+                    if that_ax.label is not None and this_ax.label is not None:
                         raise NamedAxisError(
                             'Axis labels are incompatible for '\
                             'a binary operation: ' \
                             '%s, %s'%(self.labels, other.labels)
                             )
 
-                # XYZ: Does this dimension compatibility check happen
-                # before __array_prepare__ is even called???
+                # XXX: Does this dimension compatibility check happen
+                #      before __array_prepare__ is even called? This
+                #      error is not fired when there's a shape mismatch.
                 if this_dim==1 or that_dim==1 or this_dim==that_dim:
                     continue
                 raise NamedAxisError('Dimension with label %s has a '\
@@ -807,7 +838,6 @@ class DataArray(np.ndarray):
         out = np.ndarray.transpose(self, proc_axids)
         _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
         return out
-
     transpose.func_doc = np.ndarray.transpose.__doc__
 
     def swapaxes(self, axis1, axis2):
@@ -821,7 +851,6 @@ class DataArray(np.ndarray):
         out = np.ndarray.transpose(self, ax_idx)
         _set_axes(out, _reordered_axes(self.axes, ax_idx, parent=out))
         return out
-
     swapaxes.func_doc = np.ndarray.swapaxes.__doc__
 
     def ptp(self, axis=None, out=None):
@@ -832,8 +861,94 @@ class DataArray(np.ndarray):
             return mx
         else:
             return mx-mn
-
     ptp.func_doc = np.ndarray.ptp.__doc__
+
+    # -- Various extraction and reshaping methods ----------------------------
+    def diagonal(self, *args, **kwargs):
+        # reverts to being an ndarray
+        args = (np.asarray(self),) + args
+        return np.diagonal(*args, **kwargs)
+    diagonal.func_doc = np.ndarray.diagonal.__doc__
+    
+    def flatten(self, **kwargs):
+        # reverts to being an ndarray
+        return np.asarray(self).flatten(**kwargs)
+    flatten.func_doc = np.ndarray.flatten.__doc__
+
+    def ravel(self, **kwargs):
+        # reverts to being an ndarray
+        return np.asarray(self).ravel(**kwargs)
+    ravel.func_doc = np.ndarray.ravel.__doc__
+
+    def repeat(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def squeeze(self):
+        axes = list(self.axes)
+        pinched_axes = filter(lambda x: self.shape[x.index]==1, axes)
+        squeezed_shape = filter(lambda d: d>1, self.shape)
+        axes = _pull_axis(axes, pinched_axes)
+        arr = self.reshape(squeezed_shape)
+        _set_axes(arr, axes)
+        return arr
+
+    def reshape(self, *args, **kwargs):
+        # XXX:
+        # * reshapes such as a.reshape(a.shape + (1,)) will be supported
+        # * reshapes such as a.ravel() will return ndarray
+        # * reshapes such as a.reshape(x', y', z') ???
+        print 'reshape called', args, kwargs
+        if len(args) == 1:
+            if isinstance(args[0], (tuple, list)):
+                args = args[0]
+            else:
+                return np.asarray(self).reshape(*args)
+        # if adding/removing length-1 dimensions, then add an unlabeled Axis
+        # or pop an Axis
+        old_shape = list(self.shape)
+        new_shape = list(args)
+        old_non_single_dims = filter(lambda d: d>1, old_shape)
+        new_non_single_dims = filter(lambda d: d>1, new_shape)
+        axes_to_pull = []
+        axes = list(self.axes)
+        if old_non_single_dims == new_non_single_dims:
+            # pull axes first
+            i = j = 0
+            while i < len(new_shape) and j < len(old_shape):
+                if new_shape[i] != old_shape[j] and old_shape[j] == 1:
+                    axes_to_pull.append(self.axes[j])
+                else:
+                    i += 1
+                j += 1
+            # pull anything that extends past the length of the new shape
+            axes_to_pull += [self.axes[i] for i in xrange(j, len(old_shape))]
+            old_shape = [self.shape[ax.index]
+                         for ax in axes if ax not in axes_to_pull]
+            axes = _pull_axis(axes, axes_to_pull)
+            # now append axes
+            i = j = 0
+            axes_order = []
+            while i < len(new_shape) and j < len(old_shape):
+                if new_shape[i] != old_shape[j] and new_shape[i] == 1:
+                    idx = len(axes)
+                    axes.append( Axis(None, idx, self) )
+                    axes_order.append(idx)
+                else:
+                    axes_order.append(j)
+                    j += 1
+                i += 1
+            # append None axes for all shapes past the length of the old shape
+            new_idx = range(i, len(new_shape))
+            axes += [Axis(None, idx, self) for idx in new_idx]
+            axes_order += new_idx
+            axes = _reordered_axes(axes, axes_order)
+            arr = super(DataArray, self).reshape(*new_shape)
+            _set_axes(arr, axes)
+            return arr
+
+        # if dimension sizes can be moved around between existing axes,
+        # then go ahead and try to keep the Axis meta-data
+        raise NotImplementedError
     
     # -- Sorting Ops ---------------------------------------------------------
     # ndarray sort with axis==None flattens the array: return ndarray
@@ -843,6 +958,9 @@ class DataArray(np.ndarray):
     # the remaining axes. Also return a plain ndarray.
     
     # Otherwise, order the axis in question--default axis is -1
+
+    # XXX: Might be best to always return ndarray, since the return
+    #      type is so inconsistent
     def sort(self, **kwargs):
         axis = kwargs.get('axis', -1)
         if axis is not None:
@@ -871,25 +989,25 @@ class DataArray(np.ndarray):
         _set_axes(arr, axes)
         return arr
 
-    def reshape(self, *args, **kwargs):
-        print 'reshape called'
-        return super(DataArray, self).reshape(*args, **kwargs)
-    
     # -- Reductions ----------------------------------------------------------
-    mean = _apply_reduction('mean')
-    var = _apply_reduction('var')
-    std = _apply_reduction('std')
+    mean = _apply_reduction('mean', ('axis', 'dtype', 'out'))
+    var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof'))
+    std = _apply_reduction('std', ('axis', 'dtype', 'out', 'ddof'))
 
-    min = _apply_reduction('min')
-    max = _apply_reduction('max')
+    min = _apply_reduction('min', ('axis', 'out'))
+    max = _apply_reduction('max', ('axis', 'out'))
 
-    sum = _apply_reduction('sum')
-    prod = _apply_reduction('prod')
+    sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
+    prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
     
     ### these change the meaning of the axes..
     ### should probably return ndarrays
-    argmax = _apply_reduction('argmax')
-    argmin = _apply_reduction('argmin')
+    argmax = _apply_reduction('argmax', ('axis',))
+    argmin = _apply_reduction('argmin', ('axis',))
+
+    # -- Accumulations -------------------------------------------------------
+    cumsum = _apply_accumulation('cumsum', ('axis', 'dtype', 'out'))
+    cumprod = _apply_accumulation('cumprod', ('axis', 'dtype', 'out'))
 
 # -- DataArray utilities -------------------------------------------------------
 
@@ -1004,8 +1122,9 @@ def _make_singleton_axes(arr, key):
             except IndexError:
                 raise IndexError('too many indices')
     ro_axes = _reordered_axes(new_axes, ax_order)
-    # it seems we have to leave in at least one slicing element
-    # in order to get a new array
+    # Cut down all trailing "slice(None)" objects at the end of the new key.
+    # (But! it seems we have to leave in at least one slicing element
+    #  in order to get a new array)
     while len(new_key)>1 and new_key[-1] == slice(None):
         new_key.pop()
     return tuple(new_dims), ro_axes, tuple(new_key)

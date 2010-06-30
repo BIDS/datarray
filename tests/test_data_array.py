@@ -53,6 +53,9 @@ def test_basic():
     b1 = b.axis.x[1:]
     yield npt.assert_equal, b1, [[3,4], [5,6]]
 
+def test_bad_axes_labels():
+    d = np.random.randn(3,2)
+    nt.assert_raises(NamedAxisError, DataArray, d, labels='xx')
 
 def test_combination():
     narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
@@ -160,6 +163,68 @@ def test_ticks_slicing():
            a.ticks[0::2])
     yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
 
+# -- Tests for reshaping -----------------------------------------------------
+
+def test_flatten_and_ravel():
+    "Test the functionality of ravel() and flatten() methods"
+    d = DataArray(np.arange(20).reshape(4,5), 'xy')
+    df = d.flatten()
+    yield nt.assert_true, type(df) is np.ndarray, 'Type error in flatten'
+    yield nt.assert_true, df.shape == (20,), 'Wrong shape in flatten'
+    df[:4] = 0
+    yield nt.assert_false, (d[0,:4] == 0).all(), 'Copy not made in flatten'
+
+    dr = d.ravel()
+    yield nt.assert_true, type(dr) is np.ndarray, 'Type error in ravel'
+    yield nt.assert_true, dr.shape == (20,), 'Wrong shape in ravel'
+    dr[:4] = 0
+    yield nt.assert_true, (d[0,:4] == 0).all(), 'View not made in ravel'
+
+def test_squeeze():
+    "Test squeeze method"
+    d = DataArray(np.random.randn(3,2,9), 'xyz')
+    d2 = d[None,:,None,:,:,None]
+    yield nt.assert_true, d2.shape == (1,3,1,2,9,1), 'newaxis slicing failed'
+    d3 = d.squeeze()
+    yield nt.assert_true, d3.shape == d.shape, \
+          'squeezing length-1 dimensions failed'
+    yield nt.assert_true, d3.labels == d.labels, 'Axes got lost in squeeze'
+
+def test_reshape():
+    d = DataArray(np.random.randn(3,4,5), 'xyz')
+    new_shape = (1,3,1,4,5)
+    # Test padding the shape
+    d2 = d.reshape(new_shape)
+    new_labels = (None, 'x', None, 'y', 'z')
+    yield nt.assert_true, d2.labels == new_labels, \
+          'Array with inserted dimensions has wrong labels'
+    yield nt.assert_true, d2.shape == new_shape, 'New shape wrong'
+
+    # Test trimming the shape
+    d3 = d2.reshape(d.shape)
+    yield nt.assert_true, d3.labels == d.labels, \
+          'Array with removed dimensions has wrong labels'
+    yield nt.assert_true, d3.shape == d.shape, 'New shape wrong'
+
+    # Test a combo of padding and trimming
+    d4 = d2.reshape(3,4,1,5,1)
+    new_labels = ('x', 'y', None, 'z', None)
+    yield nt.assert_true, d4.labels == new_labels, \
+          'Array with inserted and removed dimensions has wrong labels'
+    yield nt.assert_true, d4.shape == (3,4,1,5,1), 'New shape wrong'
+
+def test_reshape_corners():
+    "Test some corner cases for reshape"
+    d = DataArray(np.random.randn(3,4,5), 'xyz')
+    d2 = d.reshape(-1)
+    yield nt.assert_true, d2.shape == (60,), 'Flattened shape wrong'
+    yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
+
+    d2 = d.reshape(60)
+    yield nt.assert_true, d2.shape == (60,), 'Flattened shape wrong'
+    yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
+
+    
 # -- Tests for redefined methods ---------------------------------------------
     
 def test_transpose():
@@ -181,14 +246,18 @@ def test_swapaxes():
 
 # -- Tests for wrapped ndarray methods ---------------------------------------
 
-_failing_methods = ['ptp']
-_other_wraps = ['argmax', 'argmin', 'argsort']
-_methods = ['mean', 'var', 'std', 'min', 'max', 'sum', 'prod'] + _other_wraps
+other_wraps = ['argmax', 'argmin']
+reductions = ['mean', 'var', 'std', 'min',
+              'max', 'sum', 'prod', 'ptp']
+accumulations = ['cumprod', 'cumsum']
+
+methods = other_wraps + reductions + accumulations
+
 def assert_data_correct(d_arr, op, axis):
     from datarray.datarray import _names_to_numbers 
     super_opr = getattr(np.ndarray, op)
     axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
-    d1 = np.asarray(super_opr(d_arr, axis=axis_idx))
+    d1 = super_opr(np.asarray(d_arr), axis=axis_idx)
     opr = getattr(d_arr, op)
     d2 = np.asarray(opr(axis=axis))
     assert (d1==d2).all(), 'data computed incorrectly on operation %s'%op
@@ -198,26 +267,29 @@ def assert_axes_correct(d_arr, op, axis):
     opr = getattr(d_arr, op)
     d = opr(axis=axis)
     axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
-    axes = _pull_axis(d_arr.axes, d_arr.axes[axis_idx])
+    if op not in accumulations:
+        axes = _pull_axis(d_arr.axes, d_arr.axes[axis_idx])
+    else:
+        axes = d_arr.axes
     assert all( [ax1==ax2 for ax1, ax2 in zip(d.axes, axes)] ), \
            'mislabeled axes from operation %s'%op
 
 def test_wrapped_ops_data():
     a = DataArray(np.random.randn(4,2,6), 'xyz')
-    for m in _methods:
+    for m in methods:
         yield assert_data_correct, a, m, 'x'
-    for m in _methods:
+    for m in methods:
         yield assert_data_correct, a, m, 'y'
-    for m in _methods:
+    for m in methods:
         yield assert_data_correct, a, m, 'z'
 
 def test_wrapped_ops_axes():
     a = DataArray(np.random.randn(4,2,6), 'xyz')
-    for m in _methods:
+    for m in methods:
         yield assert_axes_correct, a, m, 'x'
-    for m in _methods:
+    for m in methods:
         yield assert_axes_correct, a, m, 'y'
-    for m in _methods:
+    for m in methods:
         yield assert_axes_correct, a, m, 'z'
     
 # -- Tests for slicing with "newaxis" ----------------------------------------
@@ -260,11 +332,20 @@ def test_broadcast():
     c = b + a
     yield nt.assert_true, c.labels == ('x', None, 'y'), \
           'broadcast with matched label, but singleton dimension failed'
+    # check that labeled Axis names the resulting Axis
+    b = DataArray(np.random.randn(3,2,4), ['x', 'z', 'y'])
+    a = DataArray(np.random.randn(2,4), [None, 'y'])
+    # this should work
+    c = b + a
+    yield nt.assert_true, c.labels == ('x', 'z', 'y'), \
+          'broadcast with unlabeled dimensions failed'
+
+
 
 # -- Testing slicing failures ------------------------------------------------
 @nt.raises(NamedAxisError)
 def test_broadcast_fails1():
-    a = DataArray( np.random.randn(2,5,6), 'xyz' )
+    a = DataArray( np.random.randn(5,6), 'yz' )
     b = DataArray( np.random.randn(5,6), 'xz' )
     c = a + b
 
@@ -277,6 +358,7 @@ def test_broadcast_fails2():
 
 @nt.raises(IndexError)
 def test_indexing_fails():
+    "Ensure slicing non-existent dimension fails"
     a = DataArray( np.random.randn(2,5,6), 'xy' )
     a[:2,:1,:2,:5]
 
