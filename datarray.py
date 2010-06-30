@@ -408,7 +408,8 @@ class Axis(object):
 
 def _names_to_numbers(axes, ax_ids):
     """
-    Convert any axis names to axis indices. Pass through any integer ax_id.
+    Convert any axis names to axis indices. Pass through any integer ax_id,
+    and convert to integer any ax_id that is an Axis.
     """
     proc_ids = []
     for ax_id in ax_ids:
@@ -418,7 +419,7 @@ def _names_to_numbers(axes, ax_ids):
                 raise NamedAxisError('No axis named %s' % ax_id)
             proc_ids.append(matches[0].index)
         else:
-            proc_ids.append(ax_id)
+            proc_ids.append(int(ax_id))
     return proc_ids
 
 

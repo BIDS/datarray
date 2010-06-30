@@ -223,9 +223,6 @@ def test_reshape_corners():
     d2 = d.reshape(60)
     yield nt.assert_true, d2.shape == (60,), 'Flattened shape wrong'
     yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
-
-    
-# -- Tests for redefined methods ---------------------------------------------
     
 def test_axis_as_index():
     narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]),
@@ -233,7 +230,8 @@ def test_axis_as_index():
     npt.assert_array_equal(np.sum(narr, axis=narr.axis.a),
                            [5, 7, 9])
 
-
+# -- Tests for redefined methods ---------------------------------------------
+    
 def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     bt = b.T
