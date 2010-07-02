@@ -10,7 +10,7 @@ This is one of those efforts. Currently, this is very experimental. The API *wil
 
 At present, there is no accepted standard solution to dealing with tabular data such as this. However, based on the following list of ad-hoc and proposal-level implementations of something such as this, there is *definitely* a demand for it For examples, in no particular order:
 
-* Elaine and some friends wrote the slick-sounding *tabular*: *http://bitbucket.org/elaine/tabular/src*
+* Elaine and some friends wrote the slick-sounding [Tabular](http://bitbucket.org/elaine/tabular/src).
 
 * [scikits.statsmodels](http://scikits.appspot.com/statsmodels) sounded as though it had some features I'd like to eventually see implemented on top of something such as datarray, and [Skipper](http://scipystats.blogspot.com/) seemed pretty interested in something like this himself.
 
