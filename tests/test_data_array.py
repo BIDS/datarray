@@ -145,9 +145,16 @@ def test_axis_make_slice():
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
     a = d_arr.axis.capitals
-    sl = a.make_slice( slice('london', 'moscow')  )
+
+    yield nt.assert_equal, a.tick_to_index('london'), 1, 'tick not translated to index correctly'
+    
+    idx = a.slice_tick_to_index(slice('london', 'moscow'))
+    yield nt.assert_equal, idx, slice(1,4), 'slice not translated to indices correctly'
+    
+    sl = a.make_slice( a.slice_tick_to_index(slice('london', 'moscow')))
     should_be = ( slice(None), slice(None), slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from ticks not correct'
+    
     sl = a.make_slice( slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from idx not correct'
 
@@ -157,11 +164,19 @@ def test_ticks_slicing():
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
     a = d_arr.axis.capitals
-    sub_arr = d_arr.axis.capitals['washington'::2]
+    sub_arr = d_arr.axis.capitals.named(slice('washington',None,2))
     yield (nt.assert_equal,
            sub_arr.axis.capitals.ticks,
            a.ticks[0::2])
     yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
+
+# test abbreviated syntax for looking up ticks
+def test_ticks_lookup():
+    p_arr = np.random.randn(3, 4)
+    row_spec = 'row', ['foo', 'bar', 'baz']
+    col_spec = 'col', ['spam', 'eggs', 'ham', 'baked beans']
+
+    d_arr = DataArray(p_arr, [row_spec, col_spec])
 
 # -- Tests for reshaping -----------------------------------------------------
 

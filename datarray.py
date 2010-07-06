@@ -279,10 +279,8 @@ class Axis(object):
 
         Parameters
         ----------
-        key : a slice object, single tick-like item, or None
-          This slice object may have arbitrary types for .start, .stop,
-          in which case tick labels will be looked up. The .step attribute
-          of course must be None or an integer.
+        key : a slice object or None
+          This slice object should refer to actual indices, not tick names.
 
         Returns
         -------
@@ -291,55 +289,44 @@ class Axis(object):
         """
 
         full_slicing = [ slice(None) ] * self.parent_arr.ndim
+        full_slicing[self.index] = key
+        return tuple(full_slicing)
+    
+    def tick_to_index(self, key):
+        if key is None: return None
+        try:
+            return self._tick_dict[key]
+        except KeyError:
+            raise IndexError(
+                'Could not find an index to match %s'%str(key)
+                )
 
-        # if no ticks, pop in the key and pray (will raise later)
-        if not self.ticks:
-            full_slicing[self.index] = key
-            return tuple(full_slicing)
-
+    def slice_tick_to_index(self, key):
         # in either case, try to translate slicing key
         if not isinstance(key, slice):
-            lookups = (key,)
-        else:
-            lookups = (key.start, key.stop)
+            return self.tick_to_index(key)
         
-        looked_up = []
-        for a in lookups:
-            if a is None:
-                looked_up.append(a)
-                continue
-            try:
-                idx = self._tick_dict[a]
-            except KeyError:
-                if not isinstance(a, int):
-                    raise IndexError(
-                        'Could not find an index to match %s'%str(a)
-                        )
-                idx = a
-            looked_up.append(idx)
+        lookups = (key.start, key.stop)
+        looked_up = [self.tick_to_index(a) for a in lookups]
 
-        # if not a slice object, then pop in the translated index and return
-        if not isinstance(key, slice):
-            full_slicing[self.index] = looked_up[0]
-            return tuple(full_slicing)
-        
-        # otherwise, go for the step size now
         step = key.step
         if not isinstance(step, (int, type(None))):
             raise IndexError(
                 'Slicing step size must be an integer or None, not %s'%str(step)
                 )
-        looked_up = looked_up + [step]
+        looked_up.append(step)
         new_key = slice(*looked_up)
-        full_slicing[self.index] = new_key
-        return tuple(full_slicing)
+        return new_key
         
-    def at(self, tick):
+    def named(self, tick):
         """
-        Return data at a given tick.
+        Return data at a given tick or range of ticks.
+        
+        Accepts a slice from one tick to another, though this has to be written
+        out as slice(tick1, tick2) or slice(tick1, tick2, step).
 
         >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
-        >>> arr = narr.axis.b.at('c')
+        >>> arr = narr.axis.b.named('c')
         >>> arr.axes
         [Axis(label='a', index=0, ticks=None)]
         >>>     
@@ -347,7 +334,7 @@ class Axis(object):
         """
         if not self.ticks:
             raise ValueError('axis must have ticks to extract data at a given tick')
-        slicing = self.make_slice(tick)
+        slicing = self.make_slice(self.slice_tick_to_index(tick))
         return self.parent_arr[slicing]
     
     def keep(self, ticks):
@@ -814,6 +801,19 @@ class DataArray(np.ndarray):
             arr = self.axes[0][key]
 
         return arr
+
+    def __getattr__(self, attr):
+        # Allows referring to an axis with a simple attribute, as long as its
+        # name does not conflict with an existing attribute.
+        #
+        # For example: a.axis.capitals.named('london')
+        # can be shortened to: a.capitals.named('london')
+        
+        if attr in self.axis.__dict__:
+            return self.axis[attr]
+        else:
+            raise AttributeError("%r object has no attribute or axis %r" %
+                                 (self.__class__.__name__, attr))
 
     def __str__(self):
         s = super(DataArray, self).__str__()
