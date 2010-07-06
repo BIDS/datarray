@@ -20,6 +20,8 @@ At present, there is no accepted standard solution to dealing with tabular data 
 
 * [larry](http://github.com/kwgoodman/la), or labeled array, often comes up in discussions.
 
+* [divisi](http://github.com/commonsense/divisi2) includes labeled sparse and dense arrays.
+
 * Finally, of course, there is [Fernando Perez's original work on datarray](http://www.github.com/fperez/datarray), of which this is a fork.
 
 ## Project Goals
