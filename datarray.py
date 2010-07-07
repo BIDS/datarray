@@ -286,7 +286,10 @@ class Axis(object):
         full_slicing[self.index] = key
         return tuple(full_slicing)
     
-    def tick_to_index(self, key):
+    def index_for(self, key):
+        """
+        Translate a tick name into an index.
+        """
         if key is None: return None
         try:
             return self._tick_dict[key]
@@ -295,22 +298,42 @@ class Axis(object):
                 'Could not find an index to match %s'%str(key)
                 )
 
-    def slice_tick_to_index(self, key):
+    def indices_for_slice(self, key):
+        """
+        Translate tick names, possibly as a slice, into indices.
+        """
         # in either case, try to translate slicing key
         if not isinstance(key, slice):
-            return self.tick_to_index(key)
+            return self.index_for(key)
         
-        lookups = (key.start, key.stop)
-        looked_up = [self.tick_to_index(a) for a in lookups]
-
         step = key.step
         if not isinstance(step, (int, type(None))):
             raise IndexError(
                 'Slicing step size must be an integer or None, not %s'%str(step)
                 )
-        looked_up.append(step)
-        new_key = slice(*looked_up)
-        return new_key
+        start = self.index_for(key.start)
+        stop = self.index_for(key.stop)
+        return slice(start, stop, step)
+
+    def name_for(self, key):
+        """
+        Translate an index into a tick name.
+        """
+        if key is None: return None
+        if self.ticks is None: return key
+        return self.ticks[key]
+
+    def names_for_slice(self, key):
+        """
+        Translate indices, possibly a slice, into tick names.
+        """
+        if key is None: return None
+        if self.ticks is None: return key
+        if not isinstance(key, slice):
+            return self.name_for(key)
+        start = self.name_for(key.start)
+        stop = self.name_for(key.stop)
+        return slice(start, stop, key.step)
         
     def named(self, tick):
         """
@@ -328,7 +351,7 @@ class Axis(object):
         """
         if not self.ticks:
             raise ValueError('axis must have ticks to extract data at a given tick')
-        slicing = self.make_slice(self.slice_tick_to_index(tick))
+        slicing = self.make_slice(self.indices_for_slice(tick))
         return self.parent_arr[slicing]
     
     def keep(self, ticks):

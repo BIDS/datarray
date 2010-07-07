@@ -146,12 +146,12 @@ def test_axis_make_slice():
     d_arr = DataArray(p_arr, [None, None, ax_spec])
     a = d_arr.axis.capitals
 
-    yield nt.assert_equal, a.tick_to_index('london'), 1, 'tick not translated to index correctly'
+    yield nt.assert_equal, a.index_for('london'), 1, 'tick not translated to index correctly'
     
-    idx = a.slice_tick_to_index(slice('london', 'moscow'))
+    idx = a.indices_for_slice(slice('london', 'moscow'))
     yield nt.assert_equal, idx, slice(1,4), 'slice not translated to indices correctly'
     
-    sl = a.make_slice( a.slice_tick_to_index(slice('london', 'moscow')))
+    sl = a.make_slice( a.indices_for_slice(slice('london', 'moscow')))
     should_be = ( slice(None), slice(None), slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from ticks not correct'
     
