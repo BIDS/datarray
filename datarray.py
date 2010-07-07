@@ -7,8 +7,6 @@ import copy
 import numpy as np
 import nose.tools as nt
 
-from stuple import *
-
 #-----------------------------------------------------------------------------
 # Classes and functions
 #-----------------------------------------------------------------------------
@@ -590,13 +588,6 @@ class DataArray(np.ndarray):
 
 
         return arr
-
-    @property
-    def aix(self):
-        # Returns an anonymous slicing tuple that knows
-        # about this array's geometry
-        return stuple( ( slice(None), ) * self.ndim,
-                       axes = self.axes )
 
     def set_label(self, i, label):
         self.axes[i].set_label(label)
