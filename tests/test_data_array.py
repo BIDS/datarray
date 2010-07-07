@@ -172,11 +172,18 @@ def test_ticks_slicing():
 
 # test abbreviated syntax for looking up ticks
 def test_ticks_lookup():
-    p_arr = np.random.randn(3, 4)
-    row_spec = 'row', ['foo', 'bar', 'baz']
-    col_spec = 'col', ['spam', 'eggs', 'ham', 'baked beans']
+    p_arr = np.random.randn(4, 5)
+    row_spec = 'country', ['Netherlands', 'Uruguay', 'Germany', 'Spain']
+    col_spec = 'year', [1994, 1998, 2002, 2006, 2010]
 
     d_arr = DataArray(p_arr, [row_spec, col_spec])
+    entry1 = d_arr.country.named('Netherlands').year.named(1998)
+    entry2 = d_arr[0,1]
+    yield nt.assert_equal, entry1, entry2
+
+    slice1 = d_arr.country.named('Germany').year.named(slice(1994, 2010))
+    slice2 = d_arr[2, 0:4]
+    yield nt.assert_true, (slice1 == slice2).all()
 
 # -- Tests for reshaping -----------------------------------------------------
 

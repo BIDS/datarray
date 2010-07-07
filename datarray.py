@@ -145,10 +145,6 @@ class Axis(object):
                 self.index
             raise ValueError(e)
 
-        # Validate types -- using generator for short circuiting
-        if any( (isinstance(t, int) for t in ticks) ):
-            raise ValueError('Ticks cannot be integers')
-        
         # Validate uniqueness
         t_dict = dict(zip(ticks, xrange(nticks)))
         if len(t_dict) != nticks:
