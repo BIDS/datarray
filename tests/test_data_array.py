@@ -404,22 +404,18 @@ def test_shifty_labels():
     b = a[0,:2]
     assert (b == arr[0,:2]).all(), 'shifty labels strike again!'
 
-# -- Tests with "aix" slicing ------------------------------------------------
+# -- Tests with axis attributes, formerly known as "aix" slicing -----------
 def test_axis_slicing():
     np_arr = np.random.randn(3,4,5)
     a = DataArray(np_arr, 'xyz')
-    b = a[ a.aix.y[:2].x[::2] ]
+    b = a.y[:2].x[::2]
     yield nt.assert_true, (b==a[::2,:2]).all(), 'unordered axis slicing failed'
-
-    b = a[ a.aix.z[:2] ]
-    yield nt.assert_true, (b==a.axis.z[:2]).all(), 'axis slicing inconsistent'
-    yield nt.assert_true, b.labels == ('x', 'y', 'z')
 
 def test_axis_slicing_both_ways():
     a = DataArray(np.random.randn(3,4,5), 'xyz')
 
-    b1 = a.axis.y[::2].axis.x[1:]
-    b2 = a[ a.aix.y[::2].x[1:] ]
+    b1 = a.x[1:].y[::2]
+    b2 = a.y[::2].x[1:]
 
     yield nt.assert_true, (b1==b2).all()
     yield nt.assert_true, b1.labels == b2.labels
