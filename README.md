@@ -10,15 +10,17 @@ This is one of those efforts. Currently, this is very experimental. The API *wil
 
 At present, there is no accepted standard solution to dealing with tabular data such as this. However, based on the following list of ad-hoc and proposal-level implementations of something such as this, there is *definitely* a demand for it For examples, in no particular order:
 
-* Elaine and some friends wrote the slick-sounding [Tabular](http://bitbucket.org/elaine/tabular/src).
+* [Tabular](http://bitbucket.org/elaine/tabular/src) implements a spreadsheet-inspired datatype, with rows/columns, csv/etc. IO, and fancy tabular operations.
 
-* [scikits.statsmodels](http://scikits.appspot.com/statsmodels) sounded as though it had some features I'd like to eventually see implemented on top of something such as datarray, and [Skipper](http://scipystats.blogspot.com/) seemed pretty interested in something like this himself.
+* [scikits.statsmodels](http://scikits.appspot.com/statsmodels) sounded as though it had some features we'd like to eventually see implemented on top of something such as datarray, and [Skipper](http://scipystats.blogspot.com/) seemed pretty interested in something like this himself.
 
-* [pandas](http://pandas.sourceforge.net/), like scikits, also builds on this sort of functionality.
+* [scikits.timeseries](http://scikits.appspot.com/timeseries) also has a time-series-specific object that's somewhat reminiscent of labeled arrays.
 
-* [pydataframe](http://code.google.com/p/pydataframe/) is supposed to be a clone of R's data.frame, which scikits.statsmodels and pandas both seem to be missing.
+* [pandas](http://pandas.sourceforge.net/) is based around a number of DataFrame-esque datatypes.
 
-* [larry](http://github.com/kwgoodman/la), or labeled array, often comes up in discussions.
+* [pydataframe](http://code.google.com/p/pydataframe/) is supposed to be a clone of R's data.frame.
+
+* [larry](http://github.com/kwgoodman/la), or "labeled array," often comes up in discussions alongside pandas.
 
 * [divisi](http://github.com/commonsense/divisi2) includes labeled sparse and dense arrays.
 
@@ -36,10 +38,5 @@ At present, there is no accepted standard solution to dealing with tabular data 
 
 ## TODO:
 
-1. Try to integrate self more fully into the scipy community.
-
-2. Familiarize myself with the internal implementation of datarray.
-
-3. Might as well look at larry and tabular as well!
-
-4. (Maybe) Figure out how R's data.frame works.
+1. Nail down the interface.
+2. Agree on what should and shouldn't be in datarray
