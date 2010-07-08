@@ -58,6 +58,33 @@ class KeyStruct(object):
     def __setattr__(self, key, val):
         self[key] = val
 
+class NamedAxisAccessor(object):
+    """
+    An object that accepts __getitem__ lookups, translates names to indices,
+    and looks up those indices on the parent axis.
+
+    This is used as the .named property of an Axis.
+    """
+    def __init__(self, axis):
+        self.axis = axis
+
+    def __getitem__(self, tick):
+        """
+        Return data at a given tick or range of ticks.
+        
+        Accepts a slice from one tick to another, though this has to be written
+        out as slice(tick1, tick2) or slice(tick1, tick2, step).
+
+        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> arr = narr.axis.b.named['c']
+        >>> arr.axes
+        [Axis(label='a', index=0, ticks=None)]
+        >>>     
+        """
+        if not self.axis.ticks:
+            raise ValueError('axis must have ticks to extract data at a given tick')
+        slicing = self.axis.make_slice(self.axis.indices_for_slice(tick))
+        return self.axis.parent_arr[slicing]
 
 class Axis(object):
     """Object to access a given axis of an array.
@@ -71,6 +98,7 @@ class Axis(object):
         self.label = label
         self.index = index
         self.parent_arr = parent_arr
+        self.named = NamedAxisAccessor(self)
         
         # If ticks is not None, label should be defined
         if ticks is not None and label is None:
@@ -335,25 +363,6 @@ class Axis(object):
         stop = self.name_for(key.stop)
         return slice(start, stop, key.step)
         
-    def named(self, tick):
-        """
-        Return data at a given tick or range of ticks.
-        
-        Accepts a slice from one tick to another, though this has to be written
-        out as slice(tick1, tick2) or slice(tick1, tick2, step).
-
-        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
-        >>> arr = narr.axis.b.named('c')
-        >>> arr.axes
-        [Axis(label='a', index=0, ticks=None)]
-        >>>     
-
-        """
-        if not self.ticks:
-            raise ValueError('axis must have ticks to extract data at a given tick')
-        slicing = self.make_slice(self.indices_for_slice(tick))
-        return self.parent_arr[slicing]
-    
     def keep(self, ticks):
         """
         Keep only certain ticks of an axis.
@@ -816,8 +825,8 @@ class DataArray(np.ndarray):
         # Allows referring to an axis with a simple attribute, as long as its
         # name does not conflict with an existing attribute.
         #
-        # For example: a.axis.capitals.named('london')
-        # can be shortened to: a.capitals.named('london')
+        # For example: a.axis.capitals.named['london']
+        # can be shortened to: a.capitals.named['london']
         
         if attr in self.axis.__dict__:
             return self.axis[attr]

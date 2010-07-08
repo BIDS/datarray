@@ -164,7 +164,7 @@ def test_ticks_slicing():
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
     a = d_arr.axis.capitals
-    sub_arr = d_arr.axis.capitals.named(slice('washington',None,2))
+    sub_arr = d_arr.axis.capitals.named['washington'::2]
     yield (nt.assert_equal,
            sub_arr.axis.capitals.ticks,
            a.ticks[0::2])
@@ -177,11 +177,11 @@ def test_ticks_lookup():
     col_spec = 'year', [1994, 1998, 2002, 2006, 2010]
 
     d_arr = DataArray(p_arr, [row_spec, col_spec])
-    entry1 = d_arr.country.named('Netherlands').year.named(1998)
+    entry1 = d_arr.country.named['Netherlands'].year.named[1998]
     entry2 = d_arr[0,1]
     yield nt.assert_equal, entry1, entry2
 
-    slice1 = d_arr.country.named('Germany').year.named(slice(1994, 2010))
+    slice1 = d_arr.country.named['Germany'].year.named[1994:2010]
     slice2 = d_arr[2, 0:4]
     yield nt.assert_true, (slice1 == slice2).all()
 
