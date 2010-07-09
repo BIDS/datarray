@@ -148,10 +148,10 @@ def test_axis_make_slice():
 
     yield nt.assert_equal, a.index_for('london'), 1, 'tick not translated to index correctly'
     
-    idx = a.indices_for_slice(slice('london', 'moscow'))
+    idx = a.indices_for(slice('london', 'moscow'))
     yield nt.assert_equal, idx, slice(1,4), 'slice not translated to indices correctly'
     
-    sl = a.make_slice( a.indices_for_slice(slice('london', 'moscow')))
+    sl = a.make_slice( a.indices_for(slice('london', 'moscow')))
     should_be = ( slice(None), slice(None), slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from ticks not correct'
     
