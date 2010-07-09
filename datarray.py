@@ -83,7 +83,7 @@ class NamedAxisAccessor(object):
         """
         if not self.axis.ticks:
             raise ValueError('axis must have ticks to extract data at a given tick')
-        slicing = self.axis.make_slice(self.axis.indices_for_slice(tick))
+        slicing = self.axis.make_slice(self.axis.indices_for(tick))
         return self.axis.parent_arr[slicing]
 
 class Axis(object):
@@ -313,12 +313,13 @@ class Axis(object):
         full_slicing = [ slice(None) ] * self.parent_arr.ndim
         full_slicing[self.index] = key
         return tuple(full_slicing)
-    
-    def index_for(self, key):
+
+    def _indices_for_name(self, key):
         """
         Translate a tick name into an index.
         """
-        if key is None: return None
+        if key is None:
+            return None
         try:
             return self._tick_dict[key]
         except KeyError:
@@ -326,43 +327,44 @@ class Axis(object):
                 'Could not find an index to match %s'%str(key)
                 )
 
-    def indices_for_slice(self, key):
+    def indices_for(self, key):
         """
-        Translate tick names, possibly as a slice, into indices.
+        Translate tick names into ndarray indices.
         """
-        # in either case, try to translate slicing key
-        if not isinstance(key, slice):
-            return self.index_for(key)
-        
-        step = key.step
-        if not isinstance(step, (int, type(None))):
-            raise IndexError(
-                'Slicing step size must be an integer or None, not %s'%str(step)
-                )
-        start = self.index_for(key.start)
-        stop = self.index_for(key.stop)
-        return slice(start, stop, step)
+        if key is None or key is np.newaxis:
+            return key
+        if isinstance(self, slice):
+            # any other access will later check 'step' validity as long as we
+            # don't want to explicitly translate it
+            return slice(self._indices_for_name(key.start),
+                         self._indices_for_name(key.stop),
+                         key.step)
+        if isinstance(self, list):
+            # TODO: should check for 'collections.Iterable' instead?
+            # TODO: does not support fancy indexing with multidimensional ndarrays
+            return [ self._indices_for_name(item)
+                     for item in key ]
+        return self._indices_for_name(key)
 
-    def name_for(self, key):
+    def names_for(self, key):
         """
-        Translate an index into a tick name.
+        Translate ndarray indices into tick names.
         """
-        if key is None: return None
-        if self.ticks is None: return key
+        if key is None or key is np.newaxis:
+            return key
+        if self.ticks is None:
+            return key
+        if isinstance(key, slice):
+            return slice(self.ticks[key.start],
+                         self.ticks[key.stop],
+                         key.step)
+        if isinstance(self, list):
+            # TODO: should check for 'collections.Iterable' instead?
+            # TODO: does not support fancy indexing with multidimensional ndarrays
+            return [ self.ticks[item]
+                     for item in ticks ]
         return self.ticks[key]
 
-    def names_for_slice(self, key):
-        """
-        Translate indices, possibly a slice, into tick names.
-        """
-        if key is None: return None
-        if self.ticks is None: return key
-        if not isinstance(key, slice):
-            return self.name_for(key)
-        start = self.name_for(key.start)
-        stop = self.name_for(key.stop)
-        return slice(start, stop, key.step)
-        
     def keep(self, ticks):
         """
         Keep only certain ticks of an axis.
@@ -372,7 +374,7 @@ class Axis(object):
         >>> arr = narr.axis.b.keep('cd')
         >>> [a.ticks for a in arr.axes]
         [None, 'cd']
-        
+
         >>> arr.axis.a.at('tick')
         Traceback (most recent call last):
         ...
@@ -574,9 +576,6 @@ def _apply_accumulation(opname, kwnames):
 
 
 class NamedAxesAccessor (object):
-    # TODO: index_for and indices_for_slice in NamedAxisAcsessor should be
-    #       unified, returning whatever is necessary depending on the input
-    #       type. Same applies for name_for/names_for_slice.
 
     def __init__ (self, parent_arr):
         self._parent_arr = parent_arr
@@ -586,7 +585,7 @@ class NamedAxesAccessor (object):
             key = (key, )
         indices = []
         for axis_idx, index in enumerate(key):
-            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+            indices.append(self._parent_arr.axes[axis_idx].indices_for(index))
         return self._parent_arr.__getitem__(tuple(indices))
 
     def __setitem__ (self, key, val):
@@ -594,7 +593,7 @@ class NamedAxesAccessor (object):
             key = (key, )
         indices = []
         for axis_idx, index in enumerate(key):
-            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+            indices.append(self._parent_arr.axes[axis_idx].indices_for(index))
         return self._parent_arr.__setitem__(tuple(indices), val)
 
 
