@@ -86,6 +86,24 @@ class NamedAxisAccessor(object):
         slicing = self.axis.make_slice(self.axis.indices_for_slice(tick))
         return self.axis.parent_arr[slicing]
 
+    def __setitem__(self, tick, newdata):
+        """
+        Set data at a given tick or range of ticks.
+        
+        Accepts a slice from one tick to another, though this has to be written
+        out as slice(tick1, tick2) or slice(tick1, tick2, step).
+
+        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> arr = narr.axis.b.named['c']
+        >>> arr.axes
+        [Axis(label='a', index=0, ticks=None)]
+        >>>     
+        """
+        if not self.axis.ticks:
+            raise ValueError('axis must have ticks to set data at a given tick')
+        slicing = self.axis.make_slice(self.axis.indices_for_slice(tick))
+        self.axis.parent_arr[slicing] = newdata
+
 class Axis(object):
     """Object to access a given axis of an array.
 
@@ -362,7 +380,14 @@ class Axis(object):
         start = self.name_for(key.start)
         stop = self.name_for(key.stop)
         return slice(start, stop, key.step)
-        
+    
+    def at(self, ticks):
+        """
+        The .at(ticks) method lets you refer to ticks by name, the same way
+        that .named[ticks] does.
+        """
+        return self.named[ticks]
+
     def keep(self, ticks):
         """
         Keep only certain ticks of an axis.
@@ -573,11 +598,9 @@ def _apply_accumulation(opname, kwnames):
     return runs_op
 
 
-class NamedAxesAccessor (object):
-    # TODO: index_for and indices_for_slice in NamedAxisAcsessor should be
-    #       unified, returning whatever is necessary depending on the input
-    #       type. Same applies for name_for/names_for_slice.
-
+class NamedAccessor (object):
+    # TODO: support ellipsis and fancy indexing
+    
     def __init__ (self, parent_arr):
         self._parent_arr = parent_arr
 
@@ -860,7 +883,7 @@ class DataArray(np.ndarray):
 
     @property
     def named (self):
-        return NamedAxesAccessor(self)
+        return NamedAccessor(self)
 
     def __str__(self):
         s = super(DataArray, self).__str__()
