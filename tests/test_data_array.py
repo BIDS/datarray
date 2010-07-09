@@ -185,6 +185,28 @@ def test_ticks_lookup():
     slice2 = d_arr[2, 0:4]
     yield nt.assert_true, (slice1 == slice2).all()
 
+def test_positional_axes_with_ticks():
+    p_arr = np.random.randn(4, 5)
+    row_spec = 'country', ['Netherlands', 'Uruguay', 'Germany', 'Spain']
+    col_spec = 'year', [1994, 1998, 2002, 2006, 2010]
+
+    d_arr = DataArray(p_arr, [row_spec, col_spec])
+    entry1 = d_arr.named['Netherlands', 1998]
+    entry2 = d_arr[0, 1]
+    yield nt.assert_equal, entry1, entry2
+    
+    slice1 = d_arr.named['Germany', 1994:2010]
+    slice2 = d_arr[2, 0:4]
+    yield nt.assert_true, (slice1 == slice2).all()
+
+    slice1 = d_arr.named['Spain', :]
+    slice2 = d_arr[3, :]
+    yield nt.assert_true, (slice1 == slice2).all()
+    
+    slice1 = d_arr.named['Uruguay':'Spain']
+    slice2 = d_arr[1:3]
+    yield nt.assert_true, (slice1 == slice2).all()
+
 # -- Tests for reshaping -----------------------------------------------------
 
 def test_flatten_and_ravel():

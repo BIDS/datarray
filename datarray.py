@@ -609,7 +609,7 @@ class NamedAccessor (object):
             key = (key, )
         indices = []
         for axis_idx, index in enumerate(key):
-            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+            indices.append(self._parent_arr.axes[axis_idx].indices_for_slice(index))
         return self._parent_arr.__getitem__(tuple(indices))
 
     def __setitem__ (self, key, val):
@@ -617,7 +617,7 @@ class NamedAccessor (object):
             key = (key, )
         indices = []
         for axis_idx, index in enumerate(key):
-            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+            indices.append(self._parent_arr.axes[axis_idx].indices_for_slice(index))
         return self._parent_arr.__setitem__(tuple(indices), val)
 
 
