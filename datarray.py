@@ -571,8 +571,32 @@ def _apply_accumulation(opname, kwnames):
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
-            
-    
+
+
+class NamedAxesAccessor (object):
+    # TODO: index_for and indices_for_slice in NamedAxisAcsessor should be
+    #       unified, returning whatever is necessary depending on the input
+    #       type. Same applies for name_for/names_for_slice.
+
+    def __init__ (self, parent_arr):
+        self._parent_arr = parent_arr
+
+    def __getitem__ (self, key):
+        if not isinstance(key, tuple):
+            key = (key, )
+        indices = []
+        for axis_idx, index in enumerate(key):
+            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+        return self._parent_arr.__getitem__(tuple(indices))
+
+    def __setitem__ (self, key, val):
+        if not isinstance(key, tuple):
+            key = (key, )
+        indices = []
+        for axis_idx, index in enumerate(key):
+            indices.append(self._parent_arr.axes[axis_idx].index_for(index))
+        return self._parent_arr.__setitem__(tuple(indices), val)
+
 
 class DataArray(np.ndarray):
 
@@ -827,12 +851,16 @@ class DataArray(np.ndarray):
         #
         # For example: a.axis.capitals.named['london']
         # can be shortened to: a.capitals.named['london']
-        
+
         if attr in self.axis.__dict__:
             return self.axis[attr]
         else:
             raise AttributeError("%r object has no attribute or axis %r" %
                                  (self.__class__.__name__, attr))
+
+    @property
+    def named (self):
+        return NamedAxesAccessor(self)
 
     def __str__(self):
         s = super(DataArray, self).__str__()
