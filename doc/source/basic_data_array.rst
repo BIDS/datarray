@@ -21,7 +21,7 @@ Basic DataArray Creation And Mixing
 
 DataArrays are constructed with array-like sequences and axis labels::
 
-  >>> narr = DataArray(np.zeros((1,2,3)), labels='abc')
+  >>> narr = DataArray(np.zeros((1,2,3)), labels=('a', 'b', 'c'))
   >>> narr.labels
   ('a', 'b', 'c')
   >>> narr.axis.a
