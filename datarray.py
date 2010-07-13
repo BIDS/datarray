@@ -1079,6 +1079,9 @@ class DataArray(np.ndarray):
     
     ### these change the meaning of the axes..
     ### should probably return ndarrays
+    
+    ### I disagree -- they change the meaning of the *values*, but the axes
+    ### remain meaningful. --rspeer
     argmax = _apply_reduction('argmax', ('axis',))
     argmin = _apply_reduction('argmin', ('axis',))
 

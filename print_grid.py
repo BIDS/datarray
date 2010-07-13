@@ -74,11 +74,11 @@ class FloatFormatter(GridDataFormatter):
         return self.min_width() + 2
 
     def max_width(self):
-        return self.leading_digits + 8
+        return min(self.leading_digits + 8, 16)
 
     def format(self, value, width=None):
         if width is None: width = self.standard_width()
-        if width < self._min_width_standard():
+        if self._use_exponential_format(width):
             return self._format_exponential(value, width)
         else:
             return self._format_standard(value, width)
@@ -99,12 +99,15 @@ class FloatFormatter(GridDataFormatter):
             return '{0:<{width}}'.format(result.rstrip('0'), width=width)
         else: return result
     
+    def _use_exponential_format(self, width):
+        return (width < self._min_width_standard())
+
     def format_all(self, values, width=None):
         """
         Formats an array of values to a fixed width, returning a string array.
         """
         if width is None: width = self.standard_width()
-        if width < self._min_width_standard():
+        if self._use_exponential_format(width):
             formatter = self._format_exponential
         else:
             formatter = self._format_standard
@@ -184,26 +187,74 @@ def get_formatter(arr):
     elif issubclass(typeobj, np.complex): return ComplexFormatter(arr)
     else: return StrFormatter
 
-def grid_layout(arr):
+def grid_layout(arr, width=75, height=10):
+    # get the maximum possible amount we'd be able to display
+    array_sample = arr[:height, :width//2]
     formatter = get_formatter(arr)
-    layout = formatter.format_all(arr[:6, :6], 9)
+    
+    # first choice: show the whole array at full width
+    cell_width = formatter.max_width()
+    columns_shown = arr.shape[1]
+    column_ellipsis = False
+
+    if (cell_width+1) * columns_shown > width+1:
+        # second choice: show the whole array at at least standard width
+        standard_width = formatter.standard_width()
+        cell_width = (width+1) // (columns_shown) - 1
+        if cell_width < standard_width:
+            # third choice: show at least 5 columns at standard width
+            column_ellipsis = True
+            cell_width = standard_width
+            columns_shown = (width-3) // (cell_width+1)
+            if columns_shown < 5:
+                # fourth choice: as many columns as possible at minimum width
+                cell_width = formatter.min_width()
+                columns_shown = max(1, (width-3) // (cell_width+1))
+    cells_shown = arr[:height, :columns_shown]
+    layout = formatter.format_all(cells_shown, cell_width)
+    
+    ungrid = [list(row) for row in layout]
+    
+    if column_ellipsis:
+        ungrid[0].append('...')
+
+    if height < arr.shape[0]: # row ellipsis
+        ungrid.append(['...'])
+    
+    return ungrid, cells_shown
+
+def labeled_layout(arr, width=75, height=10, row_label_width=9):
+    inner_width, inner_height = width, height
+    if arr.axis[0].ticks:
+        inner_width = width - row_label_width-1
+    if arr.axis[1].ticks:
+        inner_height -= 1
+    row_header = (arr.axis[0].ticks and arr.axis[0].name)
+    col_header = (arr.axis[1].ticks and arr.axis[1].name)
+    if row_header or col_header:
+        inner_height -= 2
+
+    layout, cells_shown = grid_layout(arr, inner_width, inner_height)
+    cell_width = grid_layout[0][0]
+    label_formatter = StrFormatter()
+    
+    if arr.axis[1].ticks:
+        # use one character less than available, to make labels more visually
+        # separate
+
+        col_label_layout = [label_formatter.format(str(label)[:cell_width-1], cell_width) for label in cells_shown.axis[1].ticks]
+        layout = [col_label_layout] + layout
+
+    if arr.axis[0].ticks:
+        layout = [[' '*row_label_width] + row for row in layout]
+        ticks = cells_shown.axis[0].ticks
+        offset = 0
+        if arr.axis[1].ticks: offset = 1
+        for r in xrange(cells_shown.shape[0]):
+            layout[r+offset][0] = label_formatter.format(ticks[r], row_label_width)
+    
     return layout
 
-def layout_to_string(str_array, cell_width, row_header=None, col_header=None):
-    assert str_array.ndim == 2
-    assert str_array.shape[0] > 0
-    assert str_array.shape[1] > 0
-    
-    width = cell_width * str_array.shape[1] - 1
-    height = str_array.shape[0]
-    chars = np.zeros((height, width), dtype='|S1')
-    chars.fill(' ')
-
-    for r in xrange(str_array.shape[0]):
-        for c in xrange(str_array.shape[1]):
-            entry = str_array[r, c]
-            cstart = c*cell_width
-            cend = min(cstart + len(entry), width)
-            chars[r, cstart:cend] = list(entry)[:cend-cstart]
-    return '\n'.join([''.join(row) for row in chars])
+def layout_to_string(layout):
+    return '\n'.join([' '.join(row) for row in layout])
 
