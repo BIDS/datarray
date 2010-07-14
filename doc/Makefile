@@ -86,3 +86,8 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) build/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in build/doctest/output.txt."
+
+# special target to host the docs for now...
+fpdocs: html
+	rm -rf /home/fperez/www/site/py4science/datarray/*
+	cp -alr build/html/* /home/fperez/www/site/py4science/datarray/
