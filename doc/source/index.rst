@@ -29,6 +29,7 @@ Contents:
    design_questions/index.rst
    basic_data_array.rst
    ndarray_methods.rst
+   data_array_discussion.rst
 
 Indices and tables
 ==================
