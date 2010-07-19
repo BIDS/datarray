@@ -71,5 +71,16 @@ fellow operand's array (it seems this violation is simply caught at the C-level 
     File "<ipython console>", line 1, in <module>
   ValueError: shape mismatch: objects cannot be broadcast to a single shape
 
-For me, this looks like the domain of utility functions.
+For me, this looks like the **domain of utility functions** (or
+possibly utility methods that yield new DataArrays).
+
+Namespace
+---------
+
+It would be good practice to keep all the dynamically generated
+DataArray attributes (eg, Axis labels) removed from the top-level
+array attribute list. This is what we currently have as "axis". 
+
+It might(?) be a good idea to put all future special purpose methods
+under that object too.
 
