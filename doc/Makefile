@@ -90,4 +90,7 @@ doctest:
 # special target to host the docs for now...
 fpdocs: html
 	rm -rf /home/fperez/www/site/py4science/datarray/*
+	rm -rf /home/fperez/www/site/_build/html/py4science/datarray/*
+
 	cp -alr build/html/* /home/fperez/www/site/py4science/datarray/
+	cp -alr build/html/* /home/fperez/www/site/_build/html/py4science/datarray/
