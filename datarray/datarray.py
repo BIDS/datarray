@@ -231,7 +231,8 @@ class Axis(object):
         # XXX we do not here handle 0 dimensional arrays.
         # XXX fancy indexing
         if parent_arr_ndim == 1 and not isinstance(key, slice):
-            return np.ndarray.__getitem__(parent_arr, key)
+            sli = self.make_slice(key)
+            return np.ndarray.__getitem__(parent_arr, sli)
         
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
@@ -527,11 +528,16 @@ def _apply_reduction(opname, kwnames):
         axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
         arr = super_op(inst, **kwargs)
-        _set_axes(arr, axes)
+        if not is_numpy_scalar(arr): 
+            _set_axes(arr, axes)
         return arr
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
+
+def is_numpy_scalar(arr):
+    return arr.ndim == 0
+
 
 def _apply_accumulation(opname, kwnames):
     super_op = getattr(np.ndarray, opname)
