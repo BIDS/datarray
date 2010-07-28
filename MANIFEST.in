@@ -1,0 +1,16 @@
+include LICENSE
+
+graft datarray
+
+graft doc
+exclude doc/\#*
+exclude doc/man/*.1
+
+# docs subdirs we want to skip
+prune doc/build
+
+global-exclude *~
+global-exclude *.flc
+global-exclude *.pyc
+global-exclude .dircopy.log
+global-exclude .git
