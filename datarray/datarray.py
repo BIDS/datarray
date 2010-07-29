@@ -682,11 +682,11 @@ class DataArray(np.ndarray):
             # that the label and shape are acceptible for broadcasting
             these_axes = list(self.axes)
             those_axes = list(other.axes)
-            print self.shape, self.labels
+            #print self.shape, self.labels # dbg
             while these_axes and those_axes:
                 that_ax = those_axes.pop(-1)
                 this_ax = these_axes.pop(-1)
-                print self.shape
+                # print self.shape # dbg
                 this_dim = self.shape[this_ax.index]
                 that_dim = other.shape[that_ax.index]
                 if that_ax.label != this_ax.label:
@@ -908,7 +908,7 @@ class DataArray(np.ndarray):
         # * reshapes such as a.reshape(a.shape + (1,)) will be supported
         # * reshapes such as a.ravel() will return ndarray
         # * reshapes such as a.reshape(x', y', z') ???
-        print 'reshape called', args, kwargs
+        # print 'reshape called', args, kwargs # dbg
         if len(args) == 1:
             if isinstance(args[0], (tuple, list)):
                 args = args[0]
