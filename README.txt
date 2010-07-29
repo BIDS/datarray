@@ -18,10 +18,12 @@ Code
 You can find our sources and single-click downloads:
 
 * `Main repository`_ on Github.
+* Documentation_ for all releases and current development tree.
 * Download as a tar/zip file the `current trunk`_.
 * Downloads of all `available releases`_.
 
 .. _main repository: http://github.com/fperez/datarray
+.. _Documentation: http://fperez.github.com/datarray-doc
 .. _current trunk: http://github.com/fperez/datarray/archives/master
 .. _available releases: http://github.com/fperez/datarray/downloads
 

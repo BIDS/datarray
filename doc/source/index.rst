@@ -9,17 +9,13 @@ Welcome to the documentation for the Datarray prototype
 Datarray is a prototype implementation of a numpy ndarray subclass with named
 axes and optionally labeled ticks on said axes.
 
-For now the code lives at:
+The datarray code is being collaboratively developed and hosted at:
 
 http://github.com/fperez/datarray
 
-and the documentation is being pushed to:
+The documentation for various releases and a current build is avai:
 
-http://fperez.org/py4science/datarray
-
-This is to avoid using GitHub's page-hosting system which requires the
-pollution of the main code repository.  Eventually we expect this code to find
-a more permanent home within numpy itself.
+http://fperez.github.com/datarray-doc
 
 Contents:
 

@@ -3,7 +3,7 @@
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
 _version_minor = 0
-_version_micro = 2
+_version_micro = 3
 __version__ = "%s.%s.%s" % (_version_major, _version_minor, _version_micro)
 
 
@@ -41,10 +41,12 @@ Code
 You can find our sources and single-click downloads:
 
 * `Main repository`_ on Github.
+* Documentation_ for all releases and current development tree.
 * Download as a tar/zip file the `current trunk`_.
 * Downloads of all `available releases`_.
 
 .. _main repository: http://github.com/fperez/datarray
+.. _Documentation: http://fperez.github.com/datarray-doc
 .. _current trunk: http://github.com/fperez/datarray/archives/master
 .. _available releases: http://github.com/fperez/datarray/downloads
 
