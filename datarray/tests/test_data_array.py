@@ -449,3 +449,14 @@ def test_singleton_axis_prep2():
     yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
     yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
           'axes computed poorly'
+
+def test_full_reduction():
+    # issue #2
+    assert DataArray([1, 2, 3]).sum(axis=0) == 6
+    
+def test_1d_tick_indexing():
+    # issue #18
+    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    caps = DataArray(np.arange(5),[cap_ax_spec])
+    caps.axis.capitals["washington"]
+
