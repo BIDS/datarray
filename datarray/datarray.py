@@ -198,7 +198,8 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.label == other.label and self.index == other.index
+        return self.label == other.label and self.index == other.index and \
+               self.ticks == other.ticks
 
     def __str__(self):
         return 'Axis(label=%r, index=%i, ticks=%r)' % \
@@ -663,9 +664,9 @@ class DataArray(np.ndarray):
         # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
 
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context  # dbg
         
         if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
@@ -718,9 +719,9 @@ class DataArray(np.ndarray):
 
     def __array_wrap__(self, obj, context=None):
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context # dbg
 
         other = None
         if context is not None and len(context[1]) > 1:
