@@ -25,6 +25,7 @@ Contents:
    design_questions/index.rst
    basic_data_array.rst
    ndarray_methods.rst
+   license
 
 Indices and tables
 ==================
