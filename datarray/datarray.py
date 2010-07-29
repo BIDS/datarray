@@ -198,7 +198,8 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.label == other.label and self.index == other.index
+        return self.label == other.label and self.index == other.index and \
+               self.ticks == other.ticks
 
     def __str__(self):
         return 'Axis(label=%r, index=%i, ticks=%r)' % \

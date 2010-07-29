@@ -23,6 +23,12 @@ def test_axis_equal():
     yield nt.assert_not_equal, ax1, ax5
     # and obviously both
     yield nt.assert_not_equal, ax4, ax5
+    # Try with ticks
+    ax6 = Axis('same', 0, None, ticks=['a', 'b'])
+    ax7 = Axis('same', 0, None, ticks=['a', 'b'])
+    yield nt.assert_equal, ax6, ax7
+    ax8 = Axis('same', 0, None, ticks=['a', 'xx'])
+    yield nt.assert_not_equal, ax6, ax8
 
 def test_bad_ticks1():
     d = np.zeros(5)
