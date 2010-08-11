@@ -65,18 +65,6 @@ def sh3(cmd):
 
 
 def render_htmlindex(fname, tag):
-    html_release = '<li> Release: <a href="{tag}/index.html">{tag}</a>\n'
-    out = []
-    with file(fname) as f:
-        for line in f:
-            rel_pos = line.find('<!-- RELEASE -->')
-            if rel_pos >= 0:
-                out.append(' '*rel_pos+html_release.format(tag=tag))
-            out.append(line)
-    return ''.join(out)
-
-
-def render_htmlindex(fname, tag):
     rel = '<li> Release: <a href="{t}/index.html">{t}</a>'.format(t=tag)
     rep = re.compile('<!-- RELEASE -->')
     out = []
