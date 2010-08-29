@@ -68,6 +68,19 @@ def match_shape(x,yshape,axes):
     """
     Creates a view v on x with the same number of dimensions as y.
     The axes of x are copied into the axes of v specified by the axes argument.
+    
+    Example
+    ---------
+    >>> x = np.arange(3)
+    >>> match_shape(x,(2,3,2),(1,))
+    array([[[0, 0],
+            [1, 1],
+            [2, 2]],
+    <BLANKLINE>
+           [[0, 0],
+            [1, 1],
+            [2, 2]]])
+
     """
     if isinstance(axes,int): axes = [axes]
     assert len(x.shape) == len(axes)
@@ -77,9 +90,6 @@ def match_shape(x,yshape,axes):
         strides[yax] = xstride
     return np.ndarray.__new__(np.ndarray,strides = strides, shape=yshape, buffer= x, dtype=x.dtype)
    
-def _sum(seq): return reduce(op.add,seq)
-def _prod(seq): return reduce(op.mul,seq)
-
 def multiply_potentials(*DAs):
     """Multiply DataArrays in the way that we multiply functions, 
     e.g. h(i,j,k,l) = f(i,j,k) g(k,l)
@@ -91,6 +101,20 @@ def multiply_potentials(*DAs):
     returns
     ---------
     product
+    
+    example
+    ---------
+    >>> f_of_a = DataArray([1, 2],"a")
+    >>> g_of_b = DataArray([1,-1],"b")
+    >>> multiply_potentials(f_of_a, g_of_b)
+    DataArray([[ 1, -1],
+           [ 2, -2]])
+    ('a', 'b')
+    >>> multiply_potentials(f_of_a, f_of_a)
+    DataArray([1, 4])
+    ('a',)
+
+    
     """
     if len(DAs) == 0: return 1
     
@@ -120,7 +144,19 @@ def set_slices(DA,**axes2inds):
         Out = Out.axis[ax][ind:(ind+1)]
     return Out
     
-    
+def sum_over_other_axes(DA,ax):
+    "sum all axes of DataArray DA except for ax"
+    out = DA
+    for ax2 in DA.labels:
+        if ax2 != ax:
+            out = out.sum(axis=ax2)
+    return out
+
+def _sum(seq): return reduce(op.add,seq)
+def _prod(seq): return reduce(op.mul,seq)
+
+
+
 ####### Simple marginalization #############
     
 def calc_marginals_simple(cpts,evidence):
@@ -293,6 +329,12 @@ def one_hot(size,val):
     out[val] = 1
     return out
 
+def dfs_edges(G):
+    "(source,target) for edges in directed spanning tree resulting from depth first search"
+    DG = nx.dfs_tree(G)
+    return [(src,targ) for targ in nx.dfs_postorder(DG) for src in DG.predecessors(targ)]
+
+
 ############# Junction tree #############
 
 ## Applying the junction tree algorithm to a directed graphical model requires several steps
@@ -429,24 +471,10 @@ def moral_graph_from_factors(factors):
                     
     return G
 
-
-###### Misc ###############
-
-def dfs_edges(G):
-    "(source,target) for edges in directed spanning tree resulting from depth first search"
-    DG = nx.dfs_tree(G)
-    return [(src,targ) for targ in nx.dfs_postorder(DG) for src in DG.predecessors(targ)]
-
-def sum_over_other_axes(DA,ax):
-    "sum all axes of DataArray DA except for ax"
-    out = DA
-    for ax2 in DA.labels:
-        if ax2 != ax:
-            out = out.sum(axis=ax2)
-    return out
-
 def normalize(arr):
     return arr/arr.sum()
 
 if __name__ == "__main__":
     test_pearl_network()
+    #import doctest
+    #doctest.testmod()
