@@ -425,6 +425,34 @@ def _names_to_numbers(axes, ax_ids):
     return proc_ids
 
 
+def _init_axes (dest, source, labels):
+    # XXX if an entry of labels is a tuple, it is interpreted
+    # as a (label, ticks) tuple
+    if labels is None:
+        if hasattr(source,'axes'):
+            _set_axes(dest, source.axes)
+            return
+        labels = []
+    elif len(labels) > dest.ndim:
+        raise NamedAxisError('labels list should have length <= array ndim')
+
+    labels = list(labels) + [None]*(dest.ndim - len(labels))
+    axes = []
+    for i, label_spec in enumerate(labels):
+        if type(label_spec) == type(()):
+            if len(label_spec) != 2:
+                raise ValueError(
+                    'if the label specification is a tuple, it must be ' \
+                    'of the form (label, ticks)'
+                    )
+            label, ticks = label_spec
+        else:
+            label = label_spec
+            ticks = None
+        axes.append(Axis(label, i, dest, ticks=ticks))
+
+    _set_axes(dest, axes)
+    _validate_axes(axes)
 
 def _validate_axes(axes):
     """
@@ -565,51 +593,33 @@ def _apply_accumulation(opname, kwnames):
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
-            
-    
+
+def array (data, labels=None, dtype=None, copy=True, order=None, ndmin=True):
+    # XXX accepting argument 'subok' does not make sense in here
+    res = np.array(data, dtype=dtype, copy=False, order=order,
+                   ndmin=ndmin).view(type=DataArray)
+
+    _init_axes(res, data, labels)
+
+    if copy:
+        # TODO: still raises ValueError when 'resize' is called
+        new_res = res.copy()
+        del res
+        return new_res
+
+    return res
 
 class DataArray(np.ndarray):
-
     # XXX- we need to figure out where in the numpy C code .T is defined!
     @property
     def T(self):
         return self.transpose()
 
-    def __new__(cls, data, labels=None, dtype=None, copy=False):
-        # XXX if an entry of labels is a tuple, it is interpreted
-        # as a (label, ticks) tuple 
-        # Ensure the output is an array of the proper type
-        arr = np.array(data, dtype=dtype, copy=copy).view(cls)
-        if labels is None:
-            if hasattr(data,'axes'):
-                _set_axes(arr, data.axes)
-                return arr
-            labels = []
-        elif len(labels) > arr.ndim:
-            raise NamedAxisError('labels list should have length <= array ndim')
-        
-        labels = list(labels) + [None]*(arr.ndim - len(labels))
-        axes = []
-        for i, label_spec in enumerate(labels):
-            if type(label_spec) == type(()):
-                if len(label_spec) != 2:
-                    raise ValueError(
-                        'if the label specification is a tuple, it must be ' \
-                        'of the form (label, ticks)'
-                        )
-                label, ticks = label_spec
-            else:
-                label = label_spec
-                ticks = None
-            axes.append(Axis(label, i, arr, ticks=ticks))
-
-        _set_axes(arr, axes)
-
-        # validate the axes
-        _validate_axes(axes)
-
-
-        return arr
+    def __new__(cls, shape, labels=None, dtype=float, buffer=None, offset=0, strides=None, order=None):
+        res = np.ndarray.__new__(cls, shape, dtype=dtype, buffer=buffer,
+                                 offset=offset, strides=strides, order=order)
+        _init_axes(res, None, labels)
+        return res
 
     @property
     def aix(self):
