@@ -6,7 +6,20 @@ import itertools
 
 class GridDataFormatter(object):
     """
-    Defines reasonable defaults for a data formatter.
+    A GridDataFormatter takes an ndarray of objects and represents them as
+    equal-length strings. It is flexible about what string length to use,
+    and can make suggestions about the string length based on the data it
+    will be asked to render.
+
+    Each GridDataFormatter instance specifies:
+
+    - `min_width`, the smallest acceptable width
+    - `standard_width`, a reasonable width when putting many items on the
+      screen
+    - `max_width`, the width it prefers if space is not limited
+
+    This top-level class specifies reasonable defaults for a formatter, and
+    subclasses refine it for particular data types.
     """
     def __init__(self, data=None):
         self.data = data
@@ -15,10 +28,12 @@ class GridDataFormatter(object):
         return 1
     
     def standard_width(self):
-        return 9
+        return min(9, self.max_width)
 
     def max_width(self):
-        if self.data is None: return 75
+        if self.data is None:
+            # no information, so just use all the space we're given
+            return 100
         return max([len(unicode(val)) for val in self.data.flat])
 
     def format(self, value, width=None):
@@ -37,6 +52,11 @@ class GridDataFormatter(object):
         return out.reshape(values.shape)
 
 class FloatFormatter(GridDataFormatter):
+    """
+    Formats floating point numbers either in standard or exponential notation,
+    whichever fits better and represents the numbers better in the given amount
+    of space.
+    """
     def __init__(self, data, sign=False, strip_zeros=True):
         GridDataFormatter.__init__(self, data)
         flat = data.flatten()
@@ -100,6 +120,12 @@ class FloatFormatter(GridDataFormatter):
         else: return result
     
     def _use_exponential_format(self, width):
+        """
+        The FloatFormatter will use exponential format if the standard format
+        cannot accurately represent all the numbers in the given width.
+
+        This criterion favors standard format more than NumPy's arrayprint.
+        """
         return (width < self._min_width_standard())
 
     def format_all(self, values, width=None):
@@ -118,7 +144,7 @@ class FloatFormatter(GridDataFormatter):
 class IntFormatter(FloatFormatter):
     """
     The IntFormatter tries to just print all the digits of the ints, but falls
-    back on being a FloatFormatter if there isn't room.
+    back on being an exponential FloatFormatter if there isn't room.
     """
     def _min_width_standard(self):
         return self.leading_digits + 1
@@ -130,6 +156,10 @@ class IntFormatter(FloatFormatter):
         return '{0:>{sign}{width}d}'.format(value, width=width, sign=self.sign)
 
 class BoolFormatter(GridDataFormatter):
+    """
+    The BoolFormatter prints 'True' and 'False' if there is room, and
+    otherwise prints 'T' and '-' ('T' and 'F' are too visually similar).
+    """
     def standard_width(self):
         return 5
 
@@ -145,13 +175,19 @@ class BoolFormatter(GridDataFormatter):
             else: return 'False'
 
 class StrFormatter(GridDataFormatter):
+    """
+    A StrFormatter's behavior is almost entirely defined by the default.
+    When it must truncate strings, it insists on showing at least 3
+    characters.
+    """
     def min_width(self):
         return min(3, self.max_width())
 
-    def standard_width(self):
-        return min(9, self.max_width())
-
 class ComplexFormatter(GridDataFormatter):
+    """
+    A ComplexFormatter uses two FloatFormatters side by side. This can make
+    its min_width fairly large.
+    """
     def __init__(self, data):
         GridDataFormatter.__init__(self, data)
         self.real_format = FloatFormatter(data, strip_zeros=False)
@@ -180,6 +216,9 @@ class ComplexFormatter(GridDataFormatter):
         return '{0:<{width}}'.format(result, width=width)
 
 def get_formatter(arr):
+    """
+    Get a formatter for this array's data type, and prime it on this array.
+    """
     typeobj = arr.dtype.type
     if issubclass(typeobj, np.bool): return BoolFormatter(arr)
     elif issubclass(typeobj, np.int): return IntFormatter(arr)
@@ -188,6 +227,14 @@ def get_formatter(arr):
     else: return StrFormatter
 
 def grid_layout(arr, width=75, height=10):
+    """
+    Given a 2-D non-empty array, turn it into a list of lists of strings to be
+    joined.
+
+    This uses plain lists instead of a string array, because certain
+    formatting tricks might want to join columns, resulting in a ragged-
+    shaped array.
+    """
     # get the maximum possible amount we'd be able to display
     array_sample = arr[:height, :width//2]
     formatter = get_formatter(arr)
@@ -224,6 +271,13 @@ def grid_layout(arr, width=75, height=10):
     return ungrid, cells_shown
 
 def labeled_layout(arr, width=75, height=10, row_label_width=9):
+    """
+    Given a 2-D non-empty array that may have labeled axes, rows, or columns,
+    render the array as strings to be joined and attach the labels in
+    visually appropriate places.
+
+    Returns a list of lists of strings to be joined.
+    """
     inner_width, inner_height = width, height
     if arr.axis[0].ticks:
         inner_width = width - row_label_width-1
@@ -253,8 +307,42 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         for r in xrange(cells_shown.shape[0]):
             layout[r+offset][0] = label_formatter.format(ticks[r], row_label_width)
     
+    if row_header or col_header:
+        header0 = []
+        header1 = []
+        if row_header:
+            header0.append(label_formatter.format(row_header, row_label_width))
+            header1.append('-' * row_label_width)
+        else:
+            header0.append(' ' * row_label_width)
+            header1.append(' ' * row_label_width)
+        if col_header:
+            # We can use all remaining columns. How wide are they?
+            merged_width = len(' '.join(layout[0][1:]))
+            header0.append(label_formatter.format(col_header, merged_width))
+            header1.append('-' * merged_width)
+        layout = [header0, header1] + layout
+
     return layout
 
 def layout_to_string(layout):
     return '\n'.join([' '.join(row) for row in layout])
+
+def array_to_string(arr, width=75, height=10):
+    """
+    Get a 2-D text representation of a NumPy array.
+    """
+    assert arr.ndim <= 2
+    while arr.ndim < 2:
+        arr = arr[np.newaxis, ...]
+    return layout_to_string(grid_layout(arr, width, height))
+
+def datarray_to_string(arr, width=75):
+    """
+    Get a 2-D text representation of a datarray.
+    """
+    assert arr.ndim <= 2
+    while arr.ndim < 2:
+        arr = arr[np.newaxis, ...]
+    return layout_to_string(labeled_layout(arr, width, height))
 
