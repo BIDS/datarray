@@ -23,6 +23,12 @@ def test_axis_equal():
     yield nt.assert_not_equal, ax1, ax5
     # and obviously both
     yield nt.assert_not_equal, ax4, ax5
+    # Try with ticks
+    ax6 = Axis('same', 0, None, ticks=['a', 'b'])
+    ax7 = Axis('same', 0, None, ticks=['a', 'b'])
+    yield nt.assert_equal, ax6, ax7
+    ax8 = Axis('same', 0, None, ticks=['a', 'xx'])
+    yield nt.assert_not_equal, ax6, ax8
 
 def test_bad_ticks1():
     d = np.zeros(5)
@@ -489,3 +495,14 @@ def test_singleton_axis_prep2():
     yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
     yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
           'axes computed poorly'
+
+def test_full_reduction():
+    # issue #2
+    assert DataArray([1, 2, 3]).sum(axis=0) == 6
+    
+def test_1d_tick_indexing():
+    # issue #18
+    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    caps = DataArray(np.arange(5),[cap_ax_spec])
+    caps.axis.capitals["washington"]
+

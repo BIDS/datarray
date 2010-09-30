@@ -3,8 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to DataArray Docs's documentation!
-==========================================
+Welcome to the documentation for the Datarray prototype
+=======================================================
+
+Datarray is a prototype implementation of a numpy ndarray subclass with named
+axes and optionally labeled ticks on said axes.
+
+The datarray code is being collaboratively developed and hosted at:
+
+http://github.com/fperez/datarray
+
+The documentation for various releases and a current build is avai:
+
+http://fperez.github.com/datarray-doc
 
 Contents:
 
@@ -14,6 +25,7 @@ Contents:
    design_questions/index.rst
    basic_data_array.rst
    ndarray_methods.rst
+   license
 
 Indices and tables
 ==================

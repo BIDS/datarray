@@ -1,0 +1,4 @@
+Note: the full license file is datarray/LICENSE
+
+This is so that the license can be installed by distutils along with the real
+package for end users.

@@ -1,27 +1,15 @@
-==========
-DataArrays
-==========
-
-Questions
-^^^^^^^^^
-
-* :ref:`Constructing and Combining <init_ufuncs>`
-* :ref:`Slicing <slicing>`
-* :ref:`Broadcasting <broadcasting>`
-* :ref:`Transposition, Rollaxes, Swapaxes <transposition>`
-* :ref:`Iteration <iteration>`
-* :ref:`Label Changing <label_updates>`
-* :doc:`Wrapping functions with 'axis=' kw<ndarray_methods>`
-* :ref:`To Do<todo>`
+============
+ DataArrays
+============
 
 .. _init_ufuncs:
 
 Basic DataArray Creation And Mixing
--------------------------------------
+===================================
 
 DataArrays are constructed with array-like sequences and axis labels::
 
-  >>> narr = DataArray(np.zeros((1,2,3)), labels='abc')
+  >>> narr = DataArray(np.zeros((1,2,3)), labels=('a', 'b', 'c'))
   >>> narr.labels
   ('a', 'b', 'c')
   >>> narr.axis.a
@@ -75,7 +63,7 @@ Now, what about matching names, but different indices for the names?
 The names and the position have to be the same, and the above example should raise an error.  At least for now we will raise an error, and review later.
 
 With "ticks"
-````````````
+------------
 
 Constructing a DataArray such that an Axis has ticks, for example::
 
@@ -88,7 +76,7 @@ Constructing a DataArray such that an Axis has ticks, for example::
 .. _slicing:
 
 Slicing
--------
+=======
 
 A DataArray with simple named axes can be sliced many ways.
 
@@ -123,7 +111,7 @@ Through the "axis slicer" ``aix`` attribute::
   DataArray([[ True,  True]], dtype=bool)
 
 The Axis Indexing object (it's a stuple)
-````````````````````````````````````````
+----------------------------------------
 
 The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple)::
 
@@ -184,7 +172,7 @@ I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the 
   (3, 1, 2, 4)
 
 Slicing and ticks
-`````````````````
+-----------------
 
 It is also possible to use ticks in any of the slicing syntax above. 
 
@@ -226,7 +214,7 @@ The .start and .stop attributes of the slice object can be either None, an integ
 make_slice() first tries to look up the key parameters as ticks, and then sees if the key parameters can be used as simple indices. Thus 0 is found as index 3, and 6 is passed through as index 6.
 
 Possible resolution 1
-*********************
+~~~~~~~~~~~~~~~~~~~~~
 
 "larry" would make this distinction::
 
@@ -238,7 +226,7 @@ Possible resolution 1
 And I believe mixing of ticks and is valid also.
 
 Possible resolution 2 (the winner)
-**********************************
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Do not allow integer ticks -- cast to float perhaps
 
@@ -246,14 +234,14 @@ Do not allow integer ticks -- cast to float perhaps
 
 
 Possible resolution 3
-*********************
+~~~~~~~~~~~~~~~~~~~~~
 
 Restrict access to tick based slicing to another special slicing object.
 
 .. _broadcasting:
 
 Broadcasting
-------------
+============
 
 What about broadcasting between two named arrays, where the broadcasting
 adds an axis? All ordinary NumPy rules for shape compatibility apply. Additionally, DataArray imposes axis label consistency rules.
@@ -336,7 +324,7 @@ The broadcasting rules currently allow this combination. I'm inclined to allow i
 .. _iteration:
 
 Iteration
----------
+=========
 
 seems to work::
 
@@ -396,7 +384,7 @@ Or even more conveniently::
 .. _transposition:
 
 Transposition of Axes
----------------------
+=====================
 
 Transposition of a DataArray preserves the dimension labels, and updates the corresponding indices::
 
@@ -412,10 +400,10 @@ Transposition of a DataArray preserves the dimension labels, and updates the cor
 .. _label_updates:
 
 Changing Labels on DataArrays
------------------------------
+=============================
 
 Tricky Attributes
-`````````````````
+-----------------
 
 * .labels -- currently a mutable list of Axis.name attributes
 * .axes -- currently a mutable list of Axis objects
@@ -433,7 +421,7 @@ Need an event-ful way to change an Axis's label, such that all the above attribu
 .. _todo:
 
 ToDo
-----
+====
 
 * Support DataArray instances with mixed axes: simple ones with no values 
   and 'fancy' ones with data in them.  Syntax?
@@ -446,7 +434,8 @@ ToDo
 
 * Can a, b, and c be combined in binary operations, given the different tick
   combinations?
-* How to handle complicated reshaping (not flattening or, padding/trimming with 1s)
+* How to handle complicated reshaping (not flattening or, padding/trimming with
+  1s) 
 * Units support (Darren's)
 * Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
   access data via the .axis objects alone.
@@ -454,16 +443,44 @@ ToDo
 * "Ordered factors"? Something R supports.
 * How many axis classes?
 
+* Allowing non-string axis names?
 
-Axis api: if a is an axis from an array: a = x.axis.a
+- At least they must be hashable...
+- Serialization?
 
-a.at(key): return the slice at that key, with one less dimension than x
-a.keep(keys): join slices for given keys, dims=dims(x)
-a.drop(keys): like keep, but the opposite
+
+* Allowing multiple labels per axis?
+
+
+* Rob Speer's proposal for purely top-level, 'magical' attributes?
+
+
+* Finish the semantics of .lix indexing, especially with regards to what it
+  should do when integer ticks are present.
+
+* What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?
+
+Indexing semantics possibilities
+--------------------------------
+
+1. .lix: Integers always labels.  a.lix[3:10] means labels 3 and 10 MUST exist.
+
+2. .nix: Integers are never treated as labels.
+
+3. .awful_ix: 1, then 2.
+
+
+Axis api
+--------
+If a is an axis from an array: a = x.axis.a
+
+- a.at(key): return the slice at that key, with one less dimension than x
+- a.keep(keys): join slices for given keys, dims=dims(x)
+- a.drop(keys): like keep, but the opposite
 
 a[i] valid cases:
-i: integer => normal numpy scalar indexing, one less dim than x
-i: slice: numpy view slicing.  same dims as x, must recover the ticks 
-i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 
+- i: integer => normal numpy scalar indexing, one less dim than x
+- i: slice: numpy view slicing.  same dims as x, must recover the ticks 
+- i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 

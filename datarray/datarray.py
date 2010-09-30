@@ -238,7 +238,8 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.label == other.label and self.index == other.index
+        return self.label == other.label and self.index == other.index and \
+               self.ticks == other.ticks
 
     def __str__(self):
         return 'Axis(label=%r, index=%i, ticks=%r)' % \
@@ -270,7 +271,8 @@ class Axis(object):
         # XXX we do not here handle 0 dimensional arrays.
         # XXX fancy indexing
         if parent_arr_ndim == 1 and not isinstance(key, slice):
-            return np.ndarray.__getitem__(parent_arr, key)
+            sli = self.make_slice(key)
+            return np.ndarray.__getitem__(parent_arr, sli)
         
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
@@ -568,11 +570,16 @@ def _apply_reduction(opname, kwnames):
         axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
         arr = super_op(inst, **kwargs)
-        _set_axes(arr, axes)
+        if not is_numpy_scalar(arr): 
+            _set_axes(arr, axes)
         return arr
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
+
+def is_numpy_scalar(arr):
+    return arr.ndim == 0
+
 
 def _apply_accumulation(opname, kwnames):
     super_op = getattr(np.ndarray, opname)
@@ -713,9 +720,9 @@ class DataArray(np.ndarray):
         # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
 
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context  # dbg
         
         if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
@@ -731,11 +738,11 @@ class DataArray(np.ndarray):
             # that the label and shape are acceptible for broadcasting
             these_axes = list(self.axes)
             those_axes = list(other.axes)
-            print self.shape, self.labels
+            #print self.shape, self.labels # dbg
             while these_axes and those_axes:
                 that_ax = those_axes.pop(-1)
                 this_ax = these_axes.pop(-1)
-                print self.shape
+                # print self.shape # dbg
                 this_dim = self.shape[this_ax.index]
                 that_dim = other.shape[that_ax.index]
                 if that_ax.label != this_ax.label:
@@ -768,9 +775,9 @@ class DataArray(np.ndarray):
 
     def __array_wrap__(self, obj, context=None):
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context # dbg
 
         other = None
         if context is not None and len(context[1]) > 1:
@@ -974,7 +981,7 @@ class DataArray(np.ndarray):
         # * reshapes such as a.reshape(a.shape + (1,)) will be supported
         # * reshapes such as a.ravel() will return ndarray
         # * reshapes such as a.reshape(x', y', z') ???
-        print 'reshape called', args, kwargs
+        # print 'reshape called', args, kwargs # dbg
         if len(args) == 1:
             if isinstance(args[0], (tuple, list)):
                 args = args[0]
