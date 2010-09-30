@@ -504,5 +504,5 @@ def test_1d_tick_indexing():
     # issue #18
     cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     caps = DataArray(np.arange(5),[cap_ax_spec])
-    caps.axis.capitals["washington"]
+    caps.axis.capitals.named["washington"]
 
