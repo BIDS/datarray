@@ -279,31 +279,31 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
     Returns a list of lists of strings to be joined.
     """
     inner_width, inner_height = width, height
-    if arr.axis[0].ticks:
+    if arr.axes[0].ticks:
         inner_width = width - row_label_width-1
-    if arr.axis[1].ticks:
+    if arr.axes[1].ticks:
         inner_height -= 1
-    row_header = (arr.axis[0].ticks and arr.axis[0].name)
-    col_header = (arr.axis[1].ticks and arr.axis[1].name)
+    row_header = (arr.axes[0].ticks and arr.axes[0].name)
+    col_header = (arr.axes[1].ticks and arr.axes[1].name)
     if row_header or col_header:
         inner_height -= 2
 
     layout, cells_shown = grid_layout(arr, inner_width, inner_height)
-    cell_width = grid_layout[0][0]
+    cell_width = len(layout[0][0])
     label_formatter = StrFormatter()
     
-    if arr.axis[1].ticks:
+    if arr.axes[1].ticks:
         # use one character less than available, to make labels more visually
         # separate
 
-        col_label_layout = [label_formatter.format(str(label)[:cell_width-1], cell_width) for label in cells_shown.axis[1].ticks]
+        col_label_layout = [label_formatter.format(str(label)[:cell_width-1], cell_width) for label in cells_shown.axes[1].ticks]
         layout = [col_label_layout] + layout
 
-    if arr.axis[0].ticks:
+    if arr.axes[0].ticks:
         layout = [[' '*row_label_width] + row for row in layout]
-        ticks = cells_shown.axis[0].ticks
+        ticks = cells_shown.axes[0].ticks
         offset = 0
-        if arr.axis[1].ticks: offset = 1
+        if arr.axes[1].ticks: offset = 1
         for r in xrange(cells_shown.shape[0]):
             layout[r+offset][0] = label_formatter.format(ticks[r], row_label_width)
     
@@ -337,7 +337,7 @@ def array_to_string(arr, width=75, height=10):
         arr = arr[np.newaxis, ...]
     return layout_to_string(grid_layout(arr, width, height))
 
-def datarray_to_string(arr, width=75):
+def datarray_to_string(arr, width=75, height=10):
     """
     Get a 2-D text representation of a datarray.
     """
