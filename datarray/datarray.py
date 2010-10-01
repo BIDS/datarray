@@ -6,6 +6,7 @@ import copy
 
 import numpy as np
 import nose.tools as nt
+from print_grid import datarray_to_string
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -896,9 +897,7 @@ class DataArray(np.ndarray):
         return NamedAccessor(self)
 
     def __str__(self):
-        s = super(DataArray, self).__str__()
-        s = '\n'.join([s, str(self.labels)])
-        return s
+        return datarray_to_string(self)
 
     def __repr__(self):
         s = super(DataArray, self).__repr__()

@@ -313,12 +313,14 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         if row_header:
             header0.append(label_formatter.format(row_header, row_label_width))
             header1.append('-' * row_label_width)
-        else:
+        elif arr.axes[0].ticks:
             header0.append(' ' * row_label_width)
             header1.append(' ' * row_label_width)
         if col_header:
             # We can use all remaining columns. How wide are they?
-            merged_width = len(' '.join(layout[0][1:]))
+            offset = 0
+            if arr.axes[0].ticks: offset = 1
+            merged_width = len(' '.join(layout[0][offset:]))
             header0.append(label_formatter.format(col_header, merged_width))
             header1.append('-' * merged_width)
         layout = [header0, header1] + layout
