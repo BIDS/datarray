@@ -897,7 +897,12 @@ class DataArray(np.ndarray):
         return NamedAccessor(self)
 
     def __str__(self):
-        return datarray_to_string(self)
+        if self.ndim <= 2:
+            return datarray_to_string(self)
+        else:
+            s = super(DataArray, self).__str__()
+            s = '\n'.join([s, str(self.labels)])
+            return s
 
     def __repr__(self):
         s = super(DataArray, self).__repr__()
