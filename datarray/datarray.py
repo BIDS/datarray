@@ -7,7 +7,7 @@ import copy
 import numpy as np
 import nose.tools as nt
 
-from stuple import *
+from stuple import stuple
 
 #-----------------------------------------------------------------------------
 # Classes and functions
