@@ -460,7 +460,6 @@ def _set_axes(dest, in_axes):
 
     - axis: a KeyStruct with each axis as a named attribute.
     - axes: a list of all axis instances.
-    - labels: a list of all the axis labels.
 
     Parameters
     ----------
@@ -470,7 +469,6 @@ def _set_axes(dest, in_axes):
     # XXX: This method is called multiple times during a DataArray's lifetime.
     #      Should rethink exactly when Axis copies need to be made
     axes = []
-    labels = []
     ax_holder = KeyStruct()
     # Create the containers for various axis-related info
     for ax in in_axes:
@@ -481,11 +479,9 @@ def _set_axes(dest, in_axes):
                 'There is another Axis in this group with ' \
                 'the same name'
                 )
-        labels.append(ax.label)
         ax_holder[ax.name] = new_ax
     # Store these containers as attributes of the destination array
     dest.axes = tuple(axes)
-    dest.labels = tuple(labels)
     dest.axis = ax_holder
     
 
@@ -620,6 +616,11 @@ class DataArray(np.ndarray):
 
     def set_label(self, i, label):
         self.axes[i].set_label(label)
+
+    @property
+    def labels (self):
+        """Returns a tuple with all the axis labels."""
+        return tuple((ax.label for ax in self.axes))
 
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
