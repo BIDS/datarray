@@ -523,26 +523,3 @@ And so can labels:
     DataArray([1, 2])
     ('new label',)
 
-
-Tweaks
-======
-
-Replace the star in:
-::
-    from stuple import *
-    
-Make it easy to turn off the debug statements. Maybe turn off by default:
-::
-    DEBUG = False
-    
-    if DEBUG:
-        print "obj     :", obj.shape  # dbg   
-        
-Replace:
-::
-    if type(label_spec) == type(()):
-
-with:
-::
-    if type(label_spec) is tuple:               
-
