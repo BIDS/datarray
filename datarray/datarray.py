@@ -702,8 +702,12 @@ class DataArray(np.ndarray):
                         raise NamedAxisError(
                             'Axis labels are incompatible for '\
                             'a binary operation: ' \
-                            '%s, %s'%(self.labels, other.labels)
-                            )
+                            '%s, %s'%(self.labels, other.labels))
+                if that_ax.ticks != this_ax.ticks:
+                    if that_ax.ticks is not None and this_ax.ticks is not None:
+                        raise NamedAxisError(
+                            'Axis ticks are incompatible for '\
+                            'a binary operation.')
 
                 # XXX: Does this dimension compatibility check happen
                 #      before __array_prepare__ is even called? This

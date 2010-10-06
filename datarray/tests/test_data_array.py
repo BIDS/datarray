@@ -470,3 +470,13 @@ def test_1d_tick_indexing():
     caps = DataArray(np.arange(5),[cap_ax_spec])
     caps.axis.capitals["washington"]
 
+# -- Test binary operations --------------------------------------------------
+
+def test_tick_mismatch():
+    dar1 = DataArray([1, 2], [('time', ['A1', 'B1'])])
+    dar2 = DataArray([1, 2], [('time', ['A2', 'B2'])])
+    nt.assert_raises(NamedAxisError, dar1.__add__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__sub__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__mul__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
+    
