@@ -75,6 +75,11 @@ def test_combination():
     res = narr + narr
     yield nt.assert_equal, res.axes, narr.axes
 
+def test_label_change():
+    a = DataArray([1,2,3])
+    yield nt.assert_equal, a.labels, (None,)
+    a.axes[0].label = "test"
+    yield nt.assert_equal, a.labels, ("test",)
 
 def test_1d():
     adata = [2,3]
@@ -87,7 +92,6 @@ def test_1d():
     for i,val in enumerate(a.axis.x):
         yield (nt.assert_equals,val,adata[i])
         yield (nt.assert_true,isinstance(val,int))
-
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
