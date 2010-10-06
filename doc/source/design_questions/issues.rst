@@ -14,27 +14,6 @@ Ticks are a relatively new addition to datarrays. The labels of a datarrays
 identify the axes of the array. The ticks of a datarray identify the elements
 along an axis. Both labels and ticks are optional.          
 
-If axis labels must match in binary operations, should ticks?
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-No error is raised for binary operations where axis labels match but ticks
-don't:
-::
-    >> dar1 = DataArray([1, 2], [('time', ['A1', 'B1'])])
-    >> dar2 = DataArray([1, 2], [('time', ['A2', 'B2'])])
-    >> dar12 = dar1 + dar2
-
-An error is raised for binary operations where axis labels don't match but
-ticks do:
-::
-    >> dar1 = DataArray([1, 2], [('time1', ['A', 'B'])])
-    >> dar2 = DataArray([1, 2], [('time2', ['A', 'B'])])
-    >> dar12 = dar1 + dar2 
-    <snip>
-    NamedAxisError: Axis labels are incompatible for a binary operation: ('time1',), ('time2',)
-    
-Should ticks be treated in (mostly) the same way as labels? 
-
 Axis._tick_dict is not updated when ticks are changed
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
