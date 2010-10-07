@@ -552,7 +552,6 @@ def _apply_accumulation(opname, kwnames):
             # this will flatten the array and lose all dimensions
             return super_op(np.asarray(inst), **kwargs)
 
-        axes = list(inst.axes)
         # try to convert a named Axis to an integer..
         # don't try to catch an error
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
