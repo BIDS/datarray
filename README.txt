@@ -14,7 +14,6 @@ Datarray provides a subclass of Numpy ndarrays that support:
 - reduction operations (like .sum, .mean, etc) support named axis arguments
   instead of only integer indices.
 
-  
 Code
 ====
 
@@ -34,7 +33,6 @@ You can find our sources and single-click downloads:
 Note
 ====
 
-this code is currently experimental!  It is meant to be a place for the
+This code is currently experimental!  It is meant to be a place for the
 community to understand and develop the right semantics and have a prototype
-implementation that will ultimately (hopefully) be folded back into Numpy
-itself.
+implementation that will ultimately (hopefully) be folded back into Numpy.

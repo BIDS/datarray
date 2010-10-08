@@ -17,8 +17,8 @@ along an axis. Both labels and ticks are optional.
 Axis._tick_dict is not updated when ticks are changed
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Example:
-::
+Example::
+
     >> dar = DataArray([1, 2], [('time', ['A', 'B'])])
     >> dar.axis.time._tick_dict 
        {'A': 0, 'B': 1}
@@ -30,9 +30,9 @@ Example:
 
 Possible solutions:
 
-1. Don't allow ticks to be changed
-2. Only allow ticks to be changed through a method that also updates _tick_dict
-3. Don't store _tick_dict, create on the fly as needed
+#. Don't allow ticks to be changed
+#. Only allow ticks to be changed through a method that also updates _tick_dict
+#. Don't store _tick_dict, create on the fly as needed
 
 pandas, I believe, makes the ticks immutable (#1). larry allows the ticks to
 be changed and calculates the mapping dict on the fly (#3).   
@@ -41,14 +41,14 @@ be changed and calculates the mapping dict on the fly (#3).
 Can I have ticks without labels?
 """"""""""""""""""""""""""""""""
 
-I'd like to use ticks without labels. At the moment that is not possible:
-::
+I'd like to use ticks without labels. At the moment that is not possible::
+
     >>> DataArray([1, 2], [(None, ('a', 'b'))])
     <snip>
     ValueError: ticks only supported when Axis has a label
     
-Well, it is possible:
-::
+Well, it is possible::
+
     >>> dar = DataArray([1, 2], [('tmp', ('a', 'b'))])
     >>> dar.set_label(0, None)
     >>> dar.axes
@@ -60,26 +60,26 @@ Add a ticks input parameter?
 
 What do you think of adding a ``ticks`` parameter to DataArray?
 
-Current behavior:
-::
+Current behavior::
+
     >>> dar = DataArray([[1, 2], [3, 4]], (('row', ['A','B']), ('col', ['C', 'D'])))
     >>> dar.axes
     (Axis(label='row', index=0, ticks=['A', 'B']),
      Axis(label='col', index=1, ticks=['C', 'D']))
 
-Proposed ticks as separate input parameter:
-::
+Proposed ticks as separate input parameter::
+
     >>> DataArray([[1, 2], [3, 4]], labels=('row', 'col'), ticks=[['A', 'B'], ['C', 'D']])
 
 I think this would make it easier for new users to construct a DataArray with
 ticks just from looking at the DataArray signature. It would match the
 signature of Axis. My use case is to use ticks only and not names axes (at
-first), so:
-::
+first), so::
+
     >>> DataArray([[1, 2], [3, 4]], ticks=[['A', 'B'], ['C', 'D']])
 
-instead of the current:
-::
+instead of the current::
+
     >>> DataArray([[1, 2], [3, 4]], ((None, ['A','B']), (None, ['C', 'D'])))
 
 It might also cause less typos (parentheses matching) at the command line.
@@ -123,33 +123,33 @@ datarray1 + datarrat2 = which axes?
 
 Which axes are returned by binary operations?
 
-Make two datarrays:
-::
+Make two datarrays::
+
     >> dar1 = DataArray([1, 2], [('time', ['A1', 'B1'])])
     >> dar2 = DataArray([1, 2], [('time', ['A2', 'B2'])])
 
-``dar1`` on the left-hand side:
-:: 
+``dar1`` on the left-hand side::
+ 
     >> dar12 = dar1 + dar2
     >> dar12.axes
        (Axis(label='time', index=0, ticks=['A1', 'B1']),)
 
-``dar1`` on the right-hand side:
-:: 
+``dar1`` on the right-hand side::
+ 
     >> dar21 = dar2 + dar1
     >> dar21.axes
        (Axis(label='time', index=0, ticks=['A2', 'B2']),)
 
 So a binary operation returns the axes from the left-hand side? No. Seems the
-left most non-None axes are used:
-::
+left most non-None axes are used::
+
     >> dar3 = DataArray([1, 2])
     >> dar31 = dar3 + dar1
     >> dar31.axes
        (Axis(label='time', index=0, ticks=['A1', 'B1']),)
 
-So binary operation may returns parts of both axes:
-::
+So binary operation may returns parts of both axes::
+
     >> dar1 = DataArray([[1, 2], [3, 4]], [None, ('col', ['A', 'B'])])
     >> dar2 = DataArray([[1, 2], [3, 4]], [('row', ['a', 'b']), None])
     >> dar12 = dar1 + dar2
@@ -163,8 +163,8 @@ Is that the intended behavior?
 Why does Axis.__eq__ require the index to be equal?
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
-Example:
-::
+Example::
+
     >> dar1 = DataArray([[1, 2], [3, 4]], [('row', ['r0', 'r1']), ('col', ['c0', 'c1'])])
     >> dar2 = DataArray([[1, 2], [3, 4]], [('col', ['c0', 'c1']), ('row', ['r0', 'r1'])])
     >> dar1.axes[0] == dar2.axes[1]
@@ -189,8 +189,8 @@ wonder if it would simplify things if there was only:
 - Data.axes (instance of Axes)
 
 That would consolidate everything in the Axes class. For example, in
-DataArray.__getitem__ this
-::
+DataArray.__getitem__ this::
+
     if isinstance(key, tuple):
         old_shape = self.shape
         old_axes = self.axes
@@ -252,21 +252,21 @@ what that means.
 It would be nice if axis labels could be anything hashable like str,
 datetime.date(), int, tuple.
 
-But labels must be strings to do indexing like this:
-::
+But labels must be strings to do indexing like this::
+
     >>> dar = DataArray([[1, 2], [3, 4]], (('row', ['A','B']), ('col', ['C', 'D'])))
     >>> dar.axis.row['A'] 
     DataArray([1, 2])
     ('col',)
 
-One way to make it work would be to rewrite the above as
-::
+One way to make it work would be to rewrite the above as::
+
     >>> dar.axis['row']['A']
     DataArray([1, 2])
     ('col',)
     
-which would also make it easier to loop through the axes by name:
-::
+which would also make it easier to loop through the axes by name::
+
     >>> for axisname in ['row', col']:
    ....:    dar.axis[axisname][idx]
    ....:    ...
@@ -282,16 +282,16 @@ datarrays.
 How long does it take to create a datarray?
 """"""""""""""""""""""""""""""""""""""""""" 
 
-Set up data:
-::
+Set up data::
+
     >> import numpy as np
     >> N = 100
     >> arr = np.random.rand(N, N)
     >> idx1 = map(str, range(N))
     >> idx2 = map(str, range(N))
 
-Time the creation of a datarray:
-::
+Time the creation of a datarray::
+
     >> from datarray import DataArray
     >> import datarray
     >> labels = [('row', idx1), ('col', idx2)]
@@ -300,15 +300,15 @@ Time the creation of a datarray:
 
 Time the creation of a pandas DataMatrix. A DataMatrix it is also a subclass
 of numpy's ndarray, but it has been optimized so should be a proxy for how
-fast a datarray can become:
-::
+fast a datarray can become::
+
     >> import pandas
     >> timeit pandas.DataMatrix(arr, idx1, idx2)
     10000 loops, best of 3: 50.7 us per loop
 
 larry is not a subclass of numpy's ndarray, I think that is one reason it is
-faster to create:
-:: 
+faster to create::
+ 
     >> import la
     >> label = [idx1, idx2]
     >> timeit la.larry(arr, label)
@@ -331,16 +331,16 @@ like to work directly with the numpy arrays. Is there a way to do that with
 datarrays?
 
 For example, with a labeled array, `larry <http://github.com/kwgoodman/la>`_,
-the underlying numpy array is always accessable as the attribute ``x``:
-::
+the underlying numpy array is always accessable as the attribute ``x``::
+
     >>> import la
     >>> lar = la.larry([1, 2, 3])
     >>> lar.x
     array([1, 2, 3])
     >>> lar.x = myfunc(lar.x)
     
-This might be one solution (base):
-::
+This might be one solution (base)::
+
     >> from datarray import DataArray
     >> x = DataArray([[1,2],[3,4]], [('row', ['r1', 'r2']), ('col', ['c1', 'c2'])])
     >> timeit x + x
@@ -348,8 +348,8 @@ This might be one solution (base):
     >> timeit x.base + x.base
     100000 loops, best of 3: 2.16 us per loop
     
-And:
-::
+and::
+
     >> x = DataArray([1, 2])
     >> x.base[0] = 9
     >> x
@@ -377,8 +377,8 @@ two datarrays to join labels or ticks using various join methods?
 `larry <http://larry.sourceforge.net>`_:
 
 By default, binary operations between two larrys use an inner join of the
-labels (the intersection of the labels):
-::
+labels (the intersection of the labels)::
+
     >>> lar1 = larry([1, 2])
     >>> lar2 = larry([1, 2, 3])
     >>> lar1 + lar2
@@ -388,8 +388,8 @@ labels (the intersection of the labels):
     x
     array([2, 4])
 
-The sum of two larrys using an outer join (union of the labels):
-::
+The sum of two larrys using an outer join (union of the labels)::
+
     >>> la.add(lar1, lar2, join='outer')
     label_0
         0
@@ -415,35 +415,35 @@ It is often useful to align two datarrays before performing binary operations
 such as +, -, *, /. Two datarrays are aligned when both datarrays have the same
 labels and ticks along all axes.
 
-Aligned:
-::
+Aligned::
+
     >> dar1 = DataArray([1, 2])
     >> dar2 = DataArray([3, 4])
     >> dar1.axes == dar2.axes
        True
 
-Unaligned:
-::
+Unaligned::
+
     >> dar1 = DataArray([1, 2], labels=("time",))
     >> dar2 = DataArray([3, 4], labels=("distance",))
     >> dar1.axes == dar2.axes
        False
 
 Unaligned but returns aligned since Axis.__eq__ doesn't (yet) check for
-equality of ticks:
-::
+equality of ticks::
+
     >> dar1 = DataArray([1, 2], labels=[("time", ['A', 'B'])])
     >> dar2 = DataArray([1, 2], labels=[("time", ['A', 'different'])])
     >> dar1.axes == dar2.axes
        True
 
-Let's say we make an add function with user control of the join method:
-::
+Let's say we make an add function with user control of the join method::
+
     >>> add(dar1, dar2, join='outer')
 
 Since datarray allows empty axis labels (None) and ticks (None), what does an
-outer join mean if dar1 has ticks but dar2 doesn't:
-::
+outer join mean if dar1 has ticks but dar2 doesn't::
+
     >>> dar1 = DataArray([1, 2], labels=[("time", ['A', 'B'])])
     >>> dar2 = DataArray([1, 2], labels=[("time",)])
     
@@ -505,8 +505,8 @@ the mapping?
 Can labels and ticks be changed?
 """"""""""""""""""""""""""""""""  
 
-Ticks can be changed:
-::
+Ticks can be changed::
+
     >>> dar = DataArray([1, 2], [('row', ['A','B'])])
     >>> dar.axes
     (Axis(label='row', index=0, ticks=['A', 'B']),)
@@ -516,8 +516,8 @@ Ticks can be changed:
     
 But Axis._tick_dict is not updated when user changes ticks.    
 
-And so can labels:
-::
+And so can labels::
+
     >>> dar.set_label(0, 'new label')
     >>> dar   
     DataArray([1, 2])

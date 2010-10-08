@@ -86,14 +86,17 @@ Axis. Otherwise, an ndarray is returned.
 Explicitly overloaded
 ---------------------
 
-These methods do not fit into a simple pattern, and are explicitly overloaded in the DataArray class definition.
+These methods do not fit into a simple pattern, and are explicitly overloaded
+in the DataArray class definition.
 
 .. _wrapped_reduction:
 
 Regular reductions (eg, min)
 ----------------------------
 
-These methods are wrapped in a generic runner that pays attention to which axis is being trimmed out (if only one), and then sets the remaining axes on the resulting array. It also allows for the translation of Axis-name to Axis-index.
+These methods are wrapped in a generic runner that pays attention to which axis
+is being trimmed out (if only one), and then sets the remaining axes on the
+resulting array. It also allows for the translation of Axis-name to Axis-index.
 
 .. _wrapped_reduction_special:
 
@@ -102,7 +105,9 @@ Special reductions (eg, argmin)
 
 These methods are currently wrapped as a generic reduction. 
 
-These methods return an index, or an array of indices into the array in question. That significantly changes the model of the array in question. Should the return type here NOT be DataArray?
+These methods return an index, or an array of indices into the array in
+question. That significantly changes the model of the array in question. Should
+the return type here NOT be DataArray?
 
 .. _incomplete_reductions:
 
@@ -111,7 +116,9 @@ Accumulations
 
 These methods are wrapped in a generic accumulator.
 
-These methods have the property of taking an "axis" keyword argument, and yet not eliminating that axis. They also default to working on the flattened array if the axis parameter is left unspecified.
+These methods have the property of taking an "axis" keyword argument, and yet
+not eliminating that axis. They also default to working on the flattened array
+if the axis parameter is left unspecified.
 
 .. _wtf_methods:
 
