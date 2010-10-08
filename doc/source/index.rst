@@ -1,8 +1,4 @@
-.. DataArray Docs documentation master file, created by
-   sphinx-quickstart on Fri May 28 11:07:18 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
+=======================================================
 Welcome to the documentation for the Datarray prototype
 =======================================================
 
@@ -13,7 +9,7 @@ The datarray code is being collaboratively developed and hosted at:
 
 http://github.com/fperez/datarray
 
-The documentation for various releases and a current build is avai:
+The documentation for various releases and a current build can be found here:
 
 http://fperez.github.com/datarray-doc
 
@@ -33,4 +29,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
