@@ -1,3 +1,6 @@
+.. -*- rest -*-
+.. vim:syntax=rest
+
 ========================================
  Datarray: Numpy arrays with named axes
 ========================================
