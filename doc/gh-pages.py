@@ -70,9 +70,9 @@ def render_htmlindex(fname, tag):
     out = []
     with file(fname) as f:
         for line in f:
+            out.append(line)
             if rep.search(line):
                 out.append(rep.sub(rel, line))
-            out.append(line)
     return ''.join(out)
 
 
