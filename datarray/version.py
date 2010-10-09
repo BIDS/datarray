@@ -78,6 +78,6 @@ MINOR               = _version_minor
 MICRO               = _version_micro
 ISRELEASED          = False
 VERSION             = __version__
-PACKAGES            = ["datarray", "datarray/tests"]
+PACKAGES            = ["datarray", "datarray/tests", "datarray/testing"]
 PACKAGE_DATA        = {'datarray': ['LICENSE']}
 REQUIRES            = ["numpy"]
