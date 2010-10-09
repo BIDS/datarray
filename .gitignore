@@ -1,2 +1,29 @@
+*.py[oc]
+*.so
+# setup.py working directory
+build
+# setup.py dist directory
+./dist
+# Documentation build files
+doc/build
+# Editor temporary/working/backup files
+*$
+.*.sw[nop]
+.sw[nop]
 *~
-*.pyc
+[#]*#
+.#*
+*.bak
+*.tmp
+*.tgz
+*.rej
+*.org
+.project
+*.diff
+.settings/
+# Egg metadata
+./*.egg-info
+# The shelf plugin uses this dir
+./.shelf
+# Mac droppings
+.DS_Store
