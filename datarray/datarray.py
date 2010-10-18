@@ -7,7 +7,7 @@ import copy
 import numpy as np
 import nose.tools as nt
 
-from stuple import *
+from stuple import stuple
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -198,7 +198,8 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.label == other.label and self.index == other.index
+        return self.label == other.label and self.index == other.index and \
+               self.ticks == other.ticks
 
     def __str__(self):
         return 'Axis(label=%r, index=%i, ticks=%r)' % \
@@ -230,7 +231,8 @@ class Axis(object):
         # XXX we do not here handle 0 dimensional arrays.
         # XXX fancy indexing
         if parent_arr_ndim == 1 and not isinstance(key, slice):
-            return np.ndarray.__getitem__(parent_arr, key)
+            sli = self.make_slice(key)
+            return np.ndarray.__getitem__(parent_arr, sli)
         
         # For other cases (slicing or scalar indexing of ndim>1 arrays),
         # build the proper slicing object to cut into the managed array
@@ -458,7 +460,6 @@ def _set_axes(dest, in_axes):
 
     - axis: a KeyStruct with each axis as a named attribute.
     - axes: a list of all axis instances.
-    - labels: a list of all the axis labels.
 
     Parameters
     ----------
@@ -468,7 +469,6 @@ def _set_axes(dest, in_axes):
     # XXX: This method is called multiple times during a DataArray's lifetime.
     #      Should rethink exactly when Axis copies need to be made
     axes = []
-    labels = []
     ax_holder = KeyStruct()
     # Create the containers for various axis-related info
     for ax in in_axes:
@@ -479,11 +479,9 @@ def _set_axes(dest, in_axes):
                 'There is another Axis in this group with ' \
                 'the same name'
                 )
-        labels.append(ax.label)
         ax_holder[ax.name] = new_ax
     # Store these containers as attributes of the destination array
     dest.axes = tuple(axes)
-    dest.labels = tuple(labels)
     dest.axis = ax_holder
     
 
@@ -526,11 +524,16 @@ def _apply_reduction(opname, kwnames):
         axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
         arr = super_op(inst, **kwargs)
-        _set_axes(arr, axes)
+        if not is_numpy_scalar(arr): 
+            _set_axes(arr, axes)
         return arr
     runs_op.func_name = opname
     runs_op.func_doc = super_op.__doc__
     return runs_op
+
+def is_numpy_scalar(arr):
+    return arr.ndim == 0
+
 
 def _apply_accumulation(opname, kwnames):
     super_op = getattr(np.ndarray, opname)
@@ -549,7 +552,6 @@ def _apply_accumulation(opname, kwnames):
             # this will flatten the array and lose all dimensions
             return super_op(np.asarray(inst), **kwargs)
 
-        axes = list(inst.axes)
         # try to convert a named Axis to an integer..
         # don't try to catch an error
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
@@ -614,6 +616,11 @@ class DataArray(np.ndarray):
     def set_label(self, i, label):
         self.axes[i].set_label(label)
 
+    @property
+    def labels (self):
+        """Returns a tuple with all the axis labels."""
+        return tuple((ax.label for ax in self.axes))
+
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
 
@@ -657,9 +664,9 @@ class DataArray(np.ndarray):
         # Ref: see http://docs.scipy.org/doc/numpy/reference/arrays.classes.html
 
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context  # dbg
         
         if context is not None and len(context[1]) > 1:
             "binary ufunc operation"
@@ -675,11 +682,11 @@ class DataArray(np.ndarray):
             # that the label and shape are acceptible for broadcasting
             these_axes = list(self.axes)
             those_axes = list(other.axes)
-            print self.shape, self.labels
+            #print self.shape, self.labels # dbg
             while these_axes and those_axes:
                 that_ax = those_axes.pop(-1)
                 this_ax = these_axes.pop(-1)
-                print self.shape
+                # print self.shape # dbg
                 this_dim = self.shape[this_ax.index]
                 that_dim = other.shape[that_ax.index]
                 if that_ax.label != this_ax.label:
@@ -694,8 +701,12 @@ class DataArray(np.ndarray):
                         raise NamedAxisError(
                             'Axis labels are incompatible for '\
                             'a binary operation: ' \
-                            '%s, %s'%(self.labels, other.labels)
-                            )
+                            '%s, %s'%(self.labels, other.labels))
+                if that_ax.ticks != this_ax.ticks:
+                    if that_ax.ticks is not None and this_ax.ticks is not None:
+                        raise NamedAxisError(
+                            'Axis ticks are incompatible for '\
+                            'a binary operation.')
 
                 # XXX: Does this dimension compatibility check happen
                 #      before __array_prepare__ is even called? This
@@ -712,9 +723,9 @@ class DataArray(np.ndarray):
 
     def __array_wrap__(self, obj, context=None):
         # provide info for what's happening
-        print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        print "obj     :", obj.shape  # dbg
-        print "context :", context
+        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        #print "obj     :", obj.shape  # dbg
+        #print "context :", context # dbg
 
         other = None
         if context is not None and len(context[1]) > 1:
@@ -901,7 +912,7 @@ class DataArray(np.ndarray):
         # * reshapes such as a.reshape(a.shape + (1,)) will be supported
         # * reshapes such as a.ravel() will return ndarray
         # * reshapes such as a.reshape(x', y', z') ???
-        print 'reshape called', args, kwargs
+        # print 'reshape called', args, kwargs # dbg
         if len(args) == 1:
             if isinstance(args[0], (tuple, list)):
                 args = args[0]

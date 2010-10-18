@@ -5,7 +5,8 @@
 Overview
 ^^^^^^^^
 
-Larray offers the notion of "ticks", but the axes themselves are not named. The model seems to be something like *data with coordinates*
+Larray offers the notion of "ticks", but the axes themselves are not named. The
+model seems to be something like *data with coordinates*
 
 Importantly,
 
@@ -25,11 +26,13 @@ Importantly,
 Construction
 ************
 
-Larrays can be constructed from an array-like object and tick names for each axis. Alternatively, Larrays can be constructed from a number of data-with-coordinates representations.
+Larrays can be constructed from an array-like object and tick names for each
+axis. Alternatively, Larrays can be constructed from a number of
+data-with-coordinates representations.
 
 
-Here's how to create a larry using **fromtuples** (note the cast to float, and the filled-in NaN): 
-::
+Here's how to create a larry using **fromtuples** (note the cast to float, and
+the filled-in NaN)::
 
     >>> data = [('a', 'a', 1), ('a', 'b', 2), ('b', 'a', 3)]
     >>> larry.fromtuples(data)
@@ -43,8 +46,7 @@ Here's how to create a larry using **fromtuples** (note the cast to float, and t
     array([[  1.,   2.],
 	   [  3.,  NaN]])
 
-Here are examples of **fromdict** and **fromlist**:
-::
+Here are examples of **fromdict** and **fromlist**::
 
     >>> data = {('a', 'c'): 1, ('a', 'd'): 2, ('b', 'c'): 3, ('b', 'd'): 4}
     >>> larry.fromdict(data)
@@ -73,9 +75,15 @@ Here are examples of **fromdict** and **fromlist**:
 Indexing
 ********
 
-Indexing using the bracket syntax arr[ <slicer> ] seems to return you exactly what numpy would slice out of the underlying array. All slicing works, with the exception of "fancy" indexing, and ellipsis indexing, and the use of **np.newaxis**.
+Indexing using the bracket syntax arr[ <slicer> ] seems to return you exactly
+what numpy would slice out of the underlying array. All slicing works, with the
+exception of "fancy" indexing, and ellipsis indexing, and the use of
+**np.newaxis**.
 
-There is also a smart slicer riding along with the larrays that can slice with label information. It seems to nicely blend labels and regular integer slicing. To disambiguate possible integer labels and integer indexing, labels always must be enclosed in a list.::
+There is also a smart slicer riding along with the larrays that can slice with
+label information. It seems to nicely blend labels and regular integer slicing.
+To disambiguate possible integer labels and integer indexing, labels always
+must be enclosed in a list::
 
     >>> arr = la.larry(np.arange(6).reshape(2,3), [ ['u', 'v'], [2,5,3], ])
     >>> arr
@@ -116,8 +124,9 @@ Binary operations are not, in general, numpy-thonic
 Alignment
 ---------
 
-Larray seems to want to only make binary operations on data with identical coordinates. Furthermore, it will re-align the data if necessary. Therefore, this example is ok:
-::
+Larray seems to want to only make binary operations on data with identical
+coordinates. Furthermore, it will re-align the data if necessary. Therefore,
+this example is ok::
 
     >>> y1 = larry([1, 2], [['a', 'z']])
     >>> y2 = larry([1, 2], [['z', 'a']])
@@ -132,8 +141,7 @@ What is ``y1 + y2``?
     x
     array([3, 3])
 
-But this fails
-::
+But this fails::
 
     >>> z1 = larry([1, 2], [['a', 'b']])
     >>> z2 = larry([3, 4], [['c', 'd']])
@@ -150,8 +158,8 @@ But this fails
 Intersections and Broadcasting
 ------------------------------
 
-Binary ops can introduce an implicit intersection operation, for example (this would be illegal code in numpy):
-::
+Binary ops can introduce an implicit intersection operation, for example (this
+would be illegal code in numpy)::
 
     >>> arr = la.larry(np.arange(6).reshape(2,3), [ ['u', 'v'], ['x','y','z']])
     >>> arr2 = la.larry(np.arange(9).reshape(3,3), [ ['u', 'v', 'w'], ['x', 'y', 'z']] )
@@ -168,8 +176,7 @@ Binary ops can introduce an implicit intersection operation, for example (this w
 	   [ 6,  8, 10]])
 
 
-According to the matched-coordinates operation rule, broadcasting does not happen
-::
+According to the matched-coordinates operation rule, broadcasting does not happen::
 
     >>> arr3 = la.larry([4,5,6], [['x','y','z']])
     >>> arr3 + arr

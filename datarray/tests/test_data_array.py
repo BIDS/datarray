@@ -23,6 +23,12 @@ def test_axis_equal():
     yield nt.assert_not_equal, ax1, ax5
     # and obviously both
     yield nt.assert_not_equal, ax4, ax5
+    # Try with ticks
+    ax6 = Axis('same', 0, None, ticks=['a', 'b'])
+    ax7 = Axis('same', 0, None, ticks=['a', 'b'])
+    yield nt.assert_equal, ax6, ax7
+    ax8 = Axis('same', 0, None, ticks=['a', 'xx'])
+    yield nt.assert_not_equal, ax6, ax8
 
 def test_bad_ticks1():
     d = np.zeros(5)
@@ -69,6 +75,11 @@ def test_combination():
     res = narr + narr
     yield nt.assert_equal, res.axes, narr.axes
 
+def test_label_change():
+    a = DataArray([1,2,3])
+    yield nt.assert_equal, a.labels, (None,)
+    a.axes[0].label = "test"
+    yield nt.assert_equal, a.labels, ("test",)
 
 def test_1d():
     adata = [2,3]
@@ -81,7 +92,6 @@ def test_1d():
     for i,val in enumerate(a.axis.x):
         yield (nt.assert_equals,val,adata[i])
         yield (nt.assert_true,isinstance(val,int))
-
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
@@ -449,3 +459,24 @@ def test_singleton_axis_prep2():
     yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
     yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
           'axes computed poorly'
+
+def test_full_reduction():
+    # issue #2
+    assert DataArray([1, 2, 3]).sum(axis=0) == 6
+    
+def test_1d_tick_indexing():
+    # issue #18
+    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    caps = DataArray(np.arange(5),[cap_ax_spec])
+    caps.axis.capitals["washington"]
+
+# -- Test binary operations --------------------------------------------------
+
+def test_tick_mismatch():
+    dar1 = DataArray([1, 2], [('time', ['A1', 'B1'])])
+    dar2 = DataArray([1, 2], [('time', ['A2', 'B2'])])
+    nt.assert_raises(NamedAxisError, dar1.__add__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__sub__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__mul__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
+    

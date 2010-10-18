@@ -16,6 +16,7 @@ ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html      to make standalone HTML files"
+	@echo "  gh-pages  to make the docs in Github-pages form"
 	@echo "  dirhtml   to make HTML files named index.html in directories"
 	@echo "  pickle    to make pickle files"
 	@echo "  json      to make JSON files"
@@ -88,6 +89,5 @@ doctest:
 	      "results in build/doctest/output.txt."
 
 # special target to host the docs for now...
-fpdocs: html
-	rm -rf /home/fperez/www/site/py4science/datarray/*
-	cp -alr build/html/* /home/fperez/www/site/py4science/datarray/
+gh-pages: html
+	./gh-pages.py

@@ -1,23 +1,11 @@
-==========
-DataArrays
-==========
-
-Questions
-^^^^^^^^^
-
-* :ref:`Constructing and Combining <init_ufuncs>`
-* :ref:`Slicing <slicing>`
-* :ref:`Broadcasting <broadcasting>`
-* :ref:`Transposition, Rollaxes, Swapaxes <transposition>`
-* :ref:`Iteration <iteration>`
-* :ref:`Label Changing <label_updates>`
-* :doc:`Wrapping functions with 'axis=' kw<ndarray_methods>`
-* :ref:`To Do<todo>`
+============
+ DataArrays
+============
 
 .. _init_ufuncs:
 
 Basic DataArray Creation And Mixing
--------------------------------------
+===================================
 
 DataArrays are constructed with array-like sequences and axis labels::
 
@@ -72,10 +60,11 @@ Now, what about matching names, but different indices for the names?
   ...
   NamedAxisError: Axis labels are incompatible for a binary operation: ('a', 'b', 'c'), ('b', 'a', 'c')
 
-The names and the position have to be the same, and the above example should raise an error.  At least for now we will raise an error, and review later.
+The names and the position have to be the same, and the above example should
+raise an error.  At least for now we will raise an error, and review later.
 
 With "ticks"
-````````````
+------------
 
 Constructing a DataArray such that an Axis has ticks, for example::
 
@@ -88,7 +77,7 @@ Constructing a DataArray such that an Axis has ticks, for example::
 .. _slicing:
 
 Slicing
--------
+=======
 
 A DataArray with simple named axes can be sliced many ways.
 
@@ -123,7 +112,7 @@ Through the "axis slicer" ``aix`` attribute::
   DataArray([[ True,  True]], dtype=bool)
 
 The Axis Indexing object (it's a stuple)
-````````````````````````````````````````
+----------------------------------------
 
 The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple)::
 
@@ -135,7 +124,10 @@ The ``aix`` attribute is a property which generates a "stuple" (special/slicing 
                        axes = self.axes )
 
 
-The stuple should have a reference to a group of Axis objects that describes an array's geometry. If the stuple is associated with a specific Axis, then when sliced itself, it can create a slicing tuple for the array with the given geometry.
+The stuple should have a reference to a group of Axis objects that describes an
+array's geometry. If the stuple is associated with a specific Axis, then when
+sliced itself, it can create a slicing tuple for the array with the given
+geometry.
 ::
 
   >>> narr.aix
@@ -151,7 +143,10 @@ The stuple should have a reference to a group of Axis objects that describes an 
    DataArray([[ 0.,  0.]])
    ('a', 'b')
 
-The mechanics are slightly different (using ``aix``, a slicing tuple is created up-front before ``__getitem__`` is called), but functionality is the same. **Question** -- Is it convenient enough to include the ``aix`` slicer? should it function differently?
+The mechanics are slightly different (using ``aix``, a slicing tuple is created
+up-front before ``__getitem__`` is called), but functionality is the same.
+**Question** -- Is it convenient enough to include the ``aix`` slicer? should
+it function differently?
 
 Also, slicing with ``newaxis`` is implemented::
 
@@ -162,7 +157,9 @@ Also, slicing with ``newaxis`` is implemented::
   >>> b[:,:,np.newaxis].labels
   ('x', 'y', None, 'z')
 
-I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the results are identical). The effect of this is always to insert an unlabeled Axis with length-1 at the original index of the named Axis::
+I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the
+results are identical). The effect of this is always to insert an unlabeled
+Axis with length-1 at the original index of the named Axis::
 
   >>> b.axes
   (Axis(label='x', index=0, ticks=None), Axis(label='y', index=1, ticks=None), Axis(label='z', index=2, ticks=None))
@@ -184,10 +181,9 @@ I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the 
   (3, 1, 2, 4)
 
 Slicing and ticks
-`````````````````
+-----------------
 
 It is also possible to use ticks in any of the slicing syntax above. 
-
 ::
 
   >>> time_caps
@@ -215,7 +211,9 @@ It is also possible to use ticks in any of the slicing syntax above.
   ('time', 'capitals')
 
 
-The .start and .stop attributes of the slice object can be either None, an integer index, or a valid tick. They may even be mixed. *The .step attribute, however, must be None or an nonzero integer.*
+The .start and .stop attributes of the slice object can be either None, an
+integer index, or a valid tick. They may even be mixed. *The .step attribute,
+however, must be None or an nonzero integer.*
 
 **Historical note: previously integer ticks clobbered indices.** For example::
 
@@ -223,10 +221,12 @@ The .start and .stop attributes of the slice object can be either None, an integ
   >>> centered_data.axis.c_idx.make_slice( slice(0, 6, None) )
   (slice(3, 6, None),)
 
-make_slice() first tries to look up the key parameters as ticks, and then sees if the key parameters can be used as simple indices. Thus 0 is found as index 3, and 6 is passed through as index 6.
+make_slice() first tries to look up the key parameters as ticks, and then sees
+if the key parameters can be used as simple indices. Thus 0 is found as index
+3, and 6 is passed through as index 6.
 
 Possible resolution 1
-*********************
+~~~~~~~~~~~~~~~~~~~~~
 
 "larry" would make this distinction::
 
@@ -238,27 +238,30 @@ Possible resolution 1
 And I believe mixing of ticks and is valid also.
 
 Possible resolution 2 (the winner)
-**********************************
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Do not allow integer ticks -- cast to float perhaps
 
-**Note**: this will be the solution. When validating ticks on an Axis, ensure that none of them ``isinstance(t, int)``
+**Note**: this will be the solution. When validating ticks on an Axis, ensure
+that none of them ``isinstance(t, int)``
 
 
 Possible resolution 3
-*********************
+~~~~~~~~~~~~~~~~~~~~~
 
 Restrict access to tick based slicing to another special slicing object.
 
 .. _broadcasting:
 
 Broadcasting
-------------
+============
 
 What about broadcasting between two named arrays, where the broadcasting
-adds an axis? All ordinary NumPy rules for shape compatibility apply. Additionally, DataArray imposes axis label consistency rules.
+adds an axis? All ordinary NumPy rules for shape compatibility apply.
+Additionally, DataArray imposes axis label consistency rules.
 
-The broadcasted DataArray below, "a", takes on dummy dimensions that are taken to be compatible with the larger DataArray::
+The broadcasted DataArray below, "a", takes on dummy dimensions that are taken
+to be compatible with the larger DataArray::
 
   >>> b = DataArray(np.ones((3,3)), labels=('x','y'))
   >>> a = DataArray(np.ones((3,)), labels=('y',))
@@ -269,7 +272,8 @@ The broadcasted DataArray below, "a", takes on dummy dimensions that are taken t
 	 [ 1.,  1.,  1.]])
   ('x', 'y')
 
-When there are unlabeled dimensions, they also must be consistently oriented across arrays when broadcasting::
+When there are unlabeled dimensions, they also must be consistently oriented
+across arrays when broadcasting::
 
   >>> b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
   >>> a = DataArray(np.random.randn(2,4), [None, 'y'])
@@ -319,7 +323,8 @@ The rule for dimension compatibility is that any two axes match if one of the fo
 
 * their (label, length) pairs are equal
 * their dimensions are broadcast-compatible, and their labels are equal
-* their dimensions are broadcast-compatible, and their labels are non-conflicting (ie, one or both are None)
+* their dimensions are broadcast-compatible, and their labels are
+  non-conflicting (ie, one or both are None)
 
 **Question** -- what about this situation::
 
@@ -331,12 +336,15 @@ The rule for dimension compatibility is that any two axes match if one of the fo
 	 [ 2.,  2.,  2.]])
   ('x', 'y')
 
-The broadcasting rules currently allow this combination. I'm inclined to allow it. Even though the axes are different lengths in ``a`` and ``b``, and therefore *might* be considered different logical axes, there is no actual information collision from ``a.axis.y``.
+The broadcasting rules currently allow this combination. I'm inclined to allow
+it. Even though the axes are different lengths in ``a`` and ``b``, and
+therefore *might* be considered different logical axes, there is no actual
+information collision from ``a.axis.y``.
 
 .. _iteration:
 
 Iteration
----------
+=========
 
 seems to work::
 
@@ -396,9 +404,10 @@ Or even more conveniently::
 .. _transposition:
 
 Transposition of Axes
----------------------
+=====================
 
-Transposition of a DataArray preserves the dimension labels, and updates the corresponding indices::
+Transposition of a DataArray preserves the dimension labels, and updates the
+corresponding indices::
 
   >>> b.shape
   (3, 2, 4)
@@ -412,16 +421,17 @@ Transposition of a DataArray preserves the dimension labels, and updates the cor
 .. _label_updates:
 
 Changing Labels on DataArrays
------------------------------
+=============================
 
 Tricky Attributes
-`````````````````
+-----------------
 
 * .labels -- currently a mutable list of Axis.name attributes
 * .axes -- currently a mutable list of Axis objects
 * .axis -- a key-to-attribute dictionary
 
-Need an event-ful way to change an Axis's label, such that all the above attributes are updated.
+Need an event-ful way to change an Axis's label, such that all the above
+attributes are updated.
 
 **Proposed solution**: 
 
@@ -433,7 +443,7 @@ Need an event-ful way to change an Axis's label, such that all the above attribu
 .. _todo:
 
 ToDo
-----
+====
 
 * Support DataArray instances with mixed axes: simple ones with no values 
   and 'fancy' ones with data in them.  Syntax?
@@ -446,7 +456,8 @@ ToDo
 
 * Can a, b, and c be combined in binary operations, given the different tick
   combinations?
-* How to handle complicated reshaping (not flattening or, padding/trimming with 1s)
+* How to handle complicated reshaping (not flattening or, padding/trimming with
+  1s) 
 * Units support (Darren's)
 * Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
   access data via the .axis objects alone.
@@ -454,16 +465,44 @@ ToDo
 * "Ordered factors"? Something R supports.
 * How many axis classes?
 
+* Allowing non-string axis names?
 
-Axis api: if a is an axis from an array: a = x.axis.a
+- At least they must be hashable...
+- Serialization?
 
-a.at(key): return the slice at that key, with one less dimension than x
-a.keep(keys): join slices for given keys, dims=dims(x)
-a.drop(keys): like keep, but the opposite
+
+* Allowing multiple labels per axis?
+
+
+* Rob Speer's proposal for purely top-level, 'magical' attributes?
+
+
+* Finish the semantics of .lix indexing, especially with regards to what it
+  should do when integer ticks are present.
+
+* What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?
+
+Indexing semantics possibilities
+--------------------------------
+
+1. .lix: Integers always labels.  a.lix[3:10] means labels 3 and 10 MUST exist.
+
+2. .nix: Integers are never treated as labels.
+
+3. .awful_ix: 1, then 2.
+
+
+Axis api
+--------
+If a is an axis from an array: a = x.axis.a
+
+- a.at(key): return the slice at that key, with one less dimension than x
+- a.keep(keys): join slices for given keys, dims=dims(x)
+- a.drop(keys): like keep, but the opposite
 
 a[i] valid cases:
-i: integer => normal numpy scalar indexing, one less dim than x
-i: slice: numpy view slicing.  same dims as x, must recover the ticks 
-i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 
+- i: integer => normal numpy scalar indexing, one less dim than x
+- i: slice: numpy view slicing.  same dims as x, must recover the ticks 
+- i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 

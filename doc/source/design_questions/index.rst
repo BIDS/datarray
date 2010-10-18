@@ -10,6 +10,7 @@ Contents:
    data_array_overview.rst
    larry_overview.rst
    pandas_overview.rst
+   issues.rst
 
 License Info
 ============
