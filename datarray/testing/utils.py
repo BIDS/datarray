@@ -1,12 +1,23 @@
-"datarray unit testing utilities"
+"""datarray unit testing utilities"""
+#-----------------------------------------------------------------------------
+# Imports
+#-----------------------------------------------------------------------------
 
+# Stdlib
+import sys
+
+# Third-party
 import numpy as np
 from numpy.testing import assert_, assert_equal, assert_array_equal
 
+# Our own
 from datarray.datarray import DataArray
 
 __all__ = ['assert_datarray_equal']
 
+#-----------------------------------------------------------------------------
+# Functions and classes
+#-----------------------------------------------------------------------------
 
 def assert_datarray_equal(x, y, err_msg='', verbose=True):
     """
