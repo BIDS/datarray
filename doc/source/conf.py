@@ -26,10 +26,7 @@ execfile('../../datarray/version.py', rel)
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath',
-
-              'sphinx_no_underscore',
-              
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath', 'sphinx.ext.doctest',
               # Only uncomment intersphinx if we really start using it, and in
               # that case it should probably be conditionally added only for
               # release builds, because it makes network lookups on every build

@@ -1,11 +1,15 @@
+.. testsetup::
+
+    import numpy as np
+
 =======
 Methods
 =======
 
-Methods::
+Methods:
 
-  >>> a = np.random.randn(3,4)
-  >>> filter(lambda x: type(getattr(a,x))==type(a.min), dir(a))
+    >>> a = np.random.randn(3,4)
+    >>> filter(lambda x: type(getattr(a,x))==type(a.min), dir(a))
 
 * '__array__',
 * :ref:`'__array_prepare__',<explicitly_redef>`
