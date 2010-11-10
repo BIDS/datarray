@@ -273,18 +273,18 @@ def grid_layout(arr, width=75, height=10):
 def labeled_layout(arr, width=75, height=10, row_label_width=9):
     """
     Given a 2-D non-empty array that may have labeled axes, rows, or columns,
-    render the array as strings to be joined and attach the labels in
+    render the array as strings to be joined and attach the axes in
     visually appropriate places.
 
     Returns a list of lists of strings to be joined.
     """
     inner_width, inner_height = width, height
-    if arr.axes[0].ticks:
+    if arr.axes[0].labels:
         inner_width = width - row_label_width-1
-    if arr.axes[1].ticks:
+    if arr.axes[1].labels:
         inner_height -= 1
-    row_header = (arr.axes[0].ticks and arr.axes[0].name)
-    col_header = (arr.axes[1].ticks and arr.axes[1].name)
+    row_header = (arr.axes[0].labels and arr.axes[0].name)
+    col_header = (arr.axes[1].labels and arr.axes[1].name)
     if row_header or col_header:
         inner_height -= 2
 
@@ -292,20 +292,21 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
     cell_width = len(layout[0][0])
     label_formatter = StrFormatter()
     
-    if arr.axes[1].ticks:
-        # use one character less than available, to make labels more visually
+    if arr.axes[1].labels:
+        # use one character less than available, to make axes more visually
         # separate
 
-        col_label_layout = [label_formatter.format(str(label)[:cell_width-1], cell_width) for label in cells_shown.axes[1].ticks]
+        col_label_layout = [label_formatter.format(str(name)[:cell_width-1],
+                             cell_width) for name in cells_shown.axes[1].labels]
         layout = [col_label_layout] + layout
 
-    if arr.axes[0].ticks:
+    if arr.axes[0].labels:
         layout = [[' '*row_label_width] + row for row in layout]
-        ticks = cells_shown.axes[0].ticks
+        labels = cells_shown.axes[0].labels
         offset = 0
-        if arr.axes[1].ticks: offset = 1
+        if arr.axes[1].labels: offset = 1
         for r in xrange(cells_shown.shape[0]):
-            layout[r+offset][0] = label_formatter.format(ticks[r], row_label_width)
+            layout[r+offset][0] = label_formatter.format(labels[r], row_label_width)
     
     if row_header or col_header:
         header0 = []
@@ -313,13 +314,13 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         if row_header:
             header0.append(label_formatter.format(row_header, row_label_width))
             header1.append('-' * row_label_width)
-        elif arr.axes[0].ticks:
+        elif arr.axes[0].labels:
             header0.append(' ' * row_label_width)
             header1.append(' ' * row_label_width)
         if col_header:
             # We can use all remaining columns. How wide are they?
             offset = 0
-            if arr.axes[0].ticks: offset = 1
+            if arr.axes[0].labels: offset = 1
             merged_width = len(' '.join(layout[0][offset:]))
             header0.append(label_formatter.format(col_header, merged_width))
             header1.append('-' * merged_width)

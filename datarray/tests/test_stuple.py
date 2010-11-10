@@ -6,7 +6,7 @@ from datarray.datarray import Axis, DataArray
 from datarray.stuple import *
 
 d_arr = DataArray(np.random.randn(3, 2, 4, 2),
-                  labels=('x', 'y', 'u', 'v'))
+                  axes=('x', 'y', 'u', 'v'))
 
 def test_a_stuple_is_a_tuple():
     s = stuple( (1,2,3,4) )

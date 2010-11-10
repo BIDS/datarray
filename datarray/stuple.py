@@ -8,14 +8,14 @@ class stuple(tuple):
     """A special tuple? A slicing tuple? All of the above?
 
     A stuple has a reference to a list of Axis objects, and may be
-    associated with a particular Axis. For each valid label in the
-    axes list, that label becomes an attribute on the stuple, to
+    associated with a particular Axis. For each valid name in the
+    axes list, that name becomes an attribute on the stuple, to
     allow chaining together slicing on multiple axes.
 
     Example
     -------
     >>> from datarray import Axis
-    >>> s = stuple( (), axes=[ Axis(label, idx, None) for label, idx in zip('abc', [0,1,2]) ] )
+    >>> s = stuple( (), axes=[ Axis(name, idx, None) for name, idx in zip('abc', [0,1,2]) ] )
     >>> hasattr(s, 'a')
     True
     >>> hasattr(s, 'b')
@@ -36,9 +36,9 @@ class stuple(tuple):
             # put some embryonic stuples on ice until they are accessed
             # by name and sliced (see proxy_stuple.__getitem__)
             # (This is to avoid infinite recursion)
-            if ax.label is not None:
+            if ax.name is not None:
                 ax_stuple = proxy_stuple(tup, this_axis=ax, axes=axes)
-                setattr(t, ax.label, ax_stuple)
+                setattr(t, ax.name, ax_stuple)
         return t
 
     def __getitem__(self, key):

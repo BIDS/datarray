@@ -66,102 +66,105 @@ class Axis(object):
 
     Key point: every axis contains a  reference to its parent array!
     """
-    def __init__(self, label, index, parent_arr, ticks=None):
-        # Axis label should be a string or None
-        if not isinstance(label, basestring) and label is not None:
-            raise ValueError('label must be a string or None')
-        self.label = label
+    def __init__(self, name, index, parent_arr, labels=None):
+        # Axis name should be a string or None
+        if not isinstance(name, basestring) and name is not None:
+            raise ValueError('name must be a string or None')
+        self.name = name
         self.index = index
         self.parent_arr = parent_arr
         
-        # If ticks is not None, label should be defined
-        if ticks is not None and label is None:
-            raise ValueError('ticks only supported when Axis has a label')
+        # If labels is not None, name should be defined
+        if labels is not None and name is None:
+            raise ValueError('labels only supported when Axis has a name')
 
-        # This will raise if the ticks are invalid:
-        self._tick_dict = self._validate_ticks(ticks)
-        self.ticks = ticks
+        # This will raise if the labels are invalid:
+        self._label_dict = self._validate_labels(labels)
+        self.labels = labels
 
     def _copy(self, **kwargs):
         """
         Create a quick copy of this Axis without bothering to do
-        tick validation (these ticks are already known as valid).
+        label validation (these labels are already known as valid).
 
         Keyword args are replacements for constructor arguments
 
         Examples
         --------
 
-        >>> a1 = Axis('time', 0, None, ticks=[str(i) for i in xrange(10)])
+        >>> a1 = Axis('time', 0, None, labels=[str(i) for i in xrange(10)])
         >>> a1
-        Axis(label='time', index=0, ticks=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-        >>> a2 = a1._copy(ticks=a1.ticks[3:6])
+        Axis(name='time', index=0, labels=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+        >>> a2 = a1._copy(labels=a1.labels[3:6])
         >>> a2
-        Axis(label='time', index=0, ticks=['3', '4', '5'])
+        Axis(name='time', index=0, labels=['3', '4', '5'])
         >>> a1 == a2
         False
         """
-        label = kwargs.pop('label', self.label)
+        name = kwargs.pop('name', self.name)
         index = kwargs.pop('index', self.index)
         parent_arr = kwargs.pop('parent_arr', self.parent_arr)
         cls = self.__class__ 
-        ax = cls(label, index, parent_arr)
+        ax = cls(name, index, parent_arr)
 
-        ticks = kwargs.pop('ticks', copy.copy(self.ticks))
-        ax.ticks = ticks
-        if ticks and len(ticks) != len(self.ticks):
-            ax._tick_dict = dict( zip(ticks, xrange( len(ticks) )) )
+        labels = kwargs.pop('labels', copy.copy(self.labels))
+        ax.labels = labels
+        if labels and len(labels) != len(self.labels):
+            ax._label_dict = dict( zip(labels, xrange( len(labels) )) )
         else:
-            ax._tick_dict = copy.copy(self._tick_dict)
+            ax._label_dict = copy.copy(self._label_dict)
         return ax
 
+    # A guaranteed-to-be-a-string version of the axis name, which lets us
+    # disambiguate when multiple unnamed axes exist in an array (since they all
+    # have None for name).
     @property
-    def name(self):
-        if self.label is not None:
-            return str(self.label)
+    def _sname(self):
+        if self.name is not None:
+            return str(self.name)
         else:
             return "_%d" %  self.index
 
-    def _validate_ticks(self, ticks):
-        """Validate constraints on ticks.
+    def _validate_labels(self, labels):
+        """Validate constraints on labels.
 
         Ensure:
 
         - uniqueness
         - length
-        - no tick is an integer
+        - no label is an integer
         """
-        if ticks is None:
+        if labels is None:
             return None
         
-        nticks = len(ticks)
-        # XXX maybe Axis ticks should be validated in __array_finalize__?
+        nlabels = len(labels)
+        # XXX maybe Axis labels should be validated in __array_finalize__?
 
         # Sanity check: the first dimension must match that of the parent array
         if self.parent_arr is not None \
-               and nticks != self.parent_arr.shape[self.index]:
-            e = 'Dimension mismatch between ticks and data at index %i' % \
+               and nlabels != self.parent_arr.shape[self.index]:
+            e = 'Dimension mismatch between labels and data at index %i' % \
                 self.index
             raise ValueError(e)
 
         # Validate types -- using generator for short circuiting
-        if any( (isinstance(t, int) for t in ticks) ):
-            raise ValueError('Ticks cannot be integers')
+        if any( (isinstance(t, int) for t in labels) ):
+            raise ValueError('Labels cannot be integers')
         
         # Validate uniqueness
-        t_dict = dict(zip(ticks, xrange(nticks)))
-        if len(t_dict) != nticks:
-            raise ValueError('non-unique tick values not supported')
+        t_dict = dict(zip(labels, xrange(nlabels)))
+        if len(t_dict) != nlabels:
+            raise ValueError('non-unique label values not supported')
         return t_dict
 
-    def set_label(self, label):
+    def set_name(self, name):
         # XXX: This makes some potentially scary changes to the parent
         #      array. It may end up being an insidious bug.
 
-        # Axis label should be a string or None
-        if not isinstance(label, basestring) and label is not None:
-            raise ValueError('label must be a string or None')
-        self.label = label
+        # Axis name should be a string or None
+        if not isinstance(name, basestring) and name is not None:
+            raise ValueError('name must be a string or None')
+        self.name = name
         pa = self.parent_arr
         nd = pa.ndim
         newaxes = [pa.axes[i] for i in xrange(self.index)]
@@ -174,8 +177,8 @@ class Axis(object):
 
     def __eq__(self, other):
         '''
-        Axes are equal iff they have matching labels and indices. They
-        do not need to have matching ticks.
+        Axes are equal iff they have matching names and indices. They
+        do not need to have matching labels.
 
         Parameters
         ----------
@@ -195,12 +198,12 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
-        return self.label == other.label and self.index == other.index and \
-               self.ticks == other.ticks
+        return self.name == other.name and self.index == other.index and \
+               self.labels == other.labels
 
     def __str__(self):
-        return 'Axis(label=%r, index=%i, ticks=%r)' % \
-               (self.label, self.index, self.ticks)
+        return 'Axis(name=%r, index=%i, labels=%r)' % \
+               (self.name, self.index, self.labels)
 
     __repr__ = __str__
     
@@ -243,13 +246,13 @@ class Axis(object):
             newaxes.append( a._copy(parent_arr=parent_arr) )
         
         if isinstance(key, slice):
-            # we need to find the ticks, if any
-            if self.ticks:
-                newticks = self.ticks[key]
+            # we need to find the labels, if any
+            if self.labels:
+                newlabels = self.labels[key]
             else:
-                newticks = None
-            # insert new Axis with sliced ticks
-            newaxis = self._copy(parent_arr=parent_arr, ticks=newticks)
+                newlabels = None
+            # insert new Axis with sliced labels
+            newaxis = self._copy(parent_arr=parent_arr, labels=newlabels)
             newaxes[self.index] = newaxis
 
         if out.ndim < parent_arr_ndim:
@@ -258,7 +261,7 @@ class Axis(object):
 
         elif out.ndim > parent_arr_ndim:
             # We were indexed by a newaxis (None),
-            # need to insert an unlabeled axis before this axis.
+            # need to insert an unnamed axis before this axis.
             # Do this by inserting an Axis at the end of the axes, then
             # reindexing them
             new_axis = self.__class__(None, out.ndim-1, parent_arr)
@@ -278,9 +281,9 @@ class Axis(object):
 
         Parameters
         ----------
-        key : a slice object, single tick-like item, or None
+        key : a slice object, single label-like item, or None
           This slice object may have arbitrary types for .start, .stop,
-          in which case tick labels will be looked up. The .step attribute
+          in which case label labels will be looked up. The .step attribute
           of course must be None or an integer.
 
         Returns
@@ -291,8 +294,8 @@ class Axis(object):
 
         full_slicing = [ slice(None) ] * self.parent_arr.ndim
 
-        # if no ticks, pop in the key and pray (will raise later)
-        if not self.ticks:
+        # if no labels, pop in the key and pray (will raise later)
+        if not self.labels:
             full_slicing[self.index] = key
             return tuple(full_slicing)
 
@@ -308,7 +311,7 @@ class Axis(object):
                 looked_up.append(a)
                 continue
             try:
-                idx = self._tick_dict[a]
+                idx = self._label_dict[a]
             except KeyError:
                 if not isinstance(a, int):
                     raise IndexError(
@@ -333,42 +336,42 @@ class Axis(object):
         full_slicing[self.index] = new_key
         return tuple(full_slicing)
         
-    def at(self, tick):
+    def at(self, label):
         """
-        Return data at a given tick.
+        Return data at a given label.
 
-        >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
+        >>> narr = DataArray(np.random.standard_normal((4,5)), axes=['a', ('b', 'abcde')])
         >>> arr = narr.axis.b.at('c')
         >>> arr.axes
-        (Axis(label='a', index=0, ticks=None),)
+        (Axis(name='a', index=0, labels=None),)
         >>>     
 
         """
-        if not self.ticks:
-            raise ValueError('axis must have ticks to extract data at a given tick')
-        slicing = self.make_slice(tick)
+        if not self.labels:
+            raise ValueError('axis must have labels to extract data at a given label')
+        slicing = self.make_slice(label)
         return self.parent_arr[slicing]
     
-    def keep(self, ticks):
+    def keep(self, labels):
         """
-        Keep only certain ticks of an axis.
+        Keep only certain labels of an axis.
 
         >>> narr = DataArray(np.random.standard_normal((4,5)),
-        ...                  labels=['a', ('b', 'abcde')])
+        ...                  axes=['a', ('b', 'abcde')])
         >>> arr = narr.axis.b.keep('cd')
-        >>> [a.ticks for a in arr.axes]
+        >>> [a.labels for a in arr.axes]
         [None, 'cd']
         
-        >>> arr.axis.a.at('tick')
+        >>> arr.axis.a.at('label')
         Traceback (most recent call last):
         ...
-        ValueError: axis must have ticks to extract data at a given tick
+        ValueError: axis must have labels to extract data at a given label
         """
 
-        if not self.ticks:
-            raise ValueError('axis must have ticks to keep certain ticks')
+        if not self.labels:
+            raise ValueError('axis must have labels to keep certain labels')
 
-        idxs = [self._tick_dict[tick] for tick in ticks]
+        idxs = [self._label_dict[label] for label in labels]
 
         parent_arr = self.parent_arr # local for speed
         parent_arr_ndim = parent_arr.ndim
@@ -379,28 +382,28 @@ class Axis(object):
 
         # just change the current axes
         new_axes = [a._copy() for a in out.axes]
-        new_axes[self.index] = self._copy(ticks=ticks)
+        new_axes[self.index] = self._copy(labels=labels)
         _set_axes(out, new_axes)
         return out
 
-    def drop(self, ticks):
+    def drop(self, labels):
         """
-        Keep only certain ticks of an axis.
+        Keep only certain labels of an axis.
 
         Example
         =======
         >>> darr = DataArray(np.random.standard_normal((4,5)),
-        ...                  labels=['a', ('b', ['a','b','c','d','e'])])
+        ...                  axes=['a', ('b', ['a','b','c','d','e'])])
         >>> arr1 = darr.axis.b.keep(['c','d'])
         >>> arr2 = darr.axis.b.drop(['a','b','e'])
         >>> np.alltrue(np.equal(arr1, arr2))
         True
         """
 
-        if not self.ticks:
-            raise ValueError('axis must have ticks to drop ticks')
+        if not self.labels:
+            raise ValueError('axis must have labels to drop labels')
 
-        kept = [t for t in self.ticks if t not in ticks]
+        kept = [t for t in self.labels if t not in labels]
         return self.keep(kept)
 
     def __int__(self):
@@ -415,7 +418,7 @@ def _names_to_numbers(axes, ax_ids):
     proc_ids = []
     for ax_id in ax_ids:
         if isinstance(ax_id, basestring):
-            matches = [ax for ax in axes if ax.name == ax_id]
+            matches = [ax for ax in axes if ax._sname == ax_id]
             if not matches:
                 raise NamedAxisError('No axis named %s' % ax_id)
             proc_ids.append(matches[0].index)
@@ -473,12 +476,12 @@ def _set_axes(dest, in_axes):
     for ax in in_axes:
         new_ax = ax._copy(parent_arr=dest)
         axes.append(new_ax)
-        if hasattr(ax_holder, ax.name):
+        if hasattr(ax_holder, ax._sname):
             raise NamedAxisError(
                 'There is another Axis in this group with ' \
                 'the same name'
                 )
-        ax_holder[ax.name] = new_ax
+        ax_holder[ax._sname] = new_ax
     # Store these containers as attributes of the destination array
     dest.axes = tuple(axes)
     dest.axis = ax_holder
@@ -569,39 +572,36 @@ class DataArray(np.ndarray):
     def T(self):
         return self.transpose()
 
-    def __new__(cls, data, labels=None, dtype=None, copy=False):
-        # XXX if an entry of labels is a tuple, it is interpreted
-        # as a (label, ticks) tuple 
+    def __new__(cls, data, axes=None, dtype=None, copy=False):
+        # XXX if an entry of axes is a tuple, it is interpreted
+        # as a (name, labels) tuple 
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
-        if labels is None:
+        if axes is None:
             if hasattr(data,'axes'):
                 _set_axes(arr, data.axes)
                 return arr
-            labels = []
-        elif len(labels) > arr.ndim:
-            raise NamedAxisError('labels list should have length <= array ndim')
+            axes = []
+        elif len(axes) > arr.ndim:
+            raise NamedAxisError('axes list should have length <= array ndim')
         
-        labels = list(labels) + [None]*(arr.ndim - len(labels))
-        axes = []
-        for i, label_spec in enumerate(labels):
-            if type(label_spec) == type(()):
-                if len(label_spec) != 2:
+        axes = list(axes) + [None]*(arr.ndim - len(axes))
+        axlist = []
+        for i, axis_spec in enumerate(axes):
+            if type(axis_spec) == tuple:
+                if len(axis_spec) != 2:
                     raise ValueError(
-                        'if the label specification is a tuple, it must be ' \
-                        'of the form (label, ticks)'
+                        'if the axis specification is a tuple, it must be ' \
+                        'of the form (name, labels)'
                         )
-                label, ticks = label_spec
+                name, labels = axis_spec
             else:
-                label = label_spec
-                ticks = None
-            axes.append(Axis(label, i, arr, ticks=ticks))
+                name = axis_spec
+                labels = None
+            axlist.append(Axis(name, i, arr, labels=labels))
 
-        _set_axes(arr, axes)
-
-        # validate the axes
-        _validate_axes(axes)
-
+        _set_axes(arr, axlist)
+        _validate_axes(axlist)
 
         return arr
 
@@ -612,13 +612,13 @@ class DataArray(np.ndarray):
         return stuple( ( slice(None), ) * self.ndim,
                        axes = self.axes )
 
-    def set_label(self, i, label):
-        self.axes[i].set_label(label)
+    def set_name(self, i, name):
+        self.axes[i].set_name(name)
 
     @property
-    def labels (self):
-        """Returns a tuple with all the axis labels."""
-        return tuple((ax.label for ax in self.axes))
+    def names (self):
+        """Returns a tuple with all the axis names."""
+        return tuple((ax.name for ax in self.axes))
 
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
@@ -646,7 +646,7 @@ class DataArray(np.ndarray):
         if not hasattr(obj, 'axes'): # looks like view cast
             _set_axes(self, [])
             return
-        # new-from-template: we just copy the labels from the template,
+        # new-from-template: we just copy the axes from the template,
         # and hope the calling rountine knows what to do with the output
 ##         print 'setting axes on self from obj' # dbg
         _set_axes(self, obj.axes)
@@ -675,36 +675,36 @@ class DataArray(np.ndarray):
             if not isinstance(other,DataArray):
                 return obj
             
-##                 print "found DataArray, comparing labels"
+##                 print "found DataArray, comparing axes"
 
             # walk back from the last axis on each array, check
-            # that the label and shape are acceptible for broadcasting
+            # that the name and shape are acceptible for broadcasting
             these_axes = list(self.axes)
             those_axes = list(other.axes)
-            #print self.shape, self.labels # dbg
+            #print self.shape, self.names # dbg
             while these_axes and those_axes:
                 that_ax = those_axes.pop(-1)
                 this_ax = these_axes.pop(-1)
                 # print self.shape # dbg
                 this_dim = self.shape[this_ax.index]
                 that_dim = other.shape[that_ax.index]
-                if that_ax.label != this_ax.label:
-                    # A valid label can be mis-matched IFF the other
-                    # (label, length) pair is:
+                if that_ax.name != this_ax.name:
+                    # A valid name can be mis-matched IFF the other
+                    # (name, length) pair is:
                     # * (None, 1)
                     # * (None, {this,that}_dim).                    
-                    # In this case, the unlabeled Axis should
-                    # adopt the label of the matching Axis in the
+                    # In this case, the unnamed Axis should
+                    # adopt the name of the matching Axis in the
                     # other array (handled in elsewhere)
-                    if that_ax.label is not None and this_ax.label is not None:
+                    if that_ax.name is not None and this_ax.name is not None:
+                        raise NamedAxisError(
+                            'Axis axes are incompatible for '\
+                            'a binary operation: ' \
+                            '%s, %s'%(self.names, other.names))
+                if that_ax.labels != this_ax.labels:
+                    if that_ax.labels is not None and this_ax.labels is not None:
                         raise NamedAxisError(
                             'Axis labels are incompatible for '\
-                            'a binary operation: ' \
-                            '%s, %s'%(self.labels, other.labels))
-                if that_ax.ticks != this_ax.ticks:
-                    if that_ax.ticks is not None and this_ax.ticks is not None:
-                        raise NamedAxisError(
-                            'Axis ticks are incompatible for '\
                             'a binary operation.')
 
                 # XXX: Does this dimension compatibility check happen
@@ -712,9 +712,9 @@ class DataArray(np.ndarray):
                 #      error is not fired when there's a shape mismatch.
                 if this_dim==1 or that_dim==1 or this_dim==that_dim:
                     continue
-                raise NamedAxisError('Dimension with label %s has a '\
+                raise NamedAxisError('Dimension with name %s has a '\
                                      'mis-matched shape: ' \
-                                     '(%d, %d) '%(this_ax.label,
+                                     '(%d, %d) '%(this_ax.name,
                                                   this_dim,
                                                   that_dim))
         return obj
@@ -733,10 +733,10 @@ class DataArray(np.ndarray):
 ##             print "other   :", other.__class__
             
         if isinstance(other,DataArray):            
-##                 print "found DataArray, comparing labels"
+##                 print "found DataArray, comparing names"
 
             # walk back from the last axis on each array to get the
-            # correct labels/ticks
+            # correct names/labels
             these_axes = list(self.axes)
             those_axes = list(other.axes)
             ax_spec = []
@@ -744,15 +744,15 @@ class DataArray(np.ndarray):
                 this_ax = these_axes.pop(-1)
                 that_ax = those_axes.pop(-1)
                 # If we've broadcasted this array against another, then
-                # this_ax.label may be None, in which case the new array's
-                # Axis label should take on the value of that_ax
-                if this_ax.label is None:
+                # this_ax.name may be None, in which case the new array's
+                # Axis name should take on the value of that_ax
+                if this_ax.name is None:
                     ax_spec.append(that_ax)
                 else:
                     ax_spec.append(this_ax)
             ax_spec = ax_spec[::-1]
             # if the axes are not totally consumed on one array or the other,
-            # then grab those labels/ticks for the rest of the dims
+            # then grab those names/labels for the rest of the dims
             if these_axes:
                 ax_spec = these_axes + ax_spec
             elif those_axes:
@@ -801,17 +801,17 @@ class DataArray(np.ndarray):
             names = [a.name for a in self.axes]
 
             # If an Axis gets sliced out entirely, then any following
-            # unlabeled Axis in the array will spontaneously change name.
+            # unnamed Axis in the array will spontaneously change name.
             # So anticipate the name change here.
             reduction = 0
             adjustments = []
             for k in key:
                 adjustments.append(reduction)
                 if not isinstance(k, slice):
-                    # reduce the idx # on the remaining default labels
+                    # reduce the idx # on the remaining default names
                     reduction -= 1
 
-            names = [n if a.label else '_%d'%(a.index+r)
+            names = [n if a.name else '_%d'%(a.index+r)
                      for n, a, r in zip(names, self.axes, adjustments)]
 
             for slice_or_int, name in zip(key, names):
@@ -827,12 +827,12 @@ class DataArray(np.ndarray):
 
     def __str__(self):
         s = super(DataArray, self).__str__()
-        s = '\n'.join([s, str(self.labels)])
+        s = '\n'.join([s, str(self.names)])
         return s
 
     def __repr__(self):
         s = super(DataArray, self).__repr__()
-        s = '\n'.join([s, str(self.labels)])
+        s = '\n'.join([s, str(self.names)])
         return s
 
     # Methods from ndarray
@@ -917,7 +917,7 @@ class DataArray(np.ndarray):
                 args = args[0]
             else:
                 return np.asarray(self).reshape(*args)
-        # if adding/removing length-1 dimensions, then add an unlabeled Axis
+        # if adding/removing length-1 dimensions, then add an unnamed Axis
         # or pop an Axis
         old_shape = list(self.shape)
         new_shape = list(args)
@@ -967,8 +967,8 @@ class DataArray(np.ndarray):
     # -- Sorting Ops ---------------------------------------------------------
     # ndarray sort with axis==None flattens the array: return ndarray
     
-    # Otherwise, if there are ticks at the axis in question, then
-    # the sample-to-tick correspondence becomes inconsistent across
+    # Otherwise, if there are labels at the axis in question, then
+    # the sample-to-label correspondence becomes inconsistent across
     # the remaining axes. Also return a plain ndarray.
     
     # Otherwise, order the axis in question--default axis is -1
@@ -980,7 +980,7 @@ class DataArray(np.ndarray):
         if axis is not None:
             axis = _names_to_numbers(self.axes, [axis])[0]
             kwargs['axis'] = axis
-        if axis is None or self.axes[axis].ticks:
+        if axis is None or self.axes[axis].labels:
             # Returning NEW ndarray
             arr = np.asarray(self).copy()
             arr.sort(**kwargs)
@@ -993,7 +993,7 @@ class DataArray(np.ndarray):
         if axis is not None:
             axis = _names_to_numbers(self.axes, [axis])[0]
             kwargs['axis'] = axis
-        if axis is None or self.axes[axis].ticks:
+        if axis is None or self.axes[axis].labels:
             # Returning NEW ndarray
             arr = np.asarray(self)
             return arr.argsort(**kwargs)
@@ -1096,7 +1096,7 @@ def _make_singleton_axes(arr, key):
     (shape, axes, key)
 
     These are the new shape, with singleton axes included; the new axes,
-    with an unlabeled Axis at each singleton dimension; and the new
+    with an unnamed Axis at each singleton dimension; and the new
     slicing key, with `newaxis` keys replaced by slice(None)
     """
     
@@ -1111,7 +1111,7 @@ def _make_singleton_axes(arr, key):
     # wherever there is a None in the key,
     # * replace it with slice(None)
     # * place a new dimension with length 1 in the shape,
-    # * and add a new unlabeled Axis to the axes
+    # * and add a new unnamed Axis to the axes
     new_dims = []
     new_key = []
     d_cnt = 0
@@ -1142,5 +1142,4 @@ def _make_singleton_axes(arr, key):
     while len(new_key)>1 and new_key[-1] == slice(None):
         new_key.pop()
     return tuple(new_dims), ro_axes, tuple(new_key)
-    
-    
+
