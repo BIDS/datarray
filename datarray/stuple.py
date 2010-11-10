@@ -14,8 +14,8 @@ class stuple(tuple):
 
     Example
     -------
-    
-    >>> s = stuple.stuple( (), axes=[ Axis(label, idx, None) for label, idx in zip('abc', [0,1,2]) ] )
+    >>> from datarray import Axis
+    >>> s = stuple( (), axes=[ Axis(label, idx, None) for label, idx in zip('abc', [0,1,2]) ] )
     >>> hasattr(s, 'a')
     True
     >>> hasattr(s, 'b')
@@ -26,8 +26,6 @@ class stuple(tuple):
     (slice(0, 2, None), slice(None, None, None), slice(None, None, 2))
     >>> s
     ()
-
-    
     """
 
     def __new__(klass, tup, this_axis=None, axes=[]):
