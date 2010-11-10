@@ -16,7 +16,7 @@ from nose.core import TestProgram
 # Functions and classes
 #-----------------------------------------------------------------------------
 
-def test(doctests=True, **kw):
+def test(doctests=True, extra_argv=None, **kw):
     """Run the nitime test suite using nose.
 
     Parameters
@@ -47,8 +47,11 @@ def test(doctests=True, **kw):
     if doctests:
         argv.append('--with-doctest')
 
+    if extra_argv is not None:
+        argv.extend(extra_argv)
+
     # Now nose can run
-    TestProgram(argv=argv, exit=False)
+    TestProgram(argv=argv, exit=False, **kw)
 
 
 # Tell nose that the test() function itself isn't a test, otherwise we get a
