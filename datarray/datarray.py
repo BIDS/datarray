@@ -33,7 +33,7 @@ class KeyStruct(object):
     >>> a[3] = 3
     Traceback (most recent call last):
       ... 
-    TypeError: attribute name must be string, not 'int'
+    TypeError: hasattr(): attribute name must be string
 
     >>> b = KeyStruct(x=1, y=2)
     >>> b.x
@@ -99,10 +99,7 @@ class Axis(object):
         >>> a2
         Axis(label='time', index=0, ticks=['3', '4', '5'])
         >>> a1 == a2
-        True
-        >>> a1 is a2
         False
-
         """
         label = kwargs.pop('label', self.label)
         index = kwargs.pop('index', self.index)
@@ -343,7 +340,7 @@ class Axis(object):
         >>> narr = DataArray(np.random.standard_normal((4,5)), labels=['a', ('b', 'abcde')])
         >>> arr = narr.axis.b.at('c')
         >>> arr.axes
-        [Axis(label='a', index=0, ticks=None)]
+        (Axis(label='a', index=0, ticks=None),)
         >>>     
 
         """
@@ -390,10 +387,12 @@ class Axis(object):
         """
         Keep only certain ticks of an axis.
 
-        >>> narr = DataArray(np.random.standard_normal((4,5)),
-        ...                  labels=['a', ('b', 'abcde')])
-        >>> arr1 = narr.axis.b.keep('cd')
-        >>> arr2 = narr.axis.b.drop('abe')
+        Example
+        =======
+        >>> darr = DataArray(np.random.standard_normal((4,5)),
+        ...                  labels=['a', ('b', ['a','b','c','d','e'])])
+        >>> arr1 = darr.axis.b.keep(['c','d'])
+        >>> arr2 = darr.axis.b.drop(['a','b','e'])
         >>> np.alltrue(np.equal(arr1, arr2))
         True
         """
@@ -767,7 +766,7 @@ class DataArray(np.ndarray):
             new_axes.append( ax._copy(index=i, parent_arr=res) )
         _set_axes(res, new_axes)
         return res
-        
+                
     def __getitem__(self, key):
         """Support x[k] access."""
         # Slicing keys:
