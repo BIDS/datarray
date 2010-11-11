@@ -7,7 +7,9 @@ manually).
 from __future__ import print_function
 
 import os
-from subprocess import call as sh
+from subprocess import call
+
+sh = lambda s: call(s, shell=True)
 
 cwd = os.getcwd()
 if not os.path.isfile('setup.py'):
