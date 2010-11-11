@@ -212,12 +212,17 @@ The .start and .stop attributes of the slice object can be either None, an
 integer index, or a valid tick. They may even be mixed. *The .step attribute,
 however, must be None or an nonzero integer.*
 
-**Historical note: previously integer labels clobbered indices.** For example:
+**Historical note: previously integer labels clobbered indices.** For example::
 
     >>> centered_data = DataArray(np.random.randn(6), [ ('c_idx', range(-3,3)) ])
     >>> centered_data.axis.c_idx.make_slice( slice(0, 6, None) )
     (slice(3, 6, None),)
 
+.. note::
+
+   The code above doesn't currently (as of Nov/2010) run, because integer
+   labels haven't been implemented.  See ticket gh-40.
+    
 make_slice() first tries to look up the key parameters as labels, and then sees
 if the key parameters can be used as simple indices. Thus 0 is found as index
 3, and 6 is passed through as index 6.
@@ -225,7 +230,7 @@ if the key parameters can be used as simple indices. Thus 0 is found as index
 Possible resolution 1
 ~~~~~~~~~~~~~~~~~~~~~
 
-"larry" would make this distinction:
+"larry" would make this distinction::
 
     >>> centered_data.axis.c_idx[ [0]:[2] ]
     >>> < returns underlying array from [3:5] >
@@ -260,10 +265,12 @@ Additionally, DataArray imposes axis name consistency rules.
 The broadcasted DataArray below, "a", takes on dummy dimensions that are taken
 to be compatible with the larger DataArray:
 
+.. doctest::
+
     >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
     >>> a = DataArray(np.ones((3,)), axes=('y',))
     >>> res = 2*b - a
-    >>> res
+    >>> res    # doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 1.,  1.,  1.],
      [ 1.,  1.,  1.],
      [ 1.,  1.,  1.]])
@@ -272,34 +279,35 @@ to be compatible with the larger DataArray:
 When there are unnamed dimensions, they also must be consistently oriented
 across arrays when broadcasting:
 
-    >>> b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
-    >>> a = DataArray(np.random.randn(2,4), [None, 'y'])
+    >>> b = DataArray(np.arange(24).reshape(3,2,4), ['x', None, 'y'])
+    >>> a = DataArray(np.arange(8).reshape(2,4), [None, 'y'])
     >>> res = a + b
     >>> res
-    DataArray([[[-0.06487062,  1.58301239,  0.74446424,  1.08379646],
-      [ 1.06747405, -1.83001368,  3.61478199, -0.55349716]],
-
-	 [[-1.39792187,  2.29882562,  0.56549005,  1.24946248],
-	  [ 0.70568938, -2.39824403,  3.5630711 , -0.19336178]],
-
-	 [[-0.48030142,  0.35936638,  0.20565394,  0.83436278],
-	  [-1.03604339, -1.59288828,  2.25200683, -0.75328268]]])
-  ('x', None, 'y')
+    DataArray([[[ 0,  2,  4,  6],
+	    [ 8, 10, 12, 14]],
+    <BLANKLINE>
+	   [[ 8, 10, 12, 14],
+	    [16, 18, 20, 22]],
+    <BLANKLINE>
+	   [[16, 18, 20, 22],
+	    [24, 26, 28, 30]]])
+    ('x', None, 'y')
 
 We already know that if the dimension names don't match, this won't be allowed (even though the shapes are correct):
 
     >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
     >>> a = DataArray(np.ones((3,)), axes=('x',))
-    >>> res = 2*b - a
-    ------------------------------------------------------------
+    >>> res = 4*b - a
     Traceback (most recent call last):
     ...
     NamedAxisError: Axis names are incompatible for a binary operation: ('x', 'y'), ('x',)
 
 But a numpy idiom for padding dimensions helps us in this case:
 
+.. doctest::
+
     >>> res = 2*b - a[:,None]
-    >>> res
+    >>> res    # doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 1.,  1.,  1.],
      [ 1.,  1.,  1.],
      [ 1.,  1.,  1.]])
@@ -307,10 +315,12 @@ But a numpy idiom for padding dimensions helps us in this case:
 
 In other words, this scenario is also a legal combination:
 
+.. doctest::
+
     >>> a2 = a[:,None]
     >>> a2.names
     ('x', None)
-    >>> b + a2
+    >>> b + a2    # doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 2.,  2.,  2.],
      [ 2.,  2.,  2.],
      [ 2.,  2.,  2.]])
@@ -325,9 +335,11 @@ The rule for dimension compatibility is that any two axes match if one of the fo
 
 **Question** -- what about this situation:
 
+.. doctest::
+
     >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
     >>> a = DataArray(np.ones((3,1)), axes=('x','y'))
-    >>> a+b
+    >>> a+b          # doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 2.,  2.,  2.],
      [ 2.,  2.,  2.],
      [ 2.,  2.,  2.]])
@@ -363,8 +375,8 @@ seems to work:
     (Axis(name='capitals', index=0, labels=['washington', 'london', 'berlin', 'paris', 'moscow']),)
 
     >>> for foo in time_caps.T:
-        print foo
-        print foo.axes
+    ...    print foo
+    ...    print foo.axes
     ...
     [ 0  5 10 15]
     ('time',)
@@ -406,6 +418,7 @@ Transposition of Axes
 Transposition of a DataArray preserves the dimension names, and updates the
 corresponding indices:
 
+    >>> b = DataArray(np.zeros((3, 2, 4)), axes=['x', None, 'y'])
     >>> b.shape
     (3, 2, 4)
     >>> b.axes
