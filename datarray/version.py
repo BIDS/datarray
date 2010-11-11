@@ -3,7 +3,7 @@
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
 _version_minor = 0
-_version_micro = 6
+_version_micro = 7
 __version__ = "%s.%s.%s" % (_version_major, _version_minor, _version_micro)
 
 
