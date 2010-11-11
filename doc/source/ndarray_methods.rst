@@ -6,7 +6,9 @@
 Methods
 =======
 
-Methods:
+Here is a list of the ``array`` methods:
+
+.. we got the method names with
 
     >>> a = np.random.randn(3,4)
     >>> filter(lambda x: type(getattr(a,x))==type(a.min), dir(a))

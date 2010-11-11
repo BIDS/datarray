@@ -93,7 +93,7 @@ Per Axis:
     Axis(label='a', index=0, ticks=None)
     >>> narr.axis.a[0]
     DataArray([[ 0.,  0.,  0.],
-     [ 0.,  0.,  0.]])
+           [ 0.,  0.,  0.]])
     ('b', 'c')
     >>> narr.axis.a[0].axes
     (Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None))
@@ -111,15 +111,18 @@ Through the "axis slicer" ``aix`` attribute:
 
     >>> narr[ narr.aix.b[:2].c[-1] ]
     DataArray([[ 0.,  0.]])
+    ('a', 'b')
     >>> narr[ narr.aix.c[-1].b[:2] ]
     DataArray([[ 0.,  0.]])
+    ('a', 'b')
     >>> narr[ narr.aix.c[-1].b[:2] ] == narr[:,:2,-1]
     DataArray([[ True,  True]], dtype=bool)
+    ('a', 'b')
 
 The Axis Indexing object (it's a stuple)
 ----------------------------------------
 
-The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple):
+The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple)::
 
     @property
     def aix(self):
@@ -155,8 +158,8 @@ it function differently?
 
 Also, slicing with ``newaxis`` is implemented:
 
-    >>> b = DataArray(np.random.randn(3,2,4), ['x', 'y', 'z'])
-    >>> b[:,:,np.newaxis]
+    >>> arr = np.arange(24).reshape((3,2,4))
+    >>> b = DataArray(arr, ['x', 'y', 'z'])
     >>> b[:,:,np.newaxis].shape
     (3, 2, 1, 4)
     >>> b[:,:,np.newaxis].labels
@@ -168,18 +171,6 @@ Axis with length-1 at the original index of the named Axis:
 
     >>> b.axes
     (Axis(label='x', index=0, ticks=None), Axis(label='y', index=1, ticks=None), Axis(label='z', index=2, ticks=None))
-    >>> b.axis.y[np.newaxis]
-    DataArray([[[[-0.5185789 ,  2.15360928,  0.27439545,  1.03371466],
-       [ 0.22295004, -0.67102797, -0.84618714, -0.87435244]]],
-
-
-	 [[[ 1.22570705, -1.33283074, -0.89732455,  0.87430548],
-	   [-0.69306908, -0.25327027, -0.53897745, -0.8659791 ]]],
-
-
-	 [[[-1.18462101, -0.1644404 ,  0.5840826 ,  1.36768481],
-	   [-0.51897418, -0.43526721, -1.18011399,  1.3553315 ]]]])
-    ('x', None, 'y', 'z')
     >>> b.axis.y[np.newaxis].labels
     ('x', None, 'y', 'z')
     >>> b.axis.y[np.newaxis].shape
@@ -188,27 +179,28 @@ Axis with length-1 at the original index of the named Axis:
 Slicing and ticks
 -----------------
 
-It is also possible to use ticks in any of the slicing syntax above. 
-:
+It is also possible to use ticks in any of the slicing syntax above:
 
-    >>> time_caps
+.. doctest::
+
+    >>> time_caps #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 0,  1,  2,  3,  4],
      [ 5,  6,  7,  8,  9],
      [10, 11, 12, 13, 14],
      [15, 16, 17, 18, 19]])
     ('time', 'capitals')
-    >>> time_caps.axis.capitals['berlin'::-1]
+    >>> time_caps.axis.capitals['berlin'::-1] #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 2,  1,  0],
      [ 7,  6,  5],
      [12, 11, 10],
      [17, 16, 15]])
     ('time', 'capitals')
-    >>> time_caps.axis.time['0015':'1815']
+    >>> time_caps.axis.time['0015':'1815'] #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 0,  1,  2,  3,  4],
      [ 5,  6,  7,  8,  9],
      [10, 11, 12, 13, 14]])
     ('time', 'capitals')
-    >>> time_caps[:, 'london':3]
+    >>> time_caps[:, 'london':3] #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 1,  2],
      [ 6,  7],
      [11, 12],
