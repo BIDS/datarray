@@ -12,72 +12,72 @@
 Basic DataArray Creation And Mixing
 ===================================
 
-DataArrays are constructed with array-like sequences and axis labels:
+DataArrays are constructed with array-like sequences and axis names:
 
-    >>> narr = DataArray(np.zeros((1,2,3)), labels=('a', 'b', 'c'))
-    >>> narr.labels
+    >>> narr = DataArray(np.zeros((1,2,3)), axes=('a', 'b', 'c'))
+    >>> narr.names
     ('a', 'b', 'c')
     >>> narr.axis.a
-    Axis(label='a', index=0, ticks=None)
+    Axis(name='a', index=0, labels=None)
     >>> narr.axis.b
-    Axis(label='b', index=1, ticks=None)
+    Axis(name='b', index=1, labels=None)
     >>> narr.axis.c
-    Axis(label='c', index=2, ticks=None)
+    Axis(name='c', index=2, labels=None)
     >>> narr.shape
     (1, 2, 3)
 
-Not all axes must necessarily be explicitly labeled, since None is a valid axis
-label:
+Not all axes must necessarily be explicitly named, since None is a valid axis
+name:
 
-    >>> narr2 = DataArray(np.zeros((1,2,3)), labels=('a', None, 'b' ))
-    >>> narr2.labels
+    >>> narr2 = DataArray(np.zeros((1,2,3)), axes=('a', None, 'b' ))
+    >>> narr2.names
     ('a', None, 'b')
 
-If no label is given for an axis, None is implicitly assumed.  So trailing axes
-without labels will be labeled as None:
+If no name is given for an axis, None is implicitly assumed.  So trailing axes
+without axes will be named as None:
 
-    >>> narr2 = DataArray(np.zeros((1,2,3,2)), labels=('a','b' ))
-    >>> narr2.labels
+    >>> narr2 = DataArray(np.zeros((1,2,3,2)), axes=('a','b' ))
+    >>> narr2.names
     ('a', 'b', None, None)
 
 Combining named and unnamed arrays:
 
-    >>> narr = DataArray(np.zeros((1,2,3)), labels='abc')
+    >>> narr = DataArray(np.zeros((1,2,3)), axes='abc')
     >>> res = narr + 5 # OK
     >>> res = narr + np.zeros((1,2,3)) # OK
-    >>> n2 = DataArray(np.ones((1,2,3)), labels=('a','b','c'))
+    >>> n2 = DataArray(np.ones((1,2,3)), axes=('a','b','c'))
     >>> res = narr + n2 # OK
 
-    >>> n3 = DataArray(np.ones((1,2,3)), labels=('x','b','c'))
+    >>> n3 = DataArray(np.ones((1,2,3)), axes=('x','b','c'))
 
     >>> res = narr + n3
     Traceback (most recent call last):
     ...
-    NamedAxisError: Axis labels are incompatible for a binary operation: ('a', 'b', 'c'), ('x', 'b', 'c')
+    NamedAxisError: Axis names are incompatible for a binary operation: ('a', 'b', 'c'), ('x', 'b', 'c')
 
 
 Now, what about matching names, but different indices for the names?
 :
 
-    >>> n4 = DataArray(np.ones((2,1,3)), labels=('b','a','c'))
+    >>> n4 = DataArray(np.ones((2,1,3)), axes=('b','a','c'))
     >>> res = narr + n4 # is this OK?
     Traceback (most recent call last):
     ...
-    NamedAxisError: Axis labels are incompatible for a binary operation: ('a', 'b', 'c'), ('b', 'a', 'c')
+    NamedAxisError: Axis names are incompatible for a binary operation: ('a', 'b', 'c'), ('b', 'a', 'c')
 
 The names and the position have to be the same, and the above example should
 raise an error.  At least for now we will raise an error, and review later.
 
-With "ticks"
+With "labels"
 ------------
 
-Constructing a DataArray such that an Axis has ticks, for example:
+Constructing a DataArray such that an Axis has labels, for example:
 
     >>> cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     >>> time_ax_spec = 'time', ['0015', '0615', '1215', '1815']
     >>> time_caps = DataArray(np.arange(4*5).reshape(4,5), [time_ax_spec, cap_ax_spec])
     >>> time_caps.axes
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']), Axis(label='capitals', index=1, ticks=['washington', 'london', 'berlin', 'paris', 'moscow']))
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']), Axis(name='capitals', index=1, labels=['washington', 'london', 'berlin', 'paris', 'moscow']))
 
 .. _slicing:
 
@@ -88,22 +88,22 @@ A DataArray with simple named axes can be sliced many ways.
 
 Per Axis:
 
-    >>> narr = DataArray(np.zeros((1,2,3)), labels=('a','b','c'))
+    >>> narr = DataArray(np.zeros((1,2,3)), axes=('a','b','c'))
     >>> narr.axis.a
-    Axis(label='a', index=0, ticks=None)
+    Axis(name='a', index=0, labels=None)
     >>> narr.axis.a[0]
     DataArray([[ 0.,  0.,  0.],
            [ 0.,  0.,  0.]])
     ('b', 'c')
     >>> narr.axis.a[0].axes
-    (Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None))
+    (Axis(name='b', index=0, labels=None), Axis(name='c', index=1, labels=None))
 
 By normal "numpy" slicing:
 
     >>> narr[0].shape
     (2, 3)
     >>> narr[0].axes
-    (Axis(label='b', index=0, ticks=None), Axis(label='c', index=1, ticks=None))
+    (Axis(name='b', index=0, labels=None), Axis(name='c', index=1, labels=None))
     >>> narr.axis.a[0].axes == narr[0,:].axes
     True
 
@@ -140,7 +140,7 @@ geometry.
 
     >>> narr.aix
     (slice(None, None, None), slice(None, None, None), slice(None, None, None))
-    >>> narr.labels
+    >>> narr.names
     ('a', 'b', 'c')
     >>> narr.aix.b[0]
     (slice(None, None, None), 0, slice(None, None, None))
@@ -162,24 +162,24 @@ Also, slicing with ``newaxis`` is implemented:
     >>> b = DataArray(arr, ['x', 'y', 'z'])
     >>> b[:,:,np.newaxis].shape
     (3, 2, 1, 4)
-    >>> b[:,:,np.newaxis].labels
+    >>> b[:,:,np.newaxis].names
     ('x', 'y', None, 'z')
 
 I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the
-results are identical). The effect of this is always to insert an unlabeled
+results are identical). The effect of this is always to insert an unnamed
 Axis with length-1 at the original index of the named Axis:
 
     >>> b.axes
-    (Axis(label='x', index=0, ticks=None), Axis(label='y', index=1, ticks=None), Axis(label='z', index=2, ticks=None))
-    >>> b.axis.y[np.newaxis].labels
+    (Axis(name='x', index=0, labels=None), Axis(name='y', index=1, labels=None), Axis(name='z', index=2, labels=None))
+    >>> b.axis.y[np.newaxis].names
     ('x', None, 'y', 'z')
     >>> b.axis.y[np.newaxis].shape
     (3, 1, 2, 4)
 
-Slicing and ticks
+Slicing and labels
 -----------------
 
-It is also possible to use ticks in any of the slicing syntax above:
+It is also possible to use labels in any of the slicing syntax above:
 
 .. doctest::
 
@@ -212,13 +212,13 @@ The .start and .stop attributes of the slice object can be either None, an
 integer index, or a valid tick. They may even be mixed. *The .step attribute,
 however, must be None or an nonzero integer.*
 
-**Historical note: previously integer ticks clobbered indices.** For example:
+**Historical note: previously integer labels clobbered indices.** For example:
 
     >>> centered_data = DataArray(np.random.randn(6), [ ('c_idx', range(-3,3)) ])
     >>> centered_data.axis.c_idx.make_slice( slice(0, 6, None) )
     (slice(3, 6, None),)
 
-make_slice() first tries to look up the key parameters as ticks, and then sees
+make_slice() first tries to look up the key parameters as labels, and then sees
 if the key parameters can be used as simple indices. Thus 0 is found as index
 3, and 6 is passed through as index 6.
 
@@ -232,14 +232,14 @@ Possible resolution 1
     >>> centered_data.axis.c_idx[ 0:2 ]
     >>> < returns underlying array from [0:2] >
 
-And I believe mixing of ticks and is valid also.
+And I believe mixing of labels and is valid also.
 
 Possible resolution 2 (the winner)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Do not allow integer ticks -- cast to float perhaps
+Do not allow integer labels -- cast to float perhaps
 
-**Note**: this will be the solution. When validating ticks on an Axis, ensure
+**Note**: this will be the solution. When validating labels on an Axis, ensure
 that none of them ``isinstance(t, int)``
 
 
@@ -255,13 +255,13 @@ Broadcasting
 
 What about broadcasting between two named arrays, where the broadcasting
 adds an axis? All ordinary NumPy rules for shape compatibility apply.
-Additionally, DataArray imposes axis label consistency rules.
+Additionally, DataArray imposes axis name consistency rules.
 
 The broadcasted DataArray below, "a", takes on dummy dimensions that are taken
 to be compatible with the larger DataArray:
 
-    >>> b = DataArray(np.ones((3,3)), labels=('x','y'))
-    >>> a = DataArray(np.ones((3,)), labels=('y',))
+    >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
+    >>> a = DataArray(np.ones((3,)), axes=('y',))
     >>> res = 2*b - a
     >>> res
     DataArray([[ 1.,  1.,  1.],
@@ -269,7 +269,7 @@ to be compatible with the larger DataArray:
      [ 1.,  1.,  1.]])
     ('x', 'y')
 
-When there are unlabeled dimensions, they also must be consistently oriented
+When there are unnamed dimensions, they also must be consistently oriented
 across arrays when broadcasting:
 
     >>> b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
@@ -286,15 +286,15 @@ across arrays when broadcasting:
 	  [-1.03604339, -1.59288828,  2.25200683, -0.75328268]]])
   ('x', None, 'y')
 
-We already know that if the dimension labels don't match, this won't be allowed (even though the shapes are correct):
+We already know that if the dimension names don't match, this won't be allowed (even though the shapes are correct):
 
-    >>> b = DataArray(np.ones((3,3)), labels=('x','y'))
-    >>> a = DataArray(np.ones((3,)), labels=('x',))
+    >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
+    >>> a = DataArray(np.ones((3,)), axes=('x',))
     >>> res = 2*b - a
     ------------------------------------------------------------
     Traceback (most recent call last):
     ...
-    NamedAxisError: Axis labels are incompatible for a binary operation: ('x', 'y'), ('x',)
+    NamedAxisError: Axis names are incompatible for a binary operation: ('x', 'y'), ('x',)
 
 But a numpy idiom for padding dimensions helps us in this case:
 
@@ -308,7 +308,7 @@ But a numpy idiom for padding dimensions helps us in this case:
 In other words, this scenario is also a legal combination:
 
     >>> a2 = a[:,None]
-    >>> a2.labels
+    >>> a2.names
     ('x', None)
     >>> b + a2
     DataArray([[ 2.,  2.,  2.],
@@ -318,15 +318,15 @@ In other words, this scenario is also a legal combination:
 
 The rule for dimension compatibility is that any two axes match if one of the following is true
 
-* their (label, length) pairs are equal
-* their dimensions are broadcast-compatible, and their labels are equal
-* their dimensions are broadcast-compatible, and their labels are
+* their (name, length) pairs are equal
+* their dimensions are broadcast-compatible, and their axes are equal
+* their dimensions are broadcast-compatible, and their axes are
   non-conflicting (ie, one or both are None)
 
 **Question** -- what about this situation:
 
-    >>> b = DataArray(np.ones((3,3)), labels=('x','y'))
-    >>> a = DataArray(np.ones((3,1)), labels=('x','y'))
+    >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
+    >>> a = DataArray(np.ones((3,1)), axes=('x','y'))
     >>> a+b
     DataArray([[ 2.,  2.,  2.],
      [ 2.,  2.,  2.],
@@ -351,16 +351,16 @@ seems to work:
     ...
     [0 1 2 3 4]
     ('capitals',)
-    (Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow']),)
+    (Axis(name='capitals', index=0, labels=['washington', 'london', 'berlin', 'paris', 'moscow']),)
     [5 6 7 8 9]
     ('capitals',)
-    (Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow']),)
+    (Axis(name='capitals', index=0, labels=['washington', 'london', 'berlin', 'paris', 'moscow']),)
     [10 11 12 13 14]
     ('capitals',)
-    (Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow']),)
+    (Axis(name='capitals', index=0, labels=['washington', 'london', 'berlin', 'paris', 'moscow']),)
     [15 16 17 18 19]
     ('capitals',)
-    (Axis(label='capitals', index=0, ticks=['washington', 'london', 'berlin', 'paris', 'moscow']),)
+    (Axis(name='capitals', index=0, labels=['washington', 'london', 'berlin', 'paris', 'moscow']),)
 
     >>> for foo in time_caps.T:
         print foo
@@ -368,19 +368,19 @@ seems to work:
     ...
     [ 0  5 10 15]
     ('time',)
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']),)
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
     [ 1  6 11 16]
     ('time',)
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']),)
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
     [ 2  7 12 17]
     ('time',)
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']),)
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
     [ 3  8 13 18]
     ('time',)
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']),)
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
     [ 4  9 14 19]
     ('time',)
-    (Axis(label='time', index=0, ticks=['0015', '0615', '1215', '1815']),)
+    (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
 
 Or even more conveniently:
 
@@ -403,27 +403,27 @@ Or even more conveniently:
 Transposition of Axes
 =====================
 
-Transposition of a DataArray preserves the dimension labels, and updates the
+Transposition of a DataArray preserves the dimension names, and updates the
 corresponding indices:
 
     >>> b.shape
     (3, 2, 4)
     >>> b.axes
-    [Axis(label='x', index=0, ticks=None), Axis(label=None, index=1, ticks=None), Axis(label='y', index=2, ticks=None)]
+    (Axis(name='x', index=0, labels=None), Axis(name=None, index=1, labels=None), Axis(name='y', index=2, labels=None))
     >>> b.T.shape
     (4, 2, 3)
     >>> b.T.axes
-    [Axis(label='y', index=0, ticks=None), Axis(label=None, index=1, ticks=None), Axis(label='x', index=2, ticks=None)]
+    (Axis(name='y', index=0, labels=None), Axis(name=None, index=1, labels=None), Axis(name='x', index=2, labels=None))
 
 .. _label_updates:
 
-Changing Labels on DataArrays
+Changing Names on DataArrays
 =============================
 
 Tricky Attributes
 -----------------
 
-* .labels -- currently a mutable list of Axis.name attributes
+* .names -- currently a mutable list of Axis.name attributes
 * .axes -- currently a mutable list of Axis objects
 * .axis -- a key-to-attribute dictionary
 
@@ -433,7 +433,7 @@ attributes are updated.
 **Proposed solution**: 
 
 1. use a set_label() method. This will consequently update the parent array's 
-    (labels, axes, axis) attributes. 
+    (names, axes, axis) attributes. 
 2. make the mutable lists into *tuples* to deny write access.
 3. make the KeyStruct ``.axis`` have write-once access 
 
@@ -445,7 +445,7 @@ ToDo
 * Support DataArray instances with mixed axes: simple ones with no values 
   and 'fancy' ones with data in them.  Syntax?
 
-``a = DataArray.from_names(data, labels=['a','b','c'])``
+``a = DataArray.from_names(data, axes=['a','b','c'])``
 
 ``b = DataArray(data, axes=[('a',['1','2','3']), ('b',['one','two']), ('c',['red','black'])])``
 
@@ -468,14 +468,14 @@ ToDo
 - Serialization?
 
 
-* Allowing multiple labels per axis?
+* Allowing multiple names per axis?
 
 
 * Rob Speer's proposal for purely top-level, 'magical' attributes?
 
 
 * Finish the semantics of .lix indexing, especially with regards to what it
-  should do when integer ticks are present.
+  should do when integer labels are present.
 
 * What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?
 
@@ -500,6 +500,6 @@ If a is an axis from an array: a = x.axis.a
 a[i] valid cases:
 
 - i: integer => normal numpy scalar indexing, one less dim than x
-- i: slice: numpy view slicing.  same dims as x, must recover the ticks 
+- i: slice: numpy view slicing.  same dims as x, must recover the labels 
 - i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 
