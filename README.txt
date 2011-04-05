@@ -64,6 +64,10 @@ it.  For examples, in no particular order:
   Dataset is not a subclass of numpy array to allow other data
   structures (e.g. sparse matrices).
 
+* [ptsa](http://git.debian.org/?p=pkg-exppsy/ptsa.git) subclasses
+  ndarray to provide attributes per dimensions aiming to ease
+  slicing/indexing given the values of the axis attributes
+
 Project Goals
 =============
 
