@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Simple release script for datarray.
 
-Ensure that you've built the docs and pushed those first (after veryfing them
+Ensure that you've built the docs and pushed those first (after verifying them
 manually).
 """
 from __future__ import print_function
