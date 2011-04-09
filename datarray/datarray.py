@@ -588,16 +588,17 @@ class DataArray(np.ndarray):
         axes = list(axes) + [None]*(arr.ndim - len(axes))
         axlist = []
         for i, axis_spec in enumerate(axes):
-            if type(axis_spec) == tuple:
+            if isinstance(axis_spec, basestring):
+                # string name
+                name = axis_spec
+                labels = None
+            else:
                 if len(axis_spec) != 2:
                     raise ValueError(
                         'if the axis specification is a tuple, it must be ' \
                         'of the form (name, labels)'
                         )
                 name, labels = axis_spec
-            else:
-                name = axis_spec
-                labels = None
             axlist.append(Axis(name, i, arr, labels=labels))
 
         _set_axes(arr, axlist)
