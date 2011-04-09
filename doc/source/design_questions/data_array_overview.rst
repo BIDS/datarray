@@ -2,6 +2,17 @@
 DataArray
 =========
 
+A DataArray is a subclass of the basic Numpy ndarray object that provides an
+explicit mechanism for attaching information to the *axes* of the underlying
+numpy array.  This is achieved by attaching an Axis object to each dimension of
+the array; an Axis object has an optional *name* as well as optional *labels*
+(think of them as tick labels in a figure).
+
+With Axis objects attached to an array, it becomes possible to manipulate the
+array by named axis, to slice an axis by named label, etc.  These features
+complement the rich semantics that numpy has for the *contents* of an array,
+encapsulated its dtype machinery for structured/record arrays.
+
 Arrays with named / labeled axes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
