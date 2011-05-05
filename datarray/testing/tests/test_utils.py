@@ -6,7 +6,6 @@ from numpy.testing import assert_raises
 from datarray.datarray import DataArray
 from datarray.testing.utils import assert_datarray_equal
 
-
 def test_assert_datarray_equal():
     "Test assert_datarray_equal"
     
