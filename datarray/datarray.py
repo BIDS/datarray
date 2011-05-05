@@ -434,8 +434,8 @@ def _validate_axes(axes):
     """
     p = axes[0].parent_arr
     for i, a in enumerate(axes):
-        nt.assert_equals(i, a.index)
-        nt.assert_true(p is a.parent_arr)
+        assert i == a.index
+        assert p is a.parent_arr
 
 def _pull_axis(axes, target_axis):
     """
