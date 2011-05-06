@@ -198,6 +198,9 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
+        if not isinstance(other, self.__class__):
+            return False
+
         return self.name == other.name and self.index == other.index and \
                self.labels == other.labels
 
