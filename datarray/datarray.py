@@ -198,6 +198,9 @@ class Axis(object):
         >>> ax == Axis('x', 1, np.arange(10))
         False
         '''
+        if not isinstance(other, self.__class__):
+            return False
+
         return self.name == other.name and self.index == other.index and \
                self.labels == other.labels
 
@@ -434,8 +437,8 @@ def _validate_axes(axes):
     """
     p = axes[0].parent_arr
     for i, a in enumerate(axes):
-        nt.assert_equals(i, a.index)
-        nt.assert_true(p is a.parent_arr)
+        assert i == a.index
+        assert p is a.parent_arr
 
 def _pull_axis(axes, target_axis):
     """
@@ -514,10 +517,11 @@ def _apply_reduction(opname, kwnames):
         for nm, val in zip(kwnames, args[1:]):
             kwargs[nm] = val
         axis = kwargs.pop('axis', None)
+
         if not isinstance(inst, DataArray) or axis is None:
             # do nothing special if not a DataArray, otherwise
             # this is a full reduction, so we lose all axes
-            return super_op(inst, **kwargs)
+            return super_op(np.asarray(inst), **kwargs)
 
         axes = list(inst.axes)
         # try to convert a named Axis to an integer..
@@ -588,7 +592,7 @@ class DataArray(np.ndarray):
         axes = list(axes) + [None]*(arr.ndim - len(axes))
         axlist = []
         for i, axis_spec in enumerate(axes):
-            if isinstance(axis_spec, basestring):
+            if isinstance(axis_spec, basestring) or axis_spec is None:
                 # string name
                 name = axis_spec
                 labels = None
@@ -656,8 +660,7 @@ class DataArray(np.ndarray):
         _validate_axes(self.axes)
 
     def __array_prepare__(self, obj, context=None):
-        """Called at the beginning of each ufunc.
-        """
+        "Called at the beginning of each ufunc."
 
 ##         print "preparing DataArray" # dbg
 
@@ -723,9 +726,9 @@ class DataArray(np.ndarray):
 
     def __array_wrap__(self, obj, context=None):
         # provide info for what's happening
-        #print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
-        #print "obj     :", obj.shape  # dbg
-        #print "context :", context # dbg
+        # print "prepare:\t%s\n\t\t%s" % (self.__class__, obj.__class__) # dbg
+        # print "obj     :", obj.shape  # dbg
+        # print "context :", context # dbg
 
         other = None
         if context is not None and len(context[1]) > 1:

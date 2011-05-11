@@ -235,10 +235,8 @@ def test_reshape_corners():
     yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
     
 def test_axis_as_index():
-    narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]),
-                     axes=('a', 'b'))
-    npt.assert_array_equal(np.sum(narr, axis=narr.axis.a),
-                           [5, 7, 9])
+    narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]), axes=('a', 'b'))
+    npt.assert_array_equal(np.sum(narr, axis=narr.axis.a), [5, 7, 9])
 
 # -- Tests for redefined methods ---------------------------------------------
     
@@ -461,7 +459,7 @@ def test_singleton_axis_prep2():
 
 def test_full_reduction():
     # issue #2
-    assert DataArray([1, 2, 3]).sum(axis=0) == 6
+    nt.assert_equal(DataArray([1, 2, 3]).sum(axis=0),6)
     
 def test_1d_label_indexing():
     # issue #18
