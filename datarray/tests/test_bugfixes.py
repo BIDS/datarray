@@ -25,3 +25,8 @@ def test_bug44():
     y = np.std(A)
     nt.assert_equal( x.sum(), y.sum() )
 
+def test_bug45():
+    "Bug 45"
+    A = DataArray([1,2,3], 'a'); B = DataArray([2,3,4], 'b'); C = np.outer(A,B)
+    assert_datarray_equal(C,DataArray(C, 'ab'))
+
