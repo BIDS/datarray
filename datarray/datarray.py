@@ -5,7 +5,6 @@
 import copy
 
 import numpy as np
-import nose.tools as nt
 
 #-----------------------------------------------------------------------------
 # Classes and functions
