@@ -16,6 +16,13 @@ def test_bug3():
     nt.assert_equal( x.sum(), y.sum() )
     nt.assert_equal( x.max(), y.max() )
 
+def test_bug26():
+    "Bug 26: check that axes names are computed on demand."
+    a = DataArray([1,2,3])
+    nt.assert_true(a.axes[0].name is None)
+    a.axes[0].name = "a"
+    nt.assert_equal(a.axes[0].name, "a")
+
 def test_bug44():
     "Bug 44"
     # In instances where axis=None, the operation runs
@@ -27,7 +34,7 @@ def test_bug44():
     nt.assert_equal( x.sum(), y.sum() )
 
 def test_bug45():
-    "Bug 45"
+    "Bug 45: Support for np.outer()"
     A = DataArray([1,2,3], 'a'); B = DataArray([2,3,4], 'b'); C = np.outer(A,B)
     assert_datarray_equal(C,DataArray(C, 'ab'))
 
