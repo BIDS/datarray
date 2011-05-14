@@ -224,7 +224,7 @@ def get_formatter(arr):
     elif issubclass(typeobj, np.int): return IntFormatter(arr)
     elif issubclass(typeobj, np.floating): return FloatFormatter(arr)
     elif issubclass(typeobj, np.complex): return ComplexFormatter(arr)
-    else: return StrFormatter
+    else: return StrFormatter(arr)
 
 def grid_layout(arr, width=75, height=10):
     """
