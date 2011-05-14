@@ -567,7 +567,33 @@ def _apply_accumulation(opname, kwnames):
     runs_op.func_doc = super_op.__doc__
     return runs_op
             
+
+class AxisIndexer(object):
+    """ An object which holds a reference to a DataArray and a list of axes
+    and allows slicing by those axes.
+    """
     
+    # XXX don't support mapped indexing yet...
+
+    def __init__(self, arr, *args):
+        self.arr = arr
+        self.axes = args
+        axis_set = set(args)
+        self._axis_map = [self.axes.index(axis.name) if axis.name in self.axes else None
+            for axis in arr.axes]
+    
+    def __getitem__(self, item):
+        if not isinstance(item, tuple) or len(item) != len(self.axes):
+            raise ValueError("Incorrect slice length")
+        
+        slicer = tuple(
+            item[self._axis_map[i]]
+                if self._axis_map[i] is not None
+                else slice(None, None, None)
+            for i in range(len(self.arr.axes)))
+    
+        return self.arr[slicer]
+        
 
 class DataArray(np.ndarray):
 
@@ -624,6 +650,9 @@ class DataArray(np.ndarray):
     def names (self):
         """Returns a tuple with all the axis names."""
         return tuple((ax.name for ax in self.axes))
+    
+    def index_by(self, *args):
+        return AxisIndexer(self, *args)
 
     def __array_finalize__(self, obj):
         """Called by ndarray on subobject (like views/slices) creation.
