@@ -4,6 +4,7 @@ from datarray.datarray import Axis, DataArray, NamedAxisError, \
     _pull_axis, _reordered_axes
 
 from datarray.testing.utils import assert_datarray_equal
+import datarray.print_grid as print_grid
 
 import nose.tools as nt
 import numpy.testing as npt
@@ -37,3 +38,11 @@ def test_bug45():
     A = DataArray([1,2,3], 'a'); B = DataArray([2,3,4], 'b'); C = np.outer(A,B)
     assert_datarray_equal(C,DataArray(C, 'ab'))
 
+def test_bug35():
+    "Bug 35"
+    txt_array = DataArray(['a','b'], axes=['dummy'])
+    #calling datarray_to_string on string arrays used to fail
+    print_grid.datarray_to_string(txt_array)
+    #because get_formatter returned the class not an instance
+    assert isinstance(print_grid.get_formatter(txt_array),
+                      print_grid.StrFormatter)
