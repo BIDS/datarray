@@ -58,6 +58,16 @@ it.  For examples, in no particular order:
 * [divisi](http://github.com/commonsense/divisi2) includes labeled sparse and
   dense arrays.
 
+* [pymvpa](https://github.com/PyMVPA/PyMVPA) provides Dataset class
+  encapsulating the data together with matching in length sets of
+  attributes for the first two (samples and features) dimensions.
+  Dataset is not a subclass of numpy array to allow other data
+  structures (e.g. sparse matrices).
+
+* [ptsa](http://git.debian.org/?p=pkg-exppsy/ptsa.git) subclasses
+  ndarray to provide attributes per dimensions aiming to ease
+  slicing/indexing given the values of the axis attributes
+
 Project Goals
 =============
 
@@ -71,7 +81,7 @@ introduce confusion.
 
 4. Oh, and make sure that the base numpy array is still accessible.
 
-  
+
 Code
 ====
 

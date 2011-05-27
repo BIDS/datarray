@@ -1,11 +1,17 @@
+.. testsetup::
+
+    import numpy as np
+
 =======
 Methods
 =======
 
-Methods::
+Here is a list of the ``array`` methods:
 
-  >>> a = np.random.randn(3,4)
-  >>> filter(lambda x: type(getattr(a,x))==type(a.min), dir(a))
+.. we got the method names with
+
+    >>> a = np.random.randn(3,4)
+    >>> filter(lambda x: type(getattr(a,x))==type(a.min), dir(a))
 
 * '__array__',
 * :ref:`'__array_prepare__',<explicitly_redef>`

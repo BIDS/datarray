@@ -1,12 +1,23 @@
-"datarray unit testing utilities"
+"""datarray unit testing utilities"""
+#-----------------------------------------------------------------------------
+# Imports
+#-----------------------------------------------------------------------------
 
+# Stdlib
+import sys
+
+# Third-party
 import numpy as np
 from numpy.testing import assert_, assert_equal, assert_array_equal
 
+# Our own
 from datarray.datarray import DataArray
 
 __all__ = ['assert_datarray_equal']
 
+#-----------------------------------------------------------------------------
+# Functions and classes
+#-----------------------------------------------------------------------------
 
 def assert_datarray_equal(x, y, err_msg='', verbose=True):
     """
@@ -64,9 +75,9 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         raise AssertionError, err_msg
     AssertionError: 
 	
-	    -----------
-	    AXIS LABELS
-	    -----------
+	    ----------
+	    AXIS NAMES
+	    ----------
 	
 	    Items are not equal:
 	    item=0
@@ -119,18 +130,18 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         except AssertionError, err:
             fail.append(heading('SHAPE') + str(err))       
 
-        # axis labels
+        # axis names
         try:         
-            assert_equal(x.labels, y.labels)
+            assert_equal(x.names, y.names)
         except AssertionError, err:
-            fail.append(heading('AXIS LABELS') + str(err))
+            fail.append(heading('AXIS NAMES') + str(err))
             
-        # ticks
+        # labels
         for ax in range(x.ndim):
             try:         
-                assert_equal(x.axes[ax].ticks, y.axes[ax].ticks)
+                assert_equal(x.axes[ax].labels, y.axes[ax].labels)
             except AssertionError, err:
-                fail.append(heading('TICKS ALONG AXIS = %d' % ax) + str(err))                         
+                fail.append(heading('LABELS ALONG AXIS = %d' % ax) + str(err))                         
 
         # axes
         for ax in range(x.ndim):

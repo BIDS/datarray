@@ -12,7 +12,7 @@ Ticks
 
 Ticks are a relatively new addition to datarrays. The labels of a datarrays
 identify the axes of the array. The ticks of a datarray identify the elements
-along an axis. Both labels and ticks are optional.          
+along an axis. Both labels and ticks are optional.
 
 Axis._tick_dict is not updated when ticks are changed
 """""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -20,12 +20,12 @@ Axis._tick_dict is not updated when ticks are changed
 Example::
 
     >> dar = DataArray([1, 2], [('time', ['A', 'B'])])
-    >> dar.axis.time._tick_dict 
+    >> dar.axis.time._tick_dict
        {'A': 0, 'B': 1}
     >> dar.axis.time.ticks[0] = 'X'
     >> dar.axis.time.ticks
        ['X', 'B']
-    >> dar.axis.time._tick_dict 
+    >> dar.axis.time._tick_dict
        {'A': 0, 'B': 1}
 
 Possible solutions:
@@ -35,7 +35,7 @@ Possible solutions:
 #. Don't store _tick_dict, create on the fly as needed
 
 pandas, I believe, makes the ticks immutable (#1). larry allows the ticks to
-be changed and calculates the mapping dict on the fly (#3).   
+be changed and calculates the mapping dict on the fly (#3).
 
 
 Can I have ticks without labels?
@@ -46,13 +46,13 @@ I'd like to use ticks without labels. At the moment that is not possible::
     >>> DataArray([1, 2], [(None, ('a', 'b'))])
     <snip>
     ValueError: ticks only supported when Axis has a label
-    
+
 Well, it is possible::
 
     >>> dar = DataArray([1, 2], [('tmp', ('a', 'b'))])
     >>> dar.set_label(0, None)
     >>> dar.axes
-    (Axis(label=None, index=0, ticks=('a', 'b')),)    
+    (Axis(label=None, index=0, ticks=('a', 'b')),)
 
 
 Add a ticks input parameter?
@@ -105,7 +105,7 @@ How about creating Axis._tick_dict on the fly when needed (but not saving it)?
 - Prevent user from doing ``dar.axes[0]._tick_dict['a'] = 10``
 - Catches (on calls to ``make_slice`` and ``keep``) user mischief like
   dar.axes[0].ticks = ('a', 'a')
-- No need to update Axis._tick_dict when user changes ticks  
+- No need to update Axis._tick_dict when user changes ticks
 
 **Cons**
 
@@ -129,13 +129,13 @@ Make two datarrays::
     >> dar2 = DataArray([1, 2], [('time', ['A2', 'B2'])])
 
 ``dar1`` on the left-hand side::
- 
+
     >> dar12 = dar1 + dar2
     >> dar12.axes
        (Axis(label='time', index=0, ticks=['A1', 'B1']),)
 
 ``dar1`` on the right-hand side::
- 
+
     >> dar21 = dar2 + dar1
     >> dar21.axes
        (Axis(label='time', index=0, ticks=['A2', 'B2']),)
@@ -154,11 +154,11 @@ So binary operation may returns parts of both axes::
     >> dar2 = DataArray([[1, 2], [3, 4]], [('row', ['a', 'b']), None])
     >> dar12 = dar1 + dar2
     >> dar12.axes
-       
+
     (Axis(label='row', index=0, ticks=['a', 'b']),
      Axis(label='col', index=1, ticks=['A', 'B']))
-     
-Is that the intended behavior?            
+
+Is that the intended behavior?
 
 Why does Axis.__eq__ require the index to be equal?
 """""""""""""""""""""""""""""""""""""""""""""""""""
@@ -169,7 +169,7 @@ Example::
     >> dar2 = DataArray([[1, 2], [3, 4]], [('col', ['c0', 'c1']), ('row', ['r0', 'r1'])])
     >> dar1.axes[0] == dar2.axes[1]
        False
-             
+
 Axis, axis, axes
 """"""""""""""""
 
@@ -232,14 +232,14 @@ could be replaces with
 ::
     if isinstance(key, tuple):
         self.axes = self.axes[key]
-        
+
 So it would pull out the axes logic from DataArray and place it in Axes.
 
 Should DataArray.axes be a list instead of a tuple?
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
-Why not make DataArrya.axes a list instead of a tuple? Then user can replace
-an axis from one datarray to another, can pop an Axis, etc.   
+Why not make DataArray.axes a list instead of a tuple? Then user can replace
+an axis from one datarray to another, can pop an Axis, etc.
 
 
 Can axis labels be anything besides None or str?
@@ -255,7 +255,7 @@ datetime.date(), int, tuple.
 But labels must be strings to do indexing like this::
 
     >>> dar = DataArray([[1, 2], [3, 4]], (('row', ['A','B']), ('col', ['C', 'D'])))
-    >>> dar.axis.row['A'] 
+    >>> dar.axis.row['A']
     DataArray([1, 2])
     ('col',)
 
@@ -264,7 +264,7 @@ One way to make it work would be to rewrite the above as::
     >>> dar.axis['row']['A']
     DataArray([1, 2])
     ('col',)
-    
+
 which would also make it easier to loop through the axes by name::
 
     >>> for axisname in ['row', col']:
@@ -278,9 +278,9 @@ Performance
 Performance is not the primary concern during the prototype phase of datarray.
 But some attention to performance issue will help guide the development of
 datarrays.
-        
+
 How long does it take to create a datarray?
-""""""""""""""""""""""""""""""""""""""""""" 
+"""""""""""""""""""""""""""""""""""""""""""
 
 Set up data::
 
@@ -308,7 +308,7 @@ fast a datarray can become::
 
 larry is not a subclass of numpy's ndarray, I think that is one reason it is
 faster to create::
- 
+
     >> import la
     >> label = [idx1, idx2]
     >> timeit la.larry(arr, label)
@@ -331,14 +331,14 @@ like to work directly with the numpy arrays. Is there a way to do that with
 datarrays?
 
 For example, with a labeled array, `larry <http://github.com/kwgoodman/la>`_,
-the underlying numpy array is always accessable as the attribute ``x``::
+the underlying numpy array is always accessible as the attribute ``x``::
 
     >>> import la
     >>> lar = la.larry([1, 2, 3])
     >>> lar.x
     array([1, 2, 3])
     >>> lar.x = myfunc(lar.x)
-    
+
 This might be one solution (base)::
 
     >> from datarray import DataArray
@@ -347,18 +347,18 @@ This might be one solution (base)::
     10000 loops, best of 3: 61.4 us per loop
     >> timeit x.base + x.base
     100000 loops, best of 3: 2.16 us per loop
-    
+
 and::
 
     >> x = DataArray([1, 2])
     >> x.base[0] = 9
     >> x
-       
+
     DataArray([9, 2])
     (None,)
-    
-But base is not gauranteed to be a view. What's another solution? Could create
-an attribute at init time, but that slows down init.    
+
+But base is not guaranteed to be a view. What's another solution? Could create
+an attribute at init time, but that slows down init.
 
 
 Alignment
@@ -366,7 +366,7 @@ Alignment
 
 Datarray may not handle alignment directly. But some users of datarrays would
 like an easy way to align datarrays.
-     
+
 Support for alignment?
 """"""""""""""""""""""
 
@@ -397,7 +397,7 @@ The sum of two larrys using an outer join (union of the labels)::
         2
     x
     array([  2.,   4.,  NaN])
-    
+
 The available join methods are inner, outer, left, right, and list. If the
 join method is specified as a list then the first element in the list is the
 join method for axis=0, the second element is the join method for axis=1, and
@@ -446,11 +446,11 @@ outer join mean if dar1 has ticks but dar2 doesn't::
 
     >>> dar1 = DataArray([1, 2], labels=[("time", ['A', 'B'])])
     >>> dar2 = DataArray([1, 2], labels=[("time",)])
-    
+
 What would the following return?
 ::
     >>> add(dar1, dar2, join='outer')
-    
+
 larry requires all axes to have ticks, if none are given then the ticks default
 to range(n).
 
@@ -465,9 +465,9 @@ method.
 
 
 Misc
-==== 
+====
 
-Miscellaneous observation on datarrays.     
+Miscellaneous observation on datarrays.
 
 How do I save a datarray in HDF5 using h5py?
 """"""""""""""""""""""""""""""""""""""""""""
@@ -484,10 +484,10 @@ A datarray can be broken down to the following components:
 - labels (store as object array since it contains None and str and covert
   back on load?)
 - ticks (each axis stored as numpy array with axis number stored as HDF5
-  Dataset attribute, but then ticks along any one axis must be homogenous
+  Dataset attribute, but then ticks along any one axis must be homogeneous
   in dtype)
 - Dictionary of tick index mappings (ignore, recreate on load)
-    
+
 (I need to write a function that saves an Axis object to HDF5.)
 
 If I don't save Axis._tick_dict, would I have to worry about a user changing
@@ -500,10 +500,10 @@ the mapping?
     >>> dar.axes[0]._tick_dict['a'] = 10
     >>> dar.axes[0]._tick_dict
     {'a': 10, 'b': 1}
-   
+
 
 Can labels and ticks be changed?
-""""""""""""""""""""""""""""""""  
+""""""""""""""""""""""""""""""""
 
 Ticks can be changed::
 
@@ -513,13 +513,13 @@ Ticks can be changed::
     >>> dar.axes[0].ticks[0] = 'CHANGED'
     >>> dar.axes
     (Axis(label='row', index=0, ticks=['CHANGED', 'B']),)
-    
-But Axis._tick_dict is not updated when user changes ticks.    
+
+But Axis._tick_dict is not updated when user changes ticks.
 
 And so can labels::
 
     >>> dar.set_label(0, 'new label')
-    >>> dar   
+    >>> dar
     DataArray([1, 2])
     ('new label',)
 
