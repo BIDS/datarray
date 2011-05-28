@@ -636,13 +636,6 @@ class DataArray(np.ndarray):
 
         return arr
 
-    @property
-    def aix(self):
-        # Returns an anonymous slicing tuple that knows
-        # about this array's geometry
-        return stuple( ( slice(None), ) * self.ndim,
-                       axes = self.axes )
-
     def set_name(self, i, name):
         self.axes[i].set_name(name)
 
