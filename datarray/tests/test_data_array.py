@@ -395,26 +395,6 @@ def test_shifty_axes():
     # name from "_2" to "_1".. make sure that this change is mapped
     b = a[0,:2]
     assert (b == arr[0,:2]).all(), 'shifty axes strike again!'
-
-# -- Tests with "aix" slicing ------------------------------------------------
-def test_axis_slicing():
-    np_arr = np.random.randn(3,4,5)
-    a = DataArray(np_arr, 'xyz')
-    b = a[ a.aix.y[:2].x[::2] ]
-    yield nt.assert_true, (b==a[::2,:2]).all(), 'unordered axis slicing failed'
-
-    b = a[ a.aix.z[:2] ]
-    yield nt.assert_true, (b==a.axis.z[:2]).all(), 'axis slicing inconsistent'
-    yield nt.assert_true, b.names == ('x', 'y', 'z')
-
-def test_axis_slicing_both_ways():
-    a = DataArray(np.random.randn(3,4,5), 'xyz')
-
-    b1 = a.axis.y[::2].axis.x[1:]
-    b2 = a[ a.aix.y[::2].x[1:] ]
-
-    yield nt.assert_true, (b1==b2).all()
-    yield nt.assert_true, b1.names == b2.names
     
 # -- Testing utility functions -----------------------------------------------
 from datarray.datarray import _expand_ellipsis, _make_singleton_axes
