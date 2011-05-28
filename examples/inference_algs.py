@@ -182,9 +182,7 @@ def calc_marginals_simple(cpts,evidence):
     likelihood : likelihood of observations in the model
     """
     joint_dist = multiply_potentials(*cpts)
-    joint_dist = joint_dist[ 
-            joint_dist.aix.johncalls[evidence['johncalls']].marycalls[evidence['marycalls']]
-        ]
+    joint_dist = joint_dist.axis.johncalls[evidence['johncalls']].axis.marycalls[evidence['marycalls']]
     return (dict((ax.name, normalize(sum_over_other_axes(joint_dist, ax.name))) 
                 for ax in joint_dist.axes),
             joint_dist.sum())
