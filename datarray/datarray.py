@@ -56,7 +56,7 @@ class KeyStruct(object):
     def __setattr__(self, key, val):
         self[key] = val
 
-class AxesManager(object):
+class AxesManager(tuple):
     """
     Class to manage the logic of the datarray.axes object.
     
@@ -65,7 +65,7 @@ class AxesManager(object):
         >>> isinstance(A.axes, AxesManager)
         True
 
-    At a basic level, AxesManager acts like a sequence of axes:
+    AxesManager is a subclass of tuple with added functionality.
 
         >>> A.axes # doctest:+ELLIPSIS
         (Axis(name='date', index=0, labels=None), ..., Axis(name='metric', index=2, labels=None))
@@ -76,7 +76,7 @@ class AxesManager(object):
         >>> A.axes[4]
         Traceback (most recent call last):
             ...
-        IndexError: Requested axis 4 out of bounds
+        IndexError: tuple index out of range
         
     Each axis is accessible as a named attribute:
 
@@ -112,32 +112,24 @@ class AxesManager(object):
         # True
     """
 
+    def __new__(cls, arr, axes):
+        return tuple.__new__(cls, axes)
+
     def __init__(self, arr, axes):
-        # Check that spec matches dimensions of array
         self._arr = arr
 
         # This is a one-to-one map between integer orders of the axes and their
         # respective objects. This way we can access an axis by name or
         # position in constant time.
-        self._axmap = bidict(enumerate(axes))
         self._namemap = bidict((i,ax.name) for i,ax in enumerate(axes))
     
     # This implements darray.axes.an_axis_name
     def __getattribute__(self, name):
         namemap = object.__getattribute__(self, "_namemap")
-        axmap = object.__getattribute__(self, "_axmap")
         try:
-            return axmap[namemap[:name]]
+            return self[namemap[:name]]
         except KeyError:
             return object.__getattribute__(self, name)
-
-    def __len__(self):
-        return len(self._axmap)
-
-    def __str__(self):
-        return str(tuple(self))
-
-    __repr__ = __str__
 
     @property
     def names(self):  
@@ -150,23 +142,7 @@ class AxesManager(object):
         >>> A.T.axes.names
         ('b', 'a')
         """
-        return tuple(self._namemap[i] for i in range(len(self._namemap)))
-
-    def __getitem__(self, n):
-        """
-        Return the `n`th axis object of the array.
-
-        >>> A = DataArray([[1,2],[3,4]], 'ab'); A.axes[0] is A.axes.a
-        True
-        >>> A.axes[1] is A.axes.b
-        True
-        """
-        if not isinstance(n, int):
-            raise TypeError("AxesManager expects integer index")
-        try:
-            return self._axmap[n]
-        except KeyError:
-            raise IndexError("Requested axis %i out of bounds" % n)
+        return tuple(ax.name for ax in self)
 
     def __call__(self, *args):
         """
@@ -176,7 +152,7 @@ class AxesManager(object):
         the axis object.
         """
         if len(args) == 1:
-            return self._axmap[self._namemap[:args[0]]]
+            return self[self._namemap[:args[0]]]
         else:
             return AxisIndexer(self._arr, *args)
 
