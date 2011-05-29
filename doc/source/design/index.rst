@@ -7,7 +7,7 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   data_array_overview.rst
+   design.rst
    issues.rst
 
 

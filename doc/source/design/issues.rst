@@ -1,6 +1,6 @@
-========
- Issues
-========
+======================================
+ Issues, open questions and todo list
+======================================
 
 Questions and issues about the datarray prototype.
 
@@ -15,7 +15,7 @@ identify the axes of the array. The labels of a datarray identify the elements
 along an axis. Both labels and labels are optional.
 
 Axis._label_dict is not updated when labels are changed
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+-------------------------------------------------------
 
 Example::
 
@@ -39,7 +39,7 @@ be changed and calculates the mapping dict on the fly (#3).
 
 
 Can I have labels without axis names?
-"""""""""""""""""""""""""""""""""""""
+-------------------------------------
 
 I'd like to use labels without names. At the moment that is not possible::
 
@@ -56,7 +56,7 @@ Well, it is possible::
 
 
 Add a labels input parameter?
-"""""""""""""""""""""""""""""
+-----------------------------
 
 What do you think of adding a ``labels`` parameter to DataArray?
 
@@ -89,7 +89,7 @@ open to allow any hashable object, like a tuple, to be used as a name.
 Currently tuples have a special meaning, the (names, labels) tuple.
 
 Create Axis._label_dict when needed?
-""""""""""""""""""""""""""""""""""""
+------------------------------------
 
 How about creating Axis._label_dict on the fly when needed (but not saving it)?
 
@@ -119,7 +119,7 @@ Axis, axes
 Datarrays were created from the need to name the axes of a numpy array.
 
 datarray1 + datarrat2 = which axes?
-"""""""""""""""""""""""""""""""""""
+-----------------------------------
 
 Which axes are returned by binary operations?
 
@@ -161,7 +161,7 @@ So binary operation may returns parts of both axes::
 Is that the intended behavior?
 
 Why does Axis.__eq__ require the index to be equal?
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+---------------------------------------------------
 
 Example::
 
@@ -171,7 +171,7 @@ Example::
        False
 
 Axis, axis, axes
-""""""""""""""""
+----------------
 
 The functions, classes, and methods that take care of axes are:
 
@@ -236,14 +236,14 @@ could be replaced with::
 So it would pull out the axes logic from DataArray and place it in Axes.
 
 Should DataArray.axes be a list instead of a tuple?
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+---------------------------------------------------
 
 Why not make DataArray.axes a list instead of a tuple? Then user can replace
 an axis from one datarray to another, can pop an Axis, etc.
 
 
 Can axis names be anything besides None or str?
-"""""""""""""""""""""""""""""""""""""""""""""""
+-----------------------------------------------
 
 from http://projects.scipy.org/numpy/wiki/NdarrayWithNamedAxes: "Axis names
 (the name of a dimension) must be valid Python identifiers." I don't know
@@ -280,7 +280,7 @@ But some attention to performance issue will help guide the development of
 datarrays.
 
 How long does it take to create a datarray?
-"""""""""""""""""""""""""""""""""""""""""""
+-------------------------------------------
 
 Set up data::
 
@@ -324,7 +324,7 @@ Why is the time to create a datarray important? Because even an operation as
 simple as ``dar1 + dar2`` creates a datarray.
 
 Direct access to array?
-"""""""""""""""""""""""
+-----------------------
 
 Names and labels add overhead. Sometimes, after aligning my datarrays, I would
 like to work directly with the numpy arrays. Is there a way to do that with
@@ -370,7 +370,7 @@ Datarray may not handle alignment directly. But some users of datarrays would
 like an easy way to align datarrays.
 
 Support for alignment?
-""""""""""""""""""""""
+----------------------
 
 Will datarray provide any support for those who want binary operations between
 two datarrays to join names or labels using various join methods?
@@ -405,7 +405,7 @@ join method for axis=0, the second element is the join method for axis=1, and
 so on.
 
 How can datarrays be aligned?
-"""""""""""""""""""""""""""""
+-----------------------------
 
 What's an outer join (or inner, left, right) along an axis of two datarrays if
 one datarray has labels and the other doesn't?
@@ -457,7 +457,7 @@ larry requires all axes to have labels, if none are given then the labels defaul
 to range(n).
 
 datarray.reshape
-""""""""""""""""
+----------------
 
 Reshape operations scramble names and labels. Some numpy functions and
 array methods use reshape. Should reshape convert a datarray to an array?
@@ -472,7 +472,7 @@ Misc
 Miscellaneous observation on datarrays.
 
 How do I save a datarray in HDF5 using h5py?
-""""""""""""""""""""""""""""""""""""""""""""
+--------------------------------------------
 
 `h5py <http://h5py.alfven.org>`_, which stores data in HDF5 format, can only
 save numpy arrays.
@@ -506,7 +506,7 @@ the mapping?
 
 
 Can names and labels be changed?
-""""""""""""""""""""""""""""""""
+--------------------------------
 
 Labels can be changed::
 
@@ -527,6 +527,94 @@ And so can names::
     ('new name',)
 
 Fancy Indexing
-""""""""""""""
+--------------
 
 It's not implemented at all yet.
+
+.. _name_updates:
+
+Changing Names on DataArrays
+=============================
+
+Tricky Attributes
+-----------------
+
+* .names -- currently a mutable list of Axis.name attributes
+* .axes -- currently a mutable list of Axis objects
+* .axis -- a key-to-attribute dictionary
+
+Need an event-ful way to change an Axis's label, such that all the above
+attributes are updated.
+
+**Proposed solution**: 
+
+1. use a set_label() method. This will consequently update the parent array's 
+    (names, axes, axis) attributes. 
+2. make the mutable lists into *tuples* to deny write access.
+3. make the KeyStruct ``.axis`` have write-once access 
+
+.. _todo:
+
+ToDo
+====
+
+* Support DataArray instances with mixed axes: simple ones with no values 
+  and 'fancy' ones with data in them.  Syntax?
+
+``a = DataArray.from_names(data, axes=['a','b','c'])``
+
+``b = DataArray(data, axes=[('a',['1','2','3']), ('b',['one','two']), ('c',['red','black'])])``
+
+``c = DataArray(data, axes=[('a',['1','2','3']), ('b',None), ('c',['red','black'])])``
+
+* Can a, b, and c be combined in binary operations, given the different tick
+  combinations?
+* How to handle complicated reshaping (not flattening or, padding/trimming with
+  1s) 
+* Units support (Darren's)
+* Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
+  access data via the .axis objects alone.
+* "Enum dtype", could be useful for event selection.
+* "Ordered factors"? Something R supports.
+* How many axis classes?
+
+* Allowing non-string axis names?
+
+- At least they must be hashable...
+- Serialization?
+
+
+* Allowing multiple names per axis?
+
+
+* Rob Speer's proposal for purely top-level, 'magical' attributes?
+
+
+* Finish the semantics of .lix indexing, especially with regards to what it
+  should do when integer labels are present.
+
+* What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?
+
+Indexing semantics possibilities
+--------------------------------
+
+1. .lix: Integers always labels.  a.lix[3:10] means labels 3 and 10 MUST exist.
+
+2. .nix: Integers are never treated as labels.
+
+3. .awful_ix: 1, then 2.
+
+
+Axis api
+--------
+If a is an axis from an array: a = x.axis.a
+
+- a.at(key): return the slice at that key, with one less dimension than x
+- a.keep(keys): join slices for given keys, dims=dims(x)
+- a.drop(keys): like keep, but the opposite
+
+a[i] valid cases:
+
+- i: integer => normal numpy scalar indexing, one less dim than x
+- i: slice: numpy view slicing.  same dims as x, must recover the labels 
+- i: list/array: numpy fancy indexing, as long as the index list is 1d only.

@@ -18,11 +18,10 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   design_questions/index
    basic_data_array
    ndarray_methods
    printing
-   data_summit_proposal
+   design/index
    other_projects/index
    license
 
