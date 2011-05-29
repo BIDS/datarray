@@ -1,3 +1,7 @@
+====================
+ The Pandas License
+====================
+
 ::
 
     Copyright (c) 2008-2009 AQR Capital Management, LLC

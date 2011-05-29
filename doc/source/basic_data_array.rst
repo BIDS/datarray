@@ -13,7 +13,7 @@
 Basic DataArray Creation And Mixing
 ===================================
 
-DataArrays are constructed with array-like sequences and axis names:
+DataArrays are constructed with array-like sequences and axis names::
 
     >>> narr = DataArray(np.zeros((1,2,3)), axes=('a', 'b', 'c'))
     >>> narr.names
@@ -28,20 +28,20 @@ DataArrays are constructed with array-like sequences and axis names:
     (1, 2, 3)
 
 Not all axes must necessarily be explicitly named, since None is a valid axis
-name:
+name::
 
     >>> narr2 = DataArray(np.zeros((1,2,3)), axes=('a', None, 'b' ))
     >>> narr2.names
     ('a', None, 'b')
 
 If no name is given for an axis, None is implicitly assumed.  So trailing axes
-without axes will be named as None:
+without axes will be named as None::
 
     >>> narr2 = DataArray(np.zeros((1,2,3,2)), axes=('a','b' ))
     >>> narr2.names
     ('a', 'b', None, None)
 
-Combining named and unnamed arrays:
+Combining named and unnamed arrays::
 
     >>> narr = DataArray(np.zeros((1,2,3)), axes='abc')
     >>> res = narr + 5 # OK
@@ -58,7 +58,7 @@ Combining named and unnamed arrays:
 
 
 Now, what about matching names, but different indices for the names?
-:
+::
 
     >>> n4 = DataArray(np.ones((2,1,3)), axes=('b','a','c'))
     >>> res = narr + n4 # is this OK?
@@ -70,9 +70,9 @@ The names and the position have to be the same, and the above example should
 raise an error.  At least for now we will raise an error, and review later.
 
 With "labels"
-------------
+-------------
 
-Constructing a DataArray such that an Axis has labels, for example:
+Constructing a DataArray such that an Axis has labels, for example::
 
     >>> cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     >>> time_ax_spec = 'time', ['0015', '0615', '1215', '1815']
@@ -87,7 +87,7 @@ Slicing
 
 A DataArray with simple named axes can be sliced many ways.
 
-Per Axis:
+Per Axis::
 
     >>> narr = DataArray(np.zeros((1,2,3)), axes=('a','b','c'))
     >>> narr.axis.a
@@ -99,7 +99,7 @@ Per Axis:
     >>> narr.axis.a[0].axes
     (Axis(name='b', index=0, labels=None), Axis(name='c', index=1, labels=None))
 
-By normal "numpy" slicing:
+By normal "numpy" slicing::
 
     >>> narr[0].shape
     (2, 3)
@@ -108,56 +108,7 @@ By normal "numpy" slicing:
     >>> narr.axis.a[0].axes == narr[0,:].axes
     True
 
-Through the "axis slicer" ``aix`` attribute:
-
-    >>> narr[ narr.aix.b[:2].c[-1] ]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-    >>> narr[ narr.aix.c[-1].b[:2] ]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-    >>> narr[ narr.aix.c[-1].b[:2] ] == narr[:,:2,-1]
-    DataArray([[ True,  True]], dtype=bool)
-    ('a', 'b')
-
-The Axis Indexing object (it's a stuple)
-----------------------------------------
-
-The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple)::
-
-    @property
-    def aix(self):
-        # Returns an anonymous slicing tuple that knows
-        # about this array's geometry
-        return stuple( ( slice(None), ) * self.ndim,
-                       axes = self.axes )
-
-
-The stuple should have a reference to a group of Axis objects that describes an
-array's geometry. If the stuple is associated with a specific Axis, then when
-sliced itself, it can create a slicing tuple for the array with the given
-geometry.
-:
-
-    >>> narr.aix
-    (slice(None, None, None), slice(None, None, None), slice(None, None, None))
-    >>> narr.names
-    ('a', 'b', 'c')
-    >>> narr.aix.b[0]
-    (slice(None, None, None), 0, slice(None, None, None))
-
-**Note** -- the ``aix`` attribute provides some shorthand syntax for the following:
-
-    >>> narr.axis.c[-1].axis.b[:2]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-
-The mechanics are slightly different (using ``aix``, a slicing tuple is created
-up-front before ``__getitem__`` is called), but functionality is the same.
-**Question** -- Is it convenient enough to include the ``aix`` slicer? should
-it function differently?
-
-Also, slicing with ``newaxis`` is implemented:
+Also, slicing with ``newaxis`` is implemented::
 
     >>> arr = np.arange(24).reshape((3,2,4))
     >>> b = DataArray(arr, ['x', 'y', 'z'])
@@ -166,9 +117,9 @@ Also, slicing with ``newaxis`` is implemented:
     >>> b[:,:,np.newaxis].names
     ('x', 'y', None, 'z')
 
-I can also slice with ``newaxis`` at each Axis, or with the ``aix`` slicer (the
-results are identical). The effect of this is always to insert an unnamed
-Axis with length-1 at the original index of the named Axis:
+I can also slice with ``newaxis`` at each Axis.  The effect of this is always
+to insert an unnamed Axis with length-1 at the original index of the named
+Axis::
 
     >>> b.axes
     (Axis(name='x', index=0, labels=None), Axis(name='y', index=1, labels=None), Axis(name='z', index=2, labels=None))
@@ -178,7 +129,7 @@ Axis with length-1 at the original index of the named Axis:
     (3, 1, 2, 4)
 
 Slicing and labels
------------------
+------------------
 
 It is also possible to use labels in any of the slicing syntax above:
 
@@ -278,7 +229,7 @@ to be compatible with the larger DataArray:
     ('x', 'y')
 
 When there are unnamed dimensions, they also must be consistently oriented
-across arrays when broadcasting:
+across arrays when broadcasting::
 
     >>> b = DataArray(np.arange(24).reshape(3,2,4), ['x', None, 'y'])
     >>> a = DataArray(np.arange(8).reshape(2,4), [None, 'y'])
@@ -294,7 +245,7 @@ across arrays when broadcasting:
 	    [24, 26, 28, 30]]])
     ('x', None, 'y')
 
-We already know that if the dimension names don't match, this won't be allowed (even though the shapes are correct):
+We already know that if the dimension names don't match, this won't be allowed (even though the shapes are correct)::
 
     >>> b = DataArray(np.ones((3,3)), axes=('x','y'))
     >>> a = DataArray(np.ones((3,)), axes=('x',))
@@ -356,7 +307,7 @@ information collision from ``a.axis.y``.
 Iteration
 =========
 
-seems to work:
+seems to work::
 
     >>> for foo in time_caps:
     ...     print foo
@@ -395,7 +346,7 @@ seems to work:
     ('time',)
     (Axis(name='time', index=0, labels=['0015', '0615', '1215', '1815']),)
 
-Or even more conveniently:
+Or even more conveniently::
 
     >>> for foo in time_caps.axis.capitals:
     ...     print foo
@@ -417,7 +368,7 @@ Transposition of Axes
 =====================
 
 Transposition of a DataArray preserves the dimension names, and updates the
-corresponding indices:
+corresponding indices::
 
     >>> b = DataArray(np.zeros((3, 2, 4)), axes=['x', None, 'y'])
     >>> b.shape
@@ -428,92 +379,4 @@ corresponding indices:
     (4, 2, 3)
     >>> b.T.axes
     (Axis(name='y', index=0, labels=None), Axis(name=None, index=1, labels=None), Axis(name='x', index=2, labels=None))
-
-.. _label_updates:
-
-Changing Names on DataArrays
-=============================
-
-Tricky Attributes
------------------
-
-* .names -- currently a mutable list of Axis.name attributes
-* .axes -- currently a mutable list of Axis objects
-* .axis -- a key-to-attribute dictionary
-
-Need an event-ful way to change an Axis's label, such that all the above
-attributes are updated.
-
-**Proposed solution**: 
-
-1. use a set_label() method. This will consequently update the parent array's 
-    (names, axes, axis) attributes. 
-2. make the mutable lists into *tuples* to deny write access.
-3. make the KeyStruct ``.axis`` have write-once access 
-
-.. _todo:
-
-ToDo
-====
-
-* Support DataArray instances with mixed axes: simple ones with no values 
-  and 'fancy' ones with data in them.  Syntax?
-
-``a = DataArray.from_names(data, axes=['a','b','c'])``
-
-``b = DataArray(data, axes=[('a',['1','2','3']), ('b',['one','two']), ('c',['red','black'])])``
-
-``c = DataArray(data, axes=[('a',['1','2','3']), ('b',None), ('c',['red','black'])])``
-
-* Can a, b, and c be combined in binary operations, given the different tick
-  combinations?
-* How to handle complicated reshaping (not flattening or, padding/trimming with
-  1s) 
-* Units support (Darren's)
-* Jagged arrays? Kilian's suggestion.  Drop the base array altogether, and
-  access data via the .axis objects alone.
-* "Enum dtype", could be useful for event selection.
-* "Ordered factors"? Something R supports.
-* How many axis classes?
-
-* Allowing non-string axis names?
-
-- At least they must be hashable...
-- Serialization?
-
-
-* Allowing multiple names per axis?
-
-
-* Rob Speer's proposal for purely top-level, 'magical' attributes?
-
-
-* Finish the semantics of .lix indexing, especially with regards to what it
-  should do when integer labels are present.
-
-* What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?
-
-Indexing semantics possibilities
---------------------------------
-
-1. .lix: Integers always labels.  a.lix[3:10] means labels 3 and 10 MUST exist.
-
-2. .nix: Integers are never treated as labels.
-
-3. .awful_ix: 1, then 2.
-
-
-Axis api
---------
-If a is an axis from an array: a = x.axis.a
-
-- a.at(key): return the slice at that key, with one less dimension than x
-- a.keep(keys): join slices for given keys, dims=dims(x)
-- a.drop(keys): like keep, but the opposite
-
-a[i] valid cases:
-
-- i: integer => normal numpy scalar indexing, one less dim than x
-- i: slice: numpy view slicing.  same dims as x, must recover the labels 
-- i: list/array: numpy fancy indexing, as long as the index list is 1d only.
 
