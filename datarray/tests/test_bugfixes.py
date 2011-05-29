@@ -9,12 +9,22 @@ import datarray.print_grid as print_grid
 import nose.tools as nt
 import numpy.testing as npt
 
+def test_full_reduction():
+    # issue #2
+    nt.assert_equal(DataArray([1, 2, 3]).sum(axis=0),6)
+
 def test_bug3():
     "Bug 3"
     x = np.array([1,2,3])
     y = DataArray(x, 'x')
     nt.assert_equal( x.sum(), y.sum() )
     nt.assert_equal( x.max(), y.max() )
+
+def test_1d_label_indexing():
+    # issue #18
+    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    caps = DataArray(np.arange(5),[cap_ax_spec])
+    caps.axes.capitals["washington"]
 
 def test_bug26():
     "Bug 26: check that axes names are computed on demand."

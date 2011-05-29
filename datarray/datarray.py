@@ -4,7 +4,6 @@
 
 import copy
 import numpy as np
-from bidict import bidict
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -121,13 +120,13 @@ class AxesManager(tuple):
         # This is a one-to-one map between integer orders of the axes and their
         # respective objects. This way we can access an axis by name or
         # position in constant time.
-        self._namemap = bidict((i,ax.name) for i,ax in enumerate(axes))
+        self._namemap = dict((ax.name,i) for i,ax in enumerate(axes))
     
     # This implements darray.axes.an_axis_name
     def __getattribute__(self, name):
         namemap = object.__getattribute__(self, "_namemap")
         try:
-            return self[namemap[:name]]
+            return self[namemap[name]]
         except KeyError:
             return object.__getattribute__(self, name)
 
@@ -152,7 +151,7 @@ class AxesManager(tuple):
         the axis object.
         """
         if len(args) == 1:
-            return self[self._namemap[:args[0]]]
+            return self[self._namemap[args[0]]]
         else:
             return AxisIndexer(self._arr, *args)
 
