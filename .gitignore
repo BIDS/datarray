@@ -3,7 +3,7 @@
 # setup.py working directory
 build
 # setup.py dist directory
-./dist
+dist/
 # Documentation build files
 doc/build
 # Editor temporary/working/backup files
@@ -27,3 +27,6 @@ doc/build
 ./.shelf
 # Mac droppings
 .DS_Store
+
+# Build products
+MANIFEST

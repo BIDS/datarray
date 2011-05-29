@@ -18,9 +18,12 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   design_questions/index.rst
-   basic_data_array.rst
-   ndarray_methods.rst
+   design_questions/index
+   basic_data_array
+   ndarray_methods
+   printing
+   data_summit_proposal
+   other_projects/index
    license
 
 Indices and tables

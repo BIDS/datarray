@@ -70,7 +70,7 @@ The names and the position have to be the same, and the above example should
 raise an error.  At least for now we will raise an error, and review later.
 
 With "labels"
-------------
+-------------
 
 Constructing a DataArray such that an Axis has labels, for example:
 
@@ -108,55 +108,6 @@ By normal "numpy" slicing:
     >>> narr.axis.a[0].axes == narr[0,:].axes
     True
 
-Through the "axis slicer" ``aix`` attribute:
-
-    >>> narr[ narr.aix.b[:2].c[-1] ]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-    >>> narr[ narr.aix.c[-1].b[:2] ]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-    >>> narr[ narr.aix.c[-1].b[:2] ] == narr[:,:2,-1]
-    DataArray([[ True,  True]], dtype=bool)
-    ('a', 'b')
-
-The Axis Indexing object (it's a stuple)
-----------------------------------------
-
-The ``aix`` attribute is a property which generates a "stuple" (special/slicing tuple)::
-
-    @property
-    def aix(self):
-        # Returns an anonymous slicing tuple that knows
-        # about this array's geometry
-        return stuple( ( slice(None), ) * self.ndim,
-                       axes = self.axes )
-
-
-The stuple should have a reference to a group of Axis objects that describes an
-array's geometry. If the stuple is associated with a specific Axis, then when
-sliced itself, it can create a slicing tuple for the array with the given
-geometry.
-:
-
-    >>> narr.aix
-    (slice(None, None, None), slice(None, None, None), slice(None, None, None))
-    >>> narr.names
-    ('a', 'b', 'c')
-    >>> narr.aix.b[0]
-    (slice(None, None, None), 0, slice(None, None, None))
-
-**Note** -- the ``aix`` attribute provides some shorthand syntax for the following:
-
-    >>> narr.axis.c[-1].axis.b[:2]
-    DataArray([[ 0.,  0.]])
-    ('a', 'b')
-
-The mechanics are slightly different (using ``aix``, a slicing tuple is created
-up-front before ``__getitem__`` is called), but functionality is the same.
-**Question** -- Is it convenient enough to include the ``aix`` slicer? should
-it function differently?
-
 Also, slicing with ``newaxis`` is implemented:
 
     >>> arr = np.arange(24).reshape((3,2,4))
@@ -178,7 +129,7 @@ Axis with length-1 at the original index of the named Axis:
     (3, 1, 2, 4)
 
 Slicing and labels
------------------
+------------------
 
 It is also possible to use labels in any of the slicing syntax above:
 
@@ -516,4 +467,3 @@ a[i] valid cases:
 - i: integer => normal numpy scalar indexing, one less dim than x
 - i: slice: numpy view slicing.  same dims as x, must recover the labels 
 - i: list/array: numpy fancy indexing, as long as the index list is 1d only.
-

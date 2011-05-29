@@ -19,7 +19,7 @@ the code in numpy.core.arrayprint is
 - largely untouched for the last 13 years!
 
 Its output can be aesthetically suboptimal in some cases. When printing large
-arrays of floats, for example, it will wrap every line like this:
+arrays of floats, for example, it will wrap every line like this::
 
     [[  0.00000000e+00   1.00000000e-04   2.00000000e-04 ...,   4.70000000e-03
         4.80000000e-03   4.90000000e-03]
@@ -85,4 +85,3 @@ beginning of the matrix, dots, and a few of these from the end of the matrix.
 Then put all those back into the grid-maker.
 
 If there are more than 30 or so dimensions, we are sad.
-
