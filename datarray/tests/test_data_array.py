@@ -100,19 +100,19 @@ def test_2d():
     rs = b.axes.x[0]
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
+    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
     # Now, check that when slicing a row, we get the right names in the output
     yield (nt.assert_equal, b.axes.x[1:].names, ('x','y'))
     # Check column named slicing
     cs = b.axes.y[1]
     yield (npt.assert_equal, cs, [2,4,6])
     yield nt.assert_equal, cs.names, ('x',)
-    yield nt.assert_equal, tuple(cs.axes), (Axis('x', 0, cs),)
+    yield nt.assert_equal, cs.axes, (Axis('x', 0, cs),)
     # What happens if we do normal slicing?
     rs = b[0]
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
+    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
 
 def test__pull_axis():
     a = Axis('x', 0, None)
