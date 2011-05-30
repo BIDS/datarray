@@ -9,12 +9,29 @@ import datarray.print_grid as print_grid
 import nose.tools as nt
 import numpy.testing as npt
 
+def test_full_reduction():
+    # issue #2
+    nt.assert_equal(DataArray([1, 2, 3]).sum(axis=0),6)
+
 def test_bug3():
     "Bug 3"
     x = np.array([1,2,3])
     y = DataArray(x, 'x')
     nt.assert_equal( x.sum(), y.sum() )
     nt.assert_equal( x.max(), y.max() )
+
+def test_1d_label_indexing():
+    # issue #18
+    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
+    caps = DataArray(np.arange(5),[cap_ax_spec])
+    caps.axes.capitals["washington"]
+
+def test_bug26():
+    "Bug 26: check that axes names are computed on demand."
+    a = DataArray([1,2,3])
+    nt.assert_true(a.axes[0].name is None)
+    a.axes[0].name = "a"
+    nt.assert_equal(a.axes[0].name, "a")
 
 def test_bug44():
     "Bug 44"
@@ -27,7 +44,7 @@ def test_bug44():
     nt.assert_equal( x.sum(), y.sum() )
 
 def test_bug45():
-    "Bug 45"
+    "Bug 45: Support for np.outer()"
     A = DataArray([1,2,3], 'a'); B = DataArray([2,3,4], 'b'); C = np.outer(A,B)
     assert_datarray_equal(C,DataArray(C, 'ab'))
 

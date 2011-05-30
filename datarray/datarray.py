@@ -3,9 +3,7 @@
 #-----------------------------------------------------------------------------
 
 import copy
-
 import numpy as np
-import nose.tools as nt
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -13,7 +11,6 @@ import nose.tools as nt
 
 class NamedAxisError(Exception):
     pass
-
 
 class KeyStruct(object):
     """A slightly enhanced version of a struct-like class with named key access.
@@ -58,12 +55,138 @@ class KeyStruct(object):
     def __setattr__(self, key, val):
         self[key] = val
 
-
-class Axis(object):
-    """Object to access a given axis of an array.
-
-    Key point: every axis contains a  reference to its parent array!
+class AxesManager(tuple):
     """
+    Class to manage the logic of the datarray.axes object.
+    
+        >>> A = DataArray(np.random.randn(200, 4, 10), \
+                    axes=('date', ('stocks', ('aapl', 'ibm', 'goog', 'msft')), 'metric'))
+        >>> isinstance(A.axes, AxesManager)
+        True
+
+    AxesManager is a subclass of tuple with added functionality.
+
+        >>> A.axes # doctest:+ELLIPSIS
+        (Axis(name='date', index=0, labels=None), ..., Axis(name='metric', index=2, labels=None))
+        >>> A.axes[0]
+        Axis(name='date', index=0, labels=None)
+        >>> len(A.axes)
+        3
+        >>> A.axes[4]
+        Traceback (most recent call last):
+            ...
+        IndexError: tuple index out of range
+        
+    Each axis is accessible as a named attribute:
+
+        >>> A.axes.stocks
+        Axis(name='stocks', index=1, labels=('aapl', 'ibm', 'goog', 'msft'))
+
+    An axis can be indexed by integers or ticks:
+
+        >>> np.all(A.axes.stocks['aapl':'goog'] == A.axes.stocks[0:2])
+        DataArray(True, dtype=bool)
+        ('date', 'stocks', 'metric')
+        >>> np.all(A.axes.stocks[0:2] == A[:,0:2,:])
+        DataArray(True, dtype=bool)
+        ('date', 'stocks', 'metric')
+
+    Axes can also be accessed numerically:
+
+        >>> A.axes[1] is A.axes.stocks
+        True
+
+    Calling the AxesManager with string arguments will return an :AxisIndexer: object
+    which can be used to restrict slices to specified axes:
+
+        >>> Ai = A.axes('stocks', 'date')
+        >>> np.all(Ai['aapl':'goog', 100] == A[100, 0:2])
+        DataArray(True, dtype=bool)
+        ('stocks', 'metric')
+
+    You can also mix axis names and integers when calling AxesManager.
+    (Not yet supported.)
+
+        # >>> np.all(A.axes(1, 'date')['aapl':'goog',100:200] == A[100:200, 0:2])
+        # True
+    """
+
+    def __new__(cls, arr, axes):
+        return tuple.__new__(cls, axes)
+
+    def __init__(self, arr, axes):
+        self._arr = arr
+
+        # This is a one-to-one map between integer orders of the axes and their
+        # respective objects. This way we can access an axis by name or
+        # position in constant time.
+        self._namemap = dict((ax.name,i) for i,ax in enumerate(axes))
+    
+    # This implements darray.axes.an_axis_name
+    def __getattribute__(self, name):
+        namemap = object.__getattribute__(self, "_namemap")
+        try:
+            return self[namemap[name]]
+        except KeyError:
+            return object.__getattribute__(self, name)
+
+    @property
+    def names(self):  
+        """
+        Return a tuple of axis names for the managed array. The tuple ordering
+        is consistent with the order of the axes:
+       
+        >>> A = DataArray([[1,2],[3,4]], 'ab'); A.axes.names
+        ('a', 'b')
+        >>> A.T.axes.names
+        ('b', 'a')
+        """
+        return tuple(ax.name for ax in self)
+
+    def __call__(self, *args):
+        """
+        Return an axis indexer object based on the supplied arguments.
+
+        Note: if you call this with only one argument, then it just returns
+        the axis object.
+        """
+        if len(args) == 1:
+            return self[self._namemap[args[0]]]
+        else:
+            return AxisIndexer(self._arr, *args)
+
+class AxisIndexer(object):
+    """
+    An object which holds a reference to a DataArray and a list of axes and
+    allows slicing by those axes.
+    """
+    # XXX don't support mapped indexing yet...
+    def __init__(self, arr, *args):
+        self.arr = arr
+        self.axes = args
+        axis_set = set(args)
+        self._axis_map = [self.axes.index(axis.name) if axis.name in self.axes else None
+            for axis in arr.axes]
+    
+    def __getitem__(self, item):
+        if not isinstance(item, tuple):
+            item = item,
+
+        if len(item) != len(self.axes):
+            raise ValueError("Incorrect slice length")
+        
+        slicer = tuple(
+            item[self._axis_map[i]]
+                if self._axis_map[i] is not None
+                else slice(None, None, None)
+            for i in range(len(self.arr.axes)))
+    
+        return self.arr[slicer]
+        
+class Axis(object):
+    "Object to access a given axis of an array."
+    # Key point: every axis contains a reference to its parent array!
+
     def __init__(self, name, index, parent_arr, labels=None):
         # Axis name should be a string or None
         if not isinstance(name, basestring) and name is not None:
@@ -174,7 +297,7 @@ class Axis(object):
         return self.parent_arr.shape[self.index]
 
     def __eq__(self, other):
-        '''
+        """
         Axes are equal iff they have matching names and indices. They
         do not need to have matching labels.
 
@@ -195,7 +318,7 @@ class Axis(object):
         True
         >>> ax == Axis('x', 1, np.arange(10))
         False
-        '''
+        """
         if not isinstance(other, self.__class__):
             return False
 
@@ -209,13 +332,31 @@ class Axis(object):
     __repr__ = __str__
     
     def __getitem__(self, key):
-        # `key` can be one of:
-        # * integer (more generally, any valid scalar index)
-        # * slice
-        # * np.newaxis (ie, None)
-        # * list (fancy indexing)
-        # * array (fancy indexing)
-        #
+        """
+        Return the item(s) of parent array along this axis as specified by `key`.
+
+        `key` can be any of:
+            - An integer
+            - A tick
+            - A slice of integers or ticks
+            - `numpy.newaxis`, i.e. None
+
+        Examples
+        --------
+
+        >>> A = DataArray(np.arange(2*3*2).reshape([2,3,2]), \
+                ('a', ('b', ('b1','b2','b3')), 'c'))
+        >>> b = A.axes.b
+        >>> np.all(b['b1'] == A[:,0,:])
+        DataArray(True, dtype=bool)
+        ('a', 'c')
+        >>> np.all(b['b1':'b2'] == A[:,0:1,:])
+        DataArray(True, dtype=bool)
+        ('a', 'b', 'c')
+        >>> np.all(b['b2':] == A[:,1:,:])
+        DataArray(True, dtype=bool)
+        ('a', 'b', 'c')
+        """
         # XXX We don't handle fancy indexing at the moment
         if isinstance(key, (np.ndarray, list)):
             raise NotImplementedError('We do not handle fancy indexing yet')
@@ -342,11 +483,9 @@ class Axis(object):
         Return data at a given label.
 
         >>> narr = DataArray(np.random.standard_normal((4,5)), axes=['a', ('b', 'abcde')])
-        >>> arr = narr.axis.b.at('c')
+        >>> arr = narr.axes.b['c']
         >>> arr.axes
         (Axis(name='a', index=0, labels=None),)
-        >>>     
-
         """
         if not self.labels:
             raise ValueError('axis must have labels to extract data at a given label')
@@ -359,13 +498,13 @@ class Axis(object):
 
         >>> narr = DataArray(np.random.standard_normal((4,5)),
         ...                  axes=['a', ('b', 'abcde')])
-        >>> arr = narr.axis.b.keep('cd')
+        >>> arr = narr.axes.b.keep('cd')
         >>> [a.labels for a in arr.axes]
         [None, 'cd']
         
-        >>> arr.axis.a.at('label')
+        >>> arr.axes.a.at('label')
         Traceback (most recent call last):
-        ...
+            ...
         ValueError: axis must have labels to extract data at a given label
         """
 
@@ -395,10 +534,11 @@ class Axis(object):
         =======
         >>> darr = DataArray(np.random.standard_normal((4,5)),
         ...                  axes=['a', ('b', ['a','b','c','d','e'])])
-        >>> arr1 = darr.axis.b.keep(['c','d'])
-        >>> arr2 = darr.axis.b.drop(['a','b','e'])
-        >>> np.alltrue(np.equal(arr1, arr2))
-        True
+        >>> arr1 = darr.axes.b.keep(['c','d'])
+        >>> arr2 = darr.axes.b.drop(['a','b','e'])
+        >>> np.all(arr1 == arr2)
+        DataArray(True, dtype=bool)
+        ('a', 'b')
         """
 
         if not self.labels:
@@ -456,13 +596,13 @@ def _pull_axis(axes, target_axis):
     return newaxes    
 
 def _set_axes(dest, in_axes):
-    """Set the axes in `dest` from `in_axes`.
+    """
+    Set the axes in `dest` from `in_axes`.
 
-    WARNING: The destination is modified in-place!  The following attributes
-    are added to it:
+    WARNING: The destination is modified in-place! The following attribute
+    is added to it:
 
-    - axis: a KeyStruct with each axis as a named attribute.
-    - axes: a list of all axis instances.
+    - axes: an instance of AxesManager which manages access to axes.
 
     Parameters
     ----------
@@ -478,21 +618,16 @@ def _set_axes(dest, in_axes):
         new_ax = ax._copy(parent_arr=dest)
         axes.append(new_ax)
         if hasattr(ax_holder, ax._sname):
-            raise NamedAxisError(
-                'There is another Axis in this group with ' \
-                'the same name'
-                )
+            raise NamedAxisError( """There is another Axis in this group with
+                    the same name""")
         ax_holder[ax._sname] = new_ax
     # Store these containers as attributes of the destination array
-    dest.axes = tuple(axes)
-    dest.axis = ax_holder
-    
+    dest.axes = AxesManager(dest, axes)
 
 def names2namedict(names):
     """Make a name map out of any name input.
     """
     raise NotImplementedError() 
-
 
 # -- Method Wrapping -----------------------------------------------------------
 
@@ -565,34 +700,6 @@ def _apply_accumulation(opname, kwnames):
     runs_op.func_doc = super_op.__doc__
     return runs_op
             
-
-class AxisIndexer(object):
-    """ An object which holds a reference to a DataArray and a list of axes
-    and allows slicing by those axes.
-    """
-    
-    # XXX don't support mapped indexing yet...
-
-    def __init__(self, arr, *args):
-        self.arr = arr
-        self.axes = args
-        axis_set = set(args)
-        self._axis_map = [self.axes.index(axis.name) if axis.name in self.axes else None
-            for axis in arr.axes]
-    
-    def __getitem__(self, item):
-        if not isinstance(item, tuple) or len(item) != len(self.axes):
-            raise ValueError("Incorrect slice length")
-        
-        slicer = tuple(
-            item[self._axis_map[i]]
-                if self._axis_map[i] is not None
-                else slice(None, None, None)
-            for i in range(len(self.arr.axes)))
-    
-        return self.arr[slicer]
-        
-
 class DataArray(np.ndarray):
 
     # XXX- we need to figure out where in the numpy C code .T is defined!
@@ -605,15 +712,19 @@ class DataArray(np.ndarray):
         # as a (name, labels) tuple 
         # Ensure the output is an array of the proper type
         arr = np.array(data, dtype=dtype, copy=copy).view(cls)
+
         if axes is None:
             if hasattr(data,'axes'):
                 _set_axes(arr, data.axes)
                 return arr
             axes = []
+
         elif len(axes) > arr.ndim:
-            raise NamedAxisError('axes list should have length <= array ndim')
+            raise NamedAxisError('Axes list should have length <= array ndim')
         
+        # Pad axes spec to match array shape
         axes = list(axes) + [None]*(arr.ndim - len(axes))
+
         axlist = []
         for i, axis_spec in enumerate(axes):
             if isinstance(axis_spec, basestring) or axis_spec is None:
@@ -622,10 +733,8 @@ class DataArray(np.ndarray):
                 labels = None
             else:
                 if len(axis_spec) != 2:
-                    raise ValueError(
-                        'if the axis specification is a tuple, it must be ' \
-                        'of the form (name, labels)'
-                        )
+                    raise ValueError("""If the axis specification is a tuple,
+                            it must be of the form (name, labels)""")
                 name, labels = axis_spec
             axlist.append(Axis(name, i, arr, labels=labels))
 
@@ -839,7 +948,7 @@ class DataArray(np.ndarray):
                      for n, a, r in zip(names, self.axes, adjustments)]
 
             for slice_or_int, name in zip(key, names):
-                arr = arr.axis[name][slice_or_int]
+                arr = arr.axes(name)[slice_or_int]
 
             # restore old shape and axes
             self.shape = old_shape
@@ -1166,4 +1275,8 @@ def _make_singleton_axes(arr, key):
     while len(new_key)>1 and new_key[-1] == slice(None):
         new_key.pop()
     return tuple(new_dims), ro_axes, tuple(new_key)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
 
