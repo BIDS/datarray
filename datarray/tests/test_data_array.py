@@ -1,4 +1,4 @@
-''' Tests for DataArray and friends '''
+'''Tests for DataArray and friend'''
 
 import numpy as np
 
@@ -53,10 +53,10 @@ def test_basic():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield nt.assert_equal, b.names, ('x','y')
     # integer slicing
-    b0 = b.axis.x[0]
+    b0 = b.axes.x[0]
     yield npt.assert_equal, b0, [1,2]
     # slice slicing
-    b1 = b.axis.x[1:]
+    b1 = b.axes.x[1:]
     yield npt.assert_equal, b1, [[3,4], [5,6]]
 
 def test_bad_axes_axes():
@@ -85,11 +85,11 @@ def test_1d():
     adata = [2,3]
     a = DataArray(adata, 'x', int)
     # Verify scalar extraction
-    yield (nt.assert_true,isinstance(a.axis.x[0],int))
+    yield (nt.assert_true,isinstance(a.axes.x[0],int))
     # Verify indexing of axis
-    yield (nt.assert_equals, a.axis.x.index, 0)
+    yield (nt.assert_equals, a.axes.x.index, 0)
     # Iteration checks
-    for i,val in enumerate(a.axis.x):
+    for i,val in enumerate(a.axes.x):
         yield (nt.assert_equals,val,adata[i])
         yield (nt.assert_true,isinstance(val,int))
 
@@ -97,22 +97,22 @@ def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     yield (nt.assert_equals, b.names, ('x','y'))
     # Check row named slicing
-    rs = b.axis.x[0]
+    rs = b.axes.x[0]
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
+    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
     # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.axis.x[1:].names, ('x','y'))
+    yield (nt.assert_equal, b.axes.x[1:].names, ('x','y'))
     # Check column named slicing
-    cs = b.axis.y[1]
+    cs = b.axes.y[1]
     yield (npt.assert_equal, cs, [2,4,6])
     yield nt.assert_equal, cs.names, ('x',)
-    yield nt.assert_equal, cs.axes, (Axis('x', 0, cs),)
+    yield nt.assert_equal, tuple(cs.axes), (Axis('x', 0, cs),)
     # What happens if we do normal slicing?
     rs = b[0]
     yield (npt.assert_equal, rs, [1,2])
     yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, rs.axes, (Axis('y', 0, rs),)
+    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
 
 def test__pull_axis():
     a = Axis('x', 0, None)
@@ -140,21 +140,21 @@ def test_axis_set_name():
     a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
     a.axes[0].set_name('u')
     yield nt.assert_equal, a.axes[0].name, 'u', 'name change failed'
-    yield nt.assert_equal, a.axis.u, a.axes[0], 'name remapping failed'
-    yield nt.assert_equal, a.axis.u.index, 0, 'name remapping failed'
+    yield nt.assert_equal, a.axes.u, a.axes[0], 'name remapping failed'
+    yield nt.assert_equal, a.axes.u.index, 0, 'name remapping failed'
 
 def test_array_set_name():
     a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
     a.set_name(0, 'u')
     yield nt.assert_equal, a.axes[0].name, 'u', 'name change failed'
-    yield nt.assert_equal, a.axis.u, a.axes[0], 'name remapping failed'
-    yield nt.assert_equal, a.axis.u.index, 0, 'name remapping failed'
+    yield nt.assert_equal, a.axes.u, a.axes[0], 'name remapping failed'
+    yield nt.assert_equal, a.axes.u.index, 0, 'name remapping failed'
     
 def test_axis_make_slice():
     p_arr = np.random.randn(2,4,5)
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
-    a = d_arr.axis.capitals
+    a = d_arr.axes.capitals
     sl = a.make_slice( slice('london', 'moscow')  )
     should_be = ( slice(None), slice(None), slice(1,4) )
     yield nt.assert_equal, should_be, sl, 'slicing tuple from labels not correct'
@@ -166,10 +166,10 @@ def test_labels_slicing():
     p_arr = np.random.randn(2,4,5)
     ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     d_arr = DataArray(p_arr, [None, None, ax_spec])
-    a = d_arr.axis.capitals
-    sub_arr = d_arr.axis.capitals['washington'::2]
+    a = d_arr.axes.capitals
+    sub_arr = d_arr.axes.capitals['washington'::2]
     yield (nt.assert_equal,
-           sub_arr.axis.capitals.labels,
+           sub_arr.axes.capitals.labels,
            a.labels[0::2])
     yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
 
@@ -236,7 +236,7 @@ def test_reshape_corners():
     
 def test_axis_as_index():
     narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]), axes=('a', 'b'))
-    npt.assert_array_equal(np.sum(narr, axis=narr.axis.a), [5, 7, 9])
+    npt.assert_array_equal(np.sum(narr, axis=narr.axes.a), [5, 7, 9])
 
 # -- Tests for redefined methods ---------------------------------------------
     
@@ -244,7 +244,7 @@ def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     bt = b.T
     c = DataArray([ [1,3,5], [2,4,6] ], 'yx')
-    yield nt.assert_true, bt.axis.x.index == 1 and bt.axis.y.index == 0
+    yield nt.assert_true, bt.axes.x.index == 1 and bt.axes.y.index == 0
     yield nt.assert_true, bt.shape == (2,3)
     yield nt.assert_true, (bt==c).all()
 
@@ -394,7 +394,7 @@ def test_shifty_axes():
     # slicing out the "x" Axis triggered the unlabeled axis to change
     # name from "_2" to "_1".. make sure that this change is mapped
     b = a[0,:2]
-    assert (b == arr[0,:2]).all(), 'shifty axes strike again!'
+    nt.assert_true((b == arr[0,:2]).all(), 'shifty axes strike again!')
     
 # -- Testing utility functions -----------------------------------------------
 from datarray.datarray import _expand_ellipsis, _make_singleton_axes
@@ -436,17 +436,7 @@ def test_singleton_axis_prep2():
     yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
     yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
           'axes computed poorly'
-
-def test_full_reduction():
-    # issue #2
-    nt.assert_equal(DataArray([1, 2, 3]).sum(axis=0),6)
     
-def test_1d_label_indexing():
-    # issue #18
-    cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
-    caps = DataArray(np.arange(5),[cap_ax_spec])
-    caps.axis.capitals["washington"]
-
 # -- Test binary operations --------------------------------------------------
 
 def test_label_mismatch():
@@ -457,3 +447,45 @@ def test_label_mismatch():
     nt.assert_raises(NamedAxisError, dar1.__mul__, dar2)
     nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
     
+# -- Test DataArray.axes
+class TestAxesManager:
+    def setUp(self):
+        self.axes_spec = ('date', ('stocks', ('aapl', 'ibm', 'goog', 'msft')), 'metric')
+        self.A = DataArray(np.random.randn(200, 4, 10), axes=self.axes_spec)
+
+    def test_axes_name_collision(self):
+        "Test .axes object for attribute collisions with axis names"
+        A = DataArray(np.arange(6).reshape([1,2,3]), 
+                ('_arr', '_axes', '_namemap'))
+        nt.assert_true(A.axes[0] is A.axes('_arr') is A.axes._arr)
+        nt.assert_true(A.axes[1] is A.axes('_axes') is A.axes._axes)
+        nt.assert_true(A.axes[2] is A.axes('_namemap') is A.axes._namemap)
+        
+        # Try to invoke some methods that use these attributes internally
+        B = A[np.newaxis, ...]
+        nt.assert_equal(B.shape, (1,1,2,3))
+        nt.assert_true(np.all(A + A == 2*A))
+
+    def test_axes_numeric_access(self):
+        for i,spec in enumerate(self.axes_spec):
+            try:
+                name,labels = spec
+            except ValueError:
+                name,labels = spec,None
+            nt.assert_true(self.A.axes[i] == Axis(name=name, index=i,
+                parent_arr=self.A, labels=labels))
+
+    def test_axes_attribute_access(self):
+        for spec in self.axes_spec:
+            try:
+                name,labels = spec
+            except ValueError:
+                name,labels = spec,None
+            nt.assert_true(getattr(self.A.axes, name) is self.A.axes(name))
+
+    def test_equality(self):
+        B = DataArray(np.random.randn(200, 4, 10), axes=self.axes_spec)
+        nt.assert_true(self.A.axes == B.axes)
+        # What if axes differ by labels only?
+        D = DataArray(np.random.randn(200, 4, 10), axes=('date', 'stocks', 'metric')) 
+        nt.assert_false(self.A.axes == D.axes)

@@ -34,5 +34,5 @@ Netherla  Uruguay   Germany   Spain
     col_spec = 'year', map(str, [1994, 1998, 2002, 2006, 2010])
 
     d_arr = DataArray(test_array, [row_spec, col_spec])
-    assert datarray_to_string(d_arr.axis.year['1994']) == grid_string
+    assert datarray_to_string(d_arr.axes.year['1994']) == grid_string
 
