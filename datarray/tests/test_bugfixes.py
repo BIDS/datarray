@@ -33,6 +33,29 @@ def test_bug26():
     a.axes[0].name = "a"
     nt.assert_equal(a.axes[0].name, "a")
 
+def test_bug35():
+    "Bug 35"
+    txt_array = DataArray(['a','b'], axes=['dummy'])
+    #calling datarray_to_string on string arrays used to fail
+    print_grid.datarray_to_string(txt_array)
+    #because get_formatter returned the class not an instance
+    assert isinstance(print_grid.get_formatter(txt_array),
+                      print_grid.StrFormatter)
+
+def test_bug38():
+    "Bug 38: DataArray.__repr__ should parse as a single entity"
+    # Calling repr() on an ndarray prepends array (instead of np.array)
+    array = np.array
+    arys = (
+        DataArray(np.random.randint(0, 10000, size=(1,2,3,4,5)), 'abcde'),
+        DataArray(np.random.randint(0, 10000, size=(3,3,3))), # Try with missing axes
+        DataArray(np.random.randint(0, 10000, (2,4,5,6)), # Try with ticks
+            ('a', ('b', ('b1','b2','b3','b4')), 'c', 'd')),
+        )
+    for A in arys:
+        print A
+        assert_datarray_equal(A, eval(repr(A)))
+
 def test_bug44():
     "Bug 44"
     # In instances where axis=None, the operation runs
@@ -43,16 +66,3 @@ def test_bug44():
     y = np.std(A)
     nt.assert_equal( x.sum(), y.sum() )
 
-def test_bug45():
-    "Bug 45: Support for np.outer()"
-    A = DataArray([1,2,3], 'a'); B = DataArray([2,3,4], 'b'); C = np.outer(A,B)
-    assert_datarray_equal(C,DataArray(C, 'ab'))
-
-def test_bug35():
-    "Bug 35"
-    txt_array = DataArray(['a','b'], axes=['dummy'])
-    #calling datarray_to_string on string arrays used to fail
-    print_grid.datarray_to_string(txt_array)
-    #because get_formatter returned the class not an instance
-    assert isinstance(print_grid.get_formatter(txt_array),
-                      print_grid.StrFormatter)
