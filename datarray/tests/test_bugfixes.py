@@ -20,6 +20,15 @@ def test_bug3():
     nt.assert_equal( x.sum(), y.sum() )
     nt.assert_equal( x.max(), y.max() )
 
+def test_bug5():
+    "Bug 5: Support 0d arrays"
+    A = DataArray(10)
+    # Empty tuples evaluate to false
+    nt.assert_false(tuple(A.axes))
+    nt.assert_equal(len(A.axes), 0)
+    nt.assert_raises(IndexError, lambda: A.axes[0])
+    nt.assert_false(A.names)
+
 def test_1d_label_indexing():
     # issue #18
     cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
