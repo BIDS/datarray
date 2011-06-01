@@ -292,7 +292,7 @@ class Axis(object):
 
         labels = kwargs.pop('labels', copy.copy(self.labels))
         ax.labels = labels
-        if labels and len(labels) != len(self.labels):
+        if labels is not None and len(labels) != len(self.labels):
             ax._label_dict = dict( zip(labels, xrange( len(labels) )) )
         else:
             ax._label_dict = copy.copy(self._label_dict)

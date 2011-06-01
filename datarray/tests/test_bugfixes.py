@@ -26,6 +26,12 @@ def test_1d_label_indexing():
     caps = DataArray(np.arange(5),[cap_ax_spec])
     caps.axes.capitals["washington"]
 
+def test_bug22():
+    "Bug 22: DataArray does not accepting array as ticks"
+    A = DataArray([1, 2], [('time', ['a', 'b'])])
+    B = DataArray([1, 2], [('time', np.array(['a', 'b']))])
+    assert_datarray_equal(A, B)
+
 def test_bug26():
     "Bug 26: check that axes names are computed on demand."
     a = DataArray([1,2,3])
