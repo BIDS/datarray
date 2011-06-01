@@ -85,11 +85,13 @@ class AxesManager(object):
     An axis can be indexed by integers or ticks:
 
     >>> np.all(A.axes.stocks['aapl':'goog'] == A.axes.stocks[0:2])
-    DataArray(True, dtype=bool)
-    ('date', 'stocks', 'metric')
+    DataArray(array(True, dtype=bool),
+    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
+
     >>> np.all(A.axes.stocks[0:2] == A[:,0:2,:])
-    DataArray(True, dtype=bool)
-    ('date', 'stocks', 'metric')
+    DataArray(array(True, dtype=bool),
+    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
+
 
     Axes can also be accessed numerically:
 
@@ -102,8 +104,8 @@ class AxesManager(object):
 
     >>> Ai = A.axes('stocks', 'date')
     >>> np.all(Ai['aapl':'goog', 100] == A[100, 0:2])
-    DataArray(True, dtype=bool)
-    ('stocks', 'metric')
+    DataArray(array(True, dtype=bool),
+    (('stocks', ('aapl', 'ibm')), 'metric'))
 
     You can also mix axis names and integers when calling AxesManager.
     (Not yet supported.)
@@ -132,10 +134,8 @@ class AxesManager(object):
     def __len__(self):
         return len(object.__getattribute__(self, '_axes'))
 
-    def __str__(self):
+    def __repr__(self):
         return str(tuple(self))
-
-    __repr__ = __str__
 
     def __getitem__(self, n):
         """Return the `n`th axis object of the array.
@@ -387,12 +387,10 @@ class Axis(object):
         return self.name == other.name and self.index == other.index and \
                self.labels == other.labels
 
-    def __str__(self):
+    def __repr__(self):
         return 'Axis(name=%r, index=%i, labels=%r)' % \
                (self.name, self.index, self.labels)
 
-    __repr__ = __str__
-    
     def __getitem__(self, key):
         """
         Return the item(s) of parent array along this axis as specified by `key`.
@@ -409,15 +407,19 @@ class Axis(object):
         >>> A = DataArray(np.arange(2*3*2).reshape([2,3,2]), \
                 ('a', ('b', ('b1','b2','b3')), 'c'))
         >>> b = A.axes.b
+       
         >>> np.all(b['b1'] == A[:,0,:])
-        DataArray(True, dtype=bool)
-        ('a', 'c')
-        >>> np.all(b['b1':'b2'] == A[:,0:1,:])
-        DataArray(True, dtype=bool)
-        ('a', 'b', 'c')
+        DataArray(array(True, dtype=bool),
+        ('a', 'c'))
+
         >>> np.all(b['b2':] == A[:,1:,:])
-        DataArray(True, dtype=bool)
-        ('a', 'b', 'c')
+        DataArray(array(True, dtype=bool),
+        ('a', ('b', ('b2', 'b3')), 'c'))
+
+        >>> np.all(b['b1':'b2'] == A[:,0:1,:])
+        DataArray(array(True, dtype=bool),
+        ('a', ('b', ('b1',)), 'c'))
+
         """
         # XXX We don't handle fancy indexing at the moment
         if isinstance(key, (np.ndarray, list)):
@@ -599,8 +601,8 @@ class Axis(object):
         >>> arr1 = darr.axes.b.keep(['c','d'])
         >>> arr2 = darr.axes.b.drop(['a','b','e'])
         >>> np.all(arr1 == arr2)
-        DataArray(True, dtype=bool)
-        ('a', 'b')
+        DataArray(array(True, dtype=bool),
+        ('a', ('b', ('c', 'd'))))
         """
 
         if not self.labels:
@@ -735,7 +737,6 @@ def _apply_reduction(opname, kwnames):
 def is_numpy_scalar(arr):
     return arr.ndim == 0
 
-
 def _apply_accumulation(opname, kwnames):
     super_op = getattr(np.ndarray, opname)
     if 'axis' not in kwnames:
@@ -763,7 +764,6 @@ def _apply_accumulation(opname, kwnames):
     return runs_op
             
 class DataArray(np.ndarray):
-
     # XXX- we need to figure out where in the numpy C code .T is defined!
     @property
     def T(self):
@@ -1003,15 +1003,20 @@ class DataArray(np.ndarray):
 
         return arr
 
+    def __str_repr_helper(self, ary_repr):
+        """Helper function for __str__ and __repr__. Produce a text
+        representation of the axis suitable for eval() as an argument to a
+        DataArray constructor."""
+        axis_spec = repr(tuple(ax.name if ax.labels is None 
+            else (ax.name, tuple(ax.labels)) for ax in self.axes))
+        return "%s(%s,\n%s)" % \
+                (self.__class__.__name__, ary_repr, axis_spec)
+
     def __str__(self):
-        s = super(DataArray, self).__str__()
-        s = '\n'.join([s, str(self.names)])
-        return s
+        return self.__str_repr_helper(np.asarray(self).__str__())
 
     def __repr__(self):
-        s = super(DataArray, self).__repr__()
-        s = '\n'.join([s, str(self.names)])
-        return s
+        return self.__str_repr_helper(np.asarray(self).__repr__())
 
     # Methods from ndarray
 
