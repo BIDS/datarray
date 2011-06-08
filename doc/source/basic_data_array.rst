@@ -18,11 +18,11 @@ DataArrays are constructed with array-like sequences and axis names::
     >>> narr = DataArray(np.zeros((1,2,3)), axes=('a', 'b', 'c'))
     >>> narr.names
     ('a', 'b', 'c')
-    >>> narr.axis.a
+    >>> narr.axes.a
     Axis(name='a', index=0, labels=None)
-    >>> narr.axis.b
+    >>> narr.axes.b
     Axis(name='b', index=1, labels=None)
-    >>> narr.axis.c
+    >>> narr.axes.c
     Axis(name='c', index=2, labels=None)
     >>> narr.shape
     (1, 2, 3)
@@ -90,13 +90,13 @@ A DataArray with simple named axes can be sliced many ways.
 Per Axis::
 
     >>> narr = DataArray(np.zeros((1,2,3)), axes=('a','b','c'))
-    >>> narr.axis.a
+    >>> narr.axes.a
     Axis(name='a', index=0, labels=None)
-    >>> narr.axis.a[0]
+    >>> narr.axes.a[0]
     DataArray([[ 0.,  0.,  0.],
            [ 0.,  0.,  0.]])
     ('b', 'c')
-    >>> narr.axis.a[0].axes
+    >>> narr.axes.a[0].axes
     (Axis(name='b', index=0, labels=None), Axis(name='c', index=1, labels=None))
 
 By normal "numpy" slicing::
@@ -105,7 +105,7 @@ By normal "numpy" slicing::
     (2, 3)
     >>> narr[0].axes
     (Axis(name='b', index=0, labels=None), Axis(name='c', index=1, labels=None))
-    >>> narr.axis.a[0].axes == narr[0,:].axes
+    >>> narr.axes.a[0].axes == narr[0,:].axes
     True
 
 Also, slicing with ``newaxis`` is implemented::
@@ -123,9 +123,9 @@ Axis::
 
     >>> b.axes
     (Axis(name='x', index=0, labels=None), Axis(name='y', index=1, labels=None), Axis(name='z', index=2, labels=None))
-    >>> b.axis.y[np.newaxis].names
+    >>> b.axes.y[np.newaxis].names
     ('x', None, 'y', 'z')
-    >>> b.axis.y[np.newaxis].shape
+    >>> b.axes.y[np.newaxis].shape
     (3, 1, 2, 4)
 
 Slicing and labels
@@ -141,13 +141,13 @@ It is also possible to use labels in any of the slicing syntax above:
      [10, 11, 12, 13, 14],
      [15, 16, 17, 18, 19]])
     ('time', 'capitals')
-    >>> time_caps.axis.capitals['berlin'::-1] #doctest: +NORMALIZE_WHITESPACE
+    >>> time_caps.axes.capitals['berlin'::-1] #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 2,  1,  0],
      [ 7,  6,  5],
      [12, 11, 10],
      [17, 16, 15]])
     ('time', 'capitals')
-    >>> time_caps.axis.time['0015':'1815'] #doctest: +NORMALIZE_WHITESPACE
+    >>> time_caps.axes.time['0015':'1815'] #doctest: +NORMALIZE_WHITESPACE
     DataArray([[ 0,  1,  2,  3,  4],
      [ 5,  6,  7,  8,  9],
      [10, 11, 12, 13, 14]])
@@ -167,7 +167,7 @@ however, must be None or an nonzero integer.*
 **Historical note: previously integer labels clobbered indices.** For example::
 
     >>> centered_data = DataArray(np.random.randn(6), [ ('c_idx', range(-3,3)) ])
-    >>> centered_data.axis.c_idx.make_slice( slice(0, 6, None) )
+    >>> centered_data.axes.c_idx.make_slice( slice(0, 6, None) )
     (slice(3, 6, None),)
 
 .. note::
@@ -184,9 +184,9 @@ Possible resolution 1
 
 "larry" would make this distinction::
 
-    >>> centered_data.axis.c_idx[ [0]:[2] ]
+    >>> centered_data.axes.c_idx[ [0]:[2] ]
     >>> < returns underlying array from [3:5] >
-    >>> centered_data.axis.c_idx[ 0:2 ]
+    >>> centered_data.axes.c_idx[ 0:2 ]
     >>> < returns underlying array from [0:2] >
 
 And I believe mixing of labels and is valid also.
@@ -300,7 +300,7 @@ The rule for dimension compatibility is that any two axes match if one of the fo
 The broadcasting rules currently allow this combination. I'm inclined to allow
 it. Even though the axes are different lengths in ``a`` and ``b``, and
 therefore *might* be considered different logical axes, there is no actual
-information collision from ``a.axis.y``.
+information collision from ``a.axes.y``.
 
 .. _iteration:
 
@@ -348,7 +348,7 @@ seems to work::
 
 Or even more conveniently::
 
-    >>> for foo in time_caps.axis.capitals:
+    >>> for foo in time_caps.axes.capitals:
     ...     print foo
     ...
     [ 0  5 10 15]
