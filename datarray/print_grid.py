@@ -273,8 +273,8 @@ def grid_layout(arr, width=75, height=10):
 def labeled_layout(arr, width=75, height=10, row_label_width=9):
     """
     Given a 2-D non-empty array that may have labeled axes, rows, or columns,
-    render the array as strings to be joined and attach the axes in
-    visually appropriate places.
+    render the array as strings to be joined and attach the axes in visually
+    appropriate places.
 
     Returns a list of lists of strings to be joined.
     """
@@ -306,7 +306,7 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         offset = 0
         if arr.axes[1].labels: offset = 1
         for r in xrange(cells_shown.shape[0]):
-            layout[r+offset][0] = label_formatter.format(labels[r], row_label_width)
+            layout[r+offset][0] = label_formatter.format(str(labels[r]), row_label_width)
     
     if row_header or col_header:
         header0 = []
