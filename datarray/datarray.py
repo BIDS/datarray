@@ -292,7 +292,7 @@ class Axis(object):
 
         labels = kwargs.pop('labels', copy.copy(self.labels))
         ax.labels = labels
-        if labels and len(labels) != len(self.labels):
+        if labels is not None and len(labels) != len(self.labels):
             ax._label_dict = dict( zip(labels, xrange( len(labels) )) )
         else:
             ax._label_dict = copy.copy(self._label_dict)
@@ -631,16 +631,10 @@ def _names_to_numbers(axes, ax_ids):
             proc_ids.append(int(ax_id))
     return proc_ids
 
-
-
-def _validate_axes(axes):
-    """
-    This should always be true our axis lists....
-    """
-    p = axes[0].parent_arr
-    for i, a in enumerate(axes):
-        assert i == a.index
-        assert p is a.parent_arr
+def _validate_axes(arr):
+    # This should always be true our axis lists....
+    assert all(i == a.index and arr is a.parent_arr 
+            for i,a in enumerate(arr.axes))
 
 def _pull_axis(axes, target_axis):
     """
@@ -801,7 +795,7 @@ class DataArray(np.ndarray):
             axlist.append(Axis(name, i, arr, labels=labels))
 
         _set_axes(arr, axlist)
-        _validate_axes(axlist)
+        _validate_axes(arr)
 
         return arr
 
@@ -848,7 +842,7 @@ class DataArray(np.ndarray):
         _set_axes(self, obj.axes)
             
         # validate the axes
-        _validate_axes(self.axes)
+        _validate_axes(self)
 
     def __array_prepare__(self, obj, context=None):
         "Called at the beginning of each ufunc."

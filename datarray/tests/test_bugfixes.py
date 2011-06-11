@@ -20,11 +20,26 @@ def test_bug3():
     nt.assert_equal( x.sum(), y.sum() )
     nt.assert_equal( x.max(), y.max() )
 
+def test_bug5():
+    "Bug 5: Support 0d arrays"
+    A = DataArray(10)
+    # Empty tuples evaluate to false
+    nt.assert_false(tuple(A.axes))
+    nt.assert_equal(len(A.axes), 0)
+    nt.assert_raises(IndexError, lambda: A.axes[0])
+    nt.assert_false(A.names)
+
 def test_1d_label_indexing():
     # issue #18
     cap_ax_spec = 'capitals', ['washington', 'london', 'berlin', 'paris', 'moscow']
     caps = DataArray(np.arange(5),[cap_ax_spec])
     caps.axes.capitals["washington"]
+
+def test_bug22():
+    "Bug 22: DataArray does not accepting array as ticks"
+    A = DataArray([1, 2], [('time', ['a', 'b'])])
+    B = DataArray([1, 2], [('time', np.array(['a', 'b']))])
+    assert_datarray_equal(A, B)
 
 def test_bug26():
     "Bug 26: check that axes names are computed on demand."
@@ -33,6 +48,17 @@ def test_bug26():
     a.axes[0].name = "a"
     nt.assert_equal(a.axes[0].name, "a")
 
+def test_bug34():
+    "Bug 34: datetime.date ticks not handled by datarray_to_string"
+    from datarray.print_grid import datarray_to_string
+    from datetime import date as D
+    A = DataArray([[1,2],[3,4]], [('row', ('a', D(2010,1,1))),('col', 'cd')])
+    nt.assert_equal(datarray_to_string(A), """row       col                
+--------- -------------------
+          c         d        
+a                 1         2
+2010-01-0         3         4""")
+    
 def test_bug35():
     "Bug 35"
     txt_array = DataArray(['a','b'], axes=['dummy'])
