@@ -2,6 +2,13 @@
 # Imports
 #-----------------------------------------------------------------------------
 
+# Py2-backwards compatibility
+try:
+  basestring
+except NameError:
+  basestring = str
+
+
 import copy
 import numpy as np
 
@@ -275,7 +282,7 @@ class Axis(object):
         Examples
         --------
 
-        >>> a1 = Axis('time', 0, None, labels=[str(i) for i in xrange(10)])
+        >>> a1 = Axis('time', 0, None, labels=[str(i) for i in range(10)])
         >>> a1
         Axis(name='time', index=0, labels=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
         >>> a2 = a1._copy(labels=a1.labels[3:6])
@@ -293,7 +300,7 @@ class Axis(object):
         labels = kwargs.pop('labels', copy.copy(self.labels))
         ax.labels = labels
         if labels is not None and len(labels) != len(self.labels):
-            ax._label_dict = dict( zip(labels, xrange( len(labels) )) )
+            ax._label_dict = dict( zip(labels, range( len(labels) )) )
         else:
             ax._label_dict = copy.copy(self._label_dict)
         return ax
@@ -335,7 +342,7 @@ class Axis(object):
             raise ValueError('Labels cannot be integers')
         
         # Validate uniqueness
-        t_dict = dict(zip(labels, xrange(nlabels)))
+        t_dict = dict(zip(labels, range(nlabels)))
         if len(t_dict) != nlabels:
             raise ValueError('non-unique label values not supported')
         return t_dict
@@ -350,9 +357,9 @@ class Axis(object):
         self.name = name
         pa = self.parent_arr
         nd = pa.ndim
-        newaxes = [pa.axes[i] for i in xrange(self.index)]
+        newaxes = [pa.axes[i] for i in range(self.index)]
         newaxes += [self]
-        newaxes += [pa.axes[i] for i in xrange(self.index+1,nd)]
+        newaxes += [pa.axes[i] for i in range(self.index+1,nd)]
         _set_axes(pa, newaxes)
         
     def __len__(self):
@@ -983,8 +990,8 @@ class DataArray(np.ndarray):
 
             # Pop the axes off in descending order to prevent index renumbering
             # headaches 
-            reductions = reversed(sorted(zip(key, new_axes), None, 
-                key=lambda k,ax: ax.index))
+            reductions = list(reversed(sorted(zip(key, new_axes), 
+                                         key=lambda ax: ax.index)))
             arr = self
             for k,ax in reductions:
                 arr = arr.axes[ax.index][k]
@@ -1076,8 +1083,8 @@ class DataArray(np.ndarray):
 
     def squeeze(self):
         axes = list(self.axes)
-        pinched_axes = filter(lambda x: self.shape[x.index]==1, axes)
-        squeezed_shape = filter(lambda d: d>1, self.shape)
+        pinched_axes = list(filter(lambda x: self.shape[x.index]==1, axes))
+        squeezed_shape = list(filter(lambda d: d>1, self.shape))
         axes = _pull_axis(axes, pinched_axes)
         arr = self.reshape(squeezed_shape)
         _set_axes(arr, axes)
@@ -1098,8 +1105,8 @@ class DataArray(np.ndarray):
         # or pop an Axis
         old_shape = list(self.shape)
         new_shape = list(args)
-        old_non_single_dims = filter(lambda d: d>1, old_shape)
-        new_non_single_dims = filter(lambda d: d>1, new_shape)
+        old_non_single_dims = list(filter(lambda d: d>1, old_shape))
+        new_non_single_dims = list(filter(lambda d: d>1, new_shape))
         axes_to_pull = []
         axes = list(self.axes)
         if old_non_single_dims == new_non_single_dims:
@@ -1112,7 +1119,7 @@ class DataArray(np.ndarray):
                     i += 1
                 j += 1
             # pull anything that extends past the length of the new shape
-            axes_to_pull += [self.axes[i] for i in xrange(j, len(old_shape))]
+            axes_to_pull += [self.axes[i] for i in range(j, len(old_shape))]
             old_shape = [self.shape[ax.index]
                          for ax in axes if ax not in axes_to_pull]
             axes = _pull_axis(axes, axes_to_pull)
@@ -1283,7 +1290,7 @@ def _make_singleton_axes(arr, key):
 
     # The full slicer will be length=arr.ndim + # of dummy-dims..
     # Boost up the slices to full "rank" ( can cut it down later for savings )
-    n_new_dims = len(filter(lambda x: x is None, key))
+    n_new_dims = len(list(filter(lambda x: x is None, key)))
     key = key + (slice(None),) * (arr.ndim + n_new_dims - len(key))
     # wherever there is a None in the key,
     # * replace it with slice(None)

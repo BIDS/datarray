@@ -15,7 +15,7 @@ Spain      2.142857  2.285714  2.428571  2.571429  2.714286
     
     test_array = np.arange(20).reshape((4, 5)) / 7.0
     row_spec = 'country', ['Netherlands', 'Uruguay', 'Germany', 'Spain']
-    col_spec = 'year', map(str, [1994, 1998, 2002, 2006, 2010])
+    col_spec = 'year', list(map(str, [1994, 1998, 2002, 2006, 2010]))
 
     d_arr = DataArray(test_array, [row_spec, col_spec])
     assert datarray_to_string(d_arr) == grid_string
@@ -31,7 +31,7 @@ Netherla  Uruguay   Germany   Spain
     
     test_array = np.arange(20).reshape((4, 5)) / 7.0
     row_spec = 'country', ['Netherlands', 'Uruguay', 'Germany', 'Spain']
-    col_spec = 'year', map(str, [1994, 1998, 2002, 2006, 2010])
+    col_spec = 'year', list(map(str, [1994, 1998, 2002, 2006, 2010]))
 
     d_arr = DataArray(test_array, [row_spec, col_spec])
     assert datarray_to_string(d_arr.axes.year['1994']) == grid_string

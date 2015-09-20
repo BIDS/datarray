@@ -4,6 +4,8 @@
 # Imports
 #-----------------------------------------------------------------------------
 # Stdlib
+from __future__ import print_function
+
 import distutils.version as v
 
 # Third-party
