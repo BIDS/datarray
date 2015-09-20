@@ -16,7 +16,7 @@ if v.LooseVersion(np.__version__) < v.LooseVersion('1.4'):
 try:
     from .testing.testlib import test
 except ImportError:
-    print "No datarray unit testing available."
+    print("No datarray unit testing available.")
     
 from .version import __version__
 from .datarray import DataArray

@@ -101,7 +101,7 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         # Both x and y are scalars        
         try:
             assert_equal(x, y)
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('SCALARS') + str(err))
             
     elif (type(x) is np.ndarray) and (type(y) is np.ndarray):
@@ -109,7 +109,7 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         # Both x and y are scalars       
         try:
             assert_array_equal(x, y)
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('ARRAYS') + str(err))            
                 
     elif (type(x) == DataArray) + (type(y) == DataArray) == 1:
@@ -117,7 +117,7 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         # Only one of x and y are datarrays; test failed
         try: 
             assert_equal(type(x), type(y))
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('TYPE') + str(err))
                                                    
     else:
@@ -127,27 +127,27 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         # shape
         try:         
             assert_equal(x.shape, y.shape)
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('SHAPE') + str(err))       
 
         # axis names
         try:         
             assert_equal(x.names, y.names)
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('AXIS NAMES') + str(err))
             
         # labels
         for ax in range(x.ndim):
-            try:         
+            try:
                 assert_equal(x.axes[ax].labels, y.axes[ax].labels)
-            except AssertionError, err:
+            except (AssertionError, err):
                 fail.append(heading('LABELS ALONG AXIS = %d' % ax) + str(err))                         
 
         # axes
         for ax in range(x.ndim):
             try:         
                 assert_(x.axes[ax], y.axes[ax])
-            except AssertionError, err:
+            except (AssertionError, err):
                 fail.append(heading('AXIS OBJECT ALONG AXIS = %d' % ax) + str(err))
                 fail.append('x: ' + str(x.axes[ax]))
                 fail.append('y: ' + str(y.axes[ax]))
@@ -155,7 +155,7 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         # data
         try:         
             assert_array_equal(x.base, y.base)
-        except AssertionError, err:
+        except (AssertionError, err):
             fail.append(heading('ARRAY') + str(err))                
     
     # Did the test pass?    
@@ -168,7 +168,7 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
                 err_msg = heading("TEST: " + err_msg) + err_msgs
             else:
                 err_msg = err_msgs           
-            raise AssertionError, err_msg
+            raise (AssertionError, err_msg)
         else:
             raise AssertionError                    
         
