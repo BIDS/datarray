@@ -1,5 +1,6 @@
 *.py[oc]
 *.so
+__pycache__/
 # setup.py working directory
 build
 # setup.py dist directory
@@ -30,3 +31,4 @@ doc/build
 
 # Build products
 MANIFEST
+*.egg-info/
