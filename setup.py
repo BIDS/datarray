@@ -11,7 +11,9 @@ from distutils.core import setup
 
 # Get version and release info, which is all stored in datarray/version.py
 ver_file = os.path.join('datarray', 'version.py')
-execfile(ver_file)
+# Use exec on contents for Python 3 compatibility
+with open(ver_file, 'rt') as fobj:
+    exec(fobj.read())
 
 opts = dict(name=NAME,
             maintainer=MAINTAINER,
