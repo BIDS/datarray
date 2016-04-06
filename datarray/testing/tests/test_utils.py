@@ -7,11 +7,11 @@ from datarray.datarray import DataArray
 from datarray.testing.utils import assert_datarray_equal
 
 def test_assert_datarray_equal():
-    "Test assert_datarray_equal"
+    # Test assert_datarray_equal
     
     x = DataArray([1, 2])
     y = DataArray([1, 2])
-    yield assert_datarray_equal, x, y, "Should not raise assertion"
+    assert_datarray_equal(x, y, "Should not raise assertion")
     y = DataArray([1, 3])
     assert_raises(AssertionError, assert_datarray_equal, x, y)
     y = DataArray([1, 2, 3])
@@ -23,7 +23,7 @@ def test_assert_datarray_equal():
     
     x = DataArray([1, 2], 'a')
     y = DataArray([1, 2], 'a')
-    yield assert_datarray_equal, x, y, "Should not raise assertion" 
+    assert_datarray_equal(x, y, "Should not raise assertion")
     y = DataArray([1, 2], 'b')       
     assert_raises(AssertionError, assert_datarray_equal, x, y)
     y = DataArray([1, 2], [('b', ['a', 'b'])])       
@@ -31,11 +31,11 @@ def test_assert_datarray_equal():
         
     x = DataArray([1, 2], 'a')    
     y = DataArray([1, 2], [('a', None)])       
-    yield assert_datarray_equal, x, y, "Should not raise assertion"
+    assert_datarray_equal(x, y, "Should not raise assertion")
     
     x = DataArray([[1, 2], [3, 4]], [('ax1', ['a', 'b']), ('ax2', ['a', 'b'])])
     y = DataArray([[1, 2], [3, 4]], [('ax1', ['a', 'b']), ('ax2', ['a', 'b'])])
-    yield assert_datarray_equal, x, y, "Should not raise assertion"            
+    assert_datarray_equal(x, y, "Should not raise assertion")
     y = DataArray([[1, 2], [3, 4]], [('ax1', ['X', 'b']), ('ax2', ['a', 'b'])])
     assert_raises(AssertionError, assert_datarray_equal, x, y)
     y = DataArray([[1, 2], [3, 4]], [('ax1', ['a', 'b']), ('ax2', None)])    
@@ -45,7 +45,7 @@ def test_assert_datarray_equal():
     
     x = DataArray([1, np.nan])
     y = DataArray([1, np.nan])
-    yield assert_datarray_equal, x, y, "Should not raise assertion"  
+    assert_datarray_equal(x, y, "Should not raise assertion")
     
     x = DataArray([1, 2], 'a')
     y = 1      

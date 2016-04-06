@@ -11,24 +11,24 @@ import numpy.testing as npt
 def test_axis_equal():
     ax1 = Axis('aname', 0, None)
     ax2 = Axis('aname', 0, None)
-    yield nt.assert_equal, ax1, ax2
+    nt.assert_equal(ax1, ax2)
     # The array to which the axis points does not matter in comparison
     ax3 = Axis('aname', 0, np.arange(10))
-    yield nt.assert_equal, ax1, ax3
+    nt.assert_equal(ax1, ax3)
     # but the index does
     ax4 = Axis('aname', 1, None)
-    yield nt.assert_not_equal, ax1, ax4
+    nt.assert_not_equal(ax1, ax4)
     # so does the name
     ax5 = Axis('anothername', 0, None)
-    yield nt.assert_not_equal, ax1, ax5
+    nt.assert_not_equal(ax1, ax5)
     # and obviously both
-    yield nt.assert_not_equal, ax4, ax5
+    nt.assert_not_equal(ax4, ax5)
     # Try with labels
     ax6 = Axis('same', 0, None, labels=['a', 'b'])
     ax7 = Axis('same', 0, None, labels=['a', 'b'])
-    yield nt.assert_equal, ax6, ax7
+    nt.assert_equal(ax6, ax7)
     ax8 = Axis('same', 0, None, labels=['a', 'xx'])
-    yield nt.assert_not_equal, ax6, ax8
+    nt.assert_not_equal(ax6, ax8)
 
 def test_bad_labels1():
     d = np.zeros(5)
@@ -48,16 +48,16 @@ def test_bad_labels3():
 def test_basic():
     adata = [2,3]
     a = DataArray(adata, 'x', float)
-    yield nt.assert_equal, a.names, ('x',)
-    yield nt.assert_equal, a.dtype, np.dtype(float)
+    nt.assert_equal(a.names, ('x',))
+    nt.assert_equal(a.dtype, np.dtype(float))
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield nt.assert_equal, b.names, ('x','y')
+    nt.assert_equal(b.names, ('x','y'))
     # integer slicing
     b0 = b.axes.x[0]
-    yield npt.assert_equal, b0, [1,2]
+    npt.assert_equal(b0, [1,2])
     # slice slicing
     b1 = b.axes.x[1:]
-    yield npt.assert_equal, b1, [[3,4], [5,6]]
+    npt.assert_equal(b1, [[3,4], [5,6]])
 
 def test_bad_axes_axes():
     d = np.random.randn(3,2)
@@ -66,53 +66,53 @@ def test_bad_axes_axes():
 def test_combination():
     narr = DataArray(np.zeros((1,2,3)), axes=('a','b','c'))
     n3 = DataArray(np.ones((1,2,3)), axes=('x','b','c'))
-    yield nt.assert_raises, NamedAxisError, np.add, narr, n3
+    nt.assert_raises(NamedAxisError, np.add, narr, n3)
     # addition of scalar
     res = narr + 2
-    yield nt.assert_true, isinstance(res, DataArray)
-    yield nt.assert_equal, res.axes, narr.axes
+    nt.assert_true(isinstance(res, DataArray))
+    nt.assert_equal(res.axes, narr.axes)
     # addition of matching size array, with matching names
     res = narr + narr
-    yield nt.assert_equal, res.axes, narr.axes
+    nt.assert_equal(res.axes, narr.axes)
 
 def test_label_change():
     a = DataArray([1,2,3])
-    yield nt.assert_equal, a.names, (None,)
+    nt.assert_equal(a.names, (None,))
     a.axes[0].name = "test"
-    yield nt.assert_equal, a.names, ("test",)
+    nt.assert_equal(a.names, ("test",))
 
 def test_1d():
     adata = [2,3]
     a = DataArray(adata, 'x', int)
     # Verify scalar extraction
-    yield (nt.assert_true,isinstance(a.axes.x[0],int))
+    nt.assert_true(isinstance(a.axes.x[0], int))
     # Verify indexing of axis
-    yield (nt.assert_equals, a.axes.x.index, 0)
+    nt.assert_equals(a.axes.x.index, 0)
     # Iteration checks
     for i,val in enumerate(a.axes.x):
-        yield (nt.assert_equals,val,adata[i])
-        yield (nt.assert_true,isinstance(val,int))
+        nt.assert_equals(val, adata[i])
+        nt.assert_true(isinstance(val, int))
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
-    yield (nt.assert_equals, b.names, ('x','y'))
+    nt.assert_equals(b.names, ('x', 'y'))
     # Check row named slicing
     rs = b.axes.x[0]
-    yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
+    npt.assert_equal(rs, [1,2])
+    nt.assert_equal(rs.names, ('y',))
+    nt.assert_equal(tuple(rs.axes), (Axis('y', 0, rs),))
     # Now, check that when slicing a row, we get the right names in the output
-    yield (nt.assert_equal, b.axes.x[1:].names, ('x','y'))
+    nt.assert_equal(b.axes.x[1:].names, ('x','y'))
     # Check column named slicing
     cs = b.axes.y[1]
-    yield (npt.assert_equal, cs, [2,4,6])
-    yield nt.assert_equal, cs.names, ('x',)
-    yield nt.assert_equal, tuple(cs.axes), (Axis('x', 0, cs),)
+    npt.assert_equal(cs, [2, 4, 6])
+    nt.assert_equal(cs.names, ('x',))
+    nt.assert_equal(tuple(cs.axes), (Axis('x', 0, cs),))
     # What happens if we do normal slicing?
     rs = b[0]
-    yield (npt.assert_equal, rs, [1,2])
-    yield nt.assert_equal, rs.names, ('y',)
-    yield nt.assert_equal, tuple(rs.axes), (Axis('y', 0, rs),)
+    npt.assert_equal(rs, [1, 2])
+    nt.assert_equal(rs.names, ('y',))
+    nt.assert_equal(tuple(rs.axes), (Axis('y', 0, rs),))
 
 def test__pull_axis():
     a = Axis('x', 0, None)
@@ -121,12 +121,12 @@ def test__pull_axis():
     t_pos = Axis('y', 1, None)
     t_neg = Axis('x', 5, None)
     axes = [a, b, c]
-    yield nt.assert_true, t_pos in axes
-    yield nt.assert_false, t_neg in axes
-    yield nt.assert_equal, axes, _pull_axis(axes, t_neg)
-    yield nt.assert_equal, axes[:-1], _pull_axis(axes, c)
+    nt.assert_true(t_pos in axes)
+    nt.assert_false(t_neg in axes)
+    nt.assert_equal(axes, _pull_axis(axes, t_neg))
+    nt.assert_equal(axes[:-1], _pull_axis(axes, c))
     new_axes = [a, Axis('z', 1, None)]
-    yield nt.assert_equal, new_axes, _pull_axis(axes, t_pos)
+    nt.assert_equal(new_axes, _pull_axis(axes, t_pos))
 
 def test__reordered_axes():
     a = Axis('x', 0, None)
@@ -134,21 +134,21 @@ def test__reordered_axes():
     c = Axis('z', 2, None)
     res = _reordered_axes([a,b,c], (1,2,0))
     names_inds = [(ax.name, ax.index) for ax in res]
-    yield nt.assert_equal, set(names_inds), set([('y',0),('z',1),('x',2)])
+    nt.assert_equal(set(names_inds), set([('y',0),('z',1),('x',2)]))
 
 def test_axis_set_name():
     a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
     a.axes[0].set_name('u')
-    yield nt.assert_equal, a.axes[0].name, 'u', 'name change failed'
-    yield nt.assert_equal, a.axes.u, a.axes[0], 'name remapping failed'
-    yield nt.assert_equal, a.axes.u.index, 0, 'name remapping failed'
+    nt.assert_equal(a.axes[0].name, 'u', 'name change failed')
+    nt.assert_equal(a.axes.u, a.axes[0], 'name remapping failed')
+    nt.assert_equal(a.axes.u.index, 0, 'name remapping failed')
 
 def test_array_set_name():
     a = DataArray(np.arange(20).reshape(2,5,2), 'xyz')
     a.set_name(0, 'u')
-    yield nt.assert_equal, a.axes[0].name, 'u', 'name change failed'
-    yield nt.assert_equal, a.axes.u, a.axes[0], 'name remapping failed'
-    yield nt.assert_equal, a.axes.u.index, 0, 'name remapping failed'
+    nt.assert_equal(a.axes[0].name, 'u', 'name change failed')
+    nt.assert_equal(a.axes.u, a.axes[0], 'name remapping failed')
+    nt.assert_equal(a.axes.u.index, 0, 'name remapping failed')
     
 def test_axis_make_slice():
     p_arr = np.random.randn(2,4,5)
@@ -157,9 +157,9 @@ def test_axis_make_slice():
     a = d_arr.axes.capitals
     sl = a.make_slice( slice('london', 'moscow')  )
     should_be = ( slice(None), slice(None), slice(1,4) )
-    yield nt.assert_equal, should_be, sl, 'slicing tuple from labels not correct'
+    nt.assert_equal(should_be, sl, 'slicing tuple from labels not correct')
     sl = a.make_slice( slice(1,4) )
-    yield nt.assert_equal, should_be, sl, 'slicing tuple from idx not correct'
+    nt.assert_equal(should_be, sl, 'slicing tuple from idx not correct')
 
 # also test with the slicing syntax
 def test_labels_slicing():
@@ -168,10 +168,9 @@ def test_labels_slicing():
     d_arr = DataArray(p_arr, [None, None, ax_spec])
     a = d_arr.axes.capitals
     sub_arr = d_arr.axes.capitals['washington'::2]
-    yield (nt.assert_equal,
-           sub_arr.axes.capitals.labels,
-           a.labels[0::2])
-    yield nt.assert_true, (sub_arr == d_arr[:,:,0::2]).all()
+    nt.assert_equal(sub_arr.axes.capitals.labels,
+                    a.labels[0::2])
+    nt.assert_true((sub_arr == d_arr[:,:,0::2]).all())
 
 # -- Tests for reshaping -----------------------------------------------------
 
@@ -179,26 +178,26 @@ def test_flatten_and_ravel():
     "Test the functionality of ravel() and flatten() methods"
     d = DataArray(np.arange(20).reshape(4,5), 'xy')
     df = d.flatten()
-    yield nt.assert_true, type(df) is np.ndarray, 'Type error in flatten'
-    yield nt.assert_true, df.shape == (20,), 'Wrong shape in flatten'
+    nt.assert_true(type(df) is np.ndarray, 'Type error in flatten')
+    nt.assert_true(df.shape == (20,), 'Wrong shape in flatten')
     df[:4] = 0
-    yield nt.assert_false, (d[0,:4] == 0).all(), 'Copy not made in flatten'
+    nt.assert_false((d[0,:4] == 0).all(), 'Copy not made in flatten')
 
     dr = d.ravel()
-    yield nt.assert_true, type(dr) is np.ndarray, 'Type error in ravel'
-    yield nt.assert_true, dr.shape == (20,), 'Wrong shape in ravel'
+    nt.assert_true(type(dr) is np.ndarray, 'Type error in ravel')
+    nt.assert_true(dr.shape == (20,), 'Wrong shape in ravel')
     dr[:4] = 0
-    yield nt.assert_true, (d[0,:4] == 0).all(), 'View not made in ravel'
+    nt.assert_true((d[0,:4] == 0).all(), 'View not made in ravel')
 
 def test_squeeze():
     "Test squeeze method"
     d = DataArray(np.random.randn(3,2,9), 'xyz')
     d2 = d[None,:,None,:,:,None]
-    yield nt.assert_true, d2.shape == (1,3,1,2,9,1), 'newaxis slicing failed'
+    nt.assert_true(d2.shape == (1,3,1,2,9,1), 'newaxis slicing failed')
     d3 = d.squeeze()
-    yield nt.assert_true, d3.shape == d.shape, \
-          'squeezing length-1 dimensions failed'
-    yield nt.assert_true, d3.names == d.names, 'Axes got lost in squeeze'
+    nt.assert_true(d3.shape == d.shape,
+                   'squeezing length-1 dimensions failed')
+    nt.assert_true(d3.names == d.names, 'Axes got lost in squeeze')
 
 def test_reshape():
     d = DataArray(np.random.randn(3,4,5), 'xyz')
@@ -206,33 +205,34 @@ def test_reshape():
     # Test padding the shape
     d2 = d.reshape(new_shape)
     new_labels = (None, 'x', None, 'y', 'z')
-    yield nt.assert_true, d2.names == new_labels, \
-          'Array with inserted dimensions has wrong labels'
-    yield nt.assert_true, d2.shape == new_shape, 'New shape wrong'
+    nt.assert_true(d2.names == new_labels,
+                   'Array with inserted dimensions has wrong labels')
+    nt.assert_true(d2.shape == new_shape, 'New shape wrong')
 
     # Test trimming the shape
     d3 = d2.reshape(d.shape)
-    yield nt.assert_true, d3.names == d.names, \
-          'Array with removed dimensions has wrong labels'
-    yield nt.assert_true, d3.shape == d.shape, 'New shape wrong'
+    nt.assert_true(d3.names == d.names,
+                   'Array with removed dimensions has wrong labels')
+    nt.assert_true(d3.shape == d.shape, 'New shape wrong')
 
     # Test a combo of padding and trimming
     d4 = d2.reshape(3,4,1,5,1)
     new_labels = ('x', 'y', None, 'z', None)
-    yield nt.assert_true, d4.names == new_labels, \
-          'Array with inserted and removed dimensions has wrong labels'
-    yield nt.assert_true, d4.shape == (3,4,1,5,1), 'New shape wrong'
+    nt.assert_true(
+        d4.names == new_labels,
+        'Array with inserted and removed dimensions has wrong labels')
+    nt.assert_true(d4.shape == (3, 4, 1, 5, 1), 'New shape wrong')
 
 def test_reshape_corners():
     "Test some corner cases for reshape"
     d = DataArray(np.random.randn(3,4,5), 'xyz')
     d2 = d.reshape(-1)
-    yield nt.assert_true, d2.shape == (60,), 'Flattened shape wrong'
-    yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
+    nt.assert_true(d2.shape == (60,), 'Flattened shape wrong')
+    nt.assert_true(type(d2) is np.ndarray, 'Flattened type wrong')
 
     d2 = d.reshape(60)
-    yield nt.assert_true, d2.shape == (60,), 'Flattened shape wrong'
-    yield nt.assert_true, type(d2) is np.ndarray, 'Flattened type wrong'
+    nt.assert_true(d2.shape == (60,), 'Flattened shape wrong')
+    nt.assert_true(type(d2) is np.ndarray, 'Flattened type wrong')
     
 def test_axis_as_index():
     narr = DataArray(np.array([[1, 2, 3], [4, 5, 6]]), axes=('a', 'b'))
@@ -244,18 +244,18 @@ def test_transpose():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     bt = b.T
     c = DataArray([ [1,3,5], [2,4,6] ], 'yx')
-    yield nt.assert_true, bt.axes.x.index == 1 and bt.axes.y.index == 0
-    yield nt.assert_true, bt.shape == (2,3)
-    yield nt.assert_true, (bt==c).all()
+    nt.assert_true(bt.axes.x.index == 1 and bt.axes.y.index == 0)
+    nt.assert_true(bt.shape == (2,3))
+    nt.assert_true((bt==c).all())
 
 def test_swapaxes():
     n_arr = np.random.randn(2,4,3)
     a = DataArray(n_arr, 'xyz')
     b = a.swapaxes('x', 'z')
     c = DataArray(n_arr.transpose(2,1,0), 'zyx')
-    yield nt.assert_true, (c==b).all(), 'data not equal in swapaxes test'
+    nt.assert_true((c==b).all(), 'data not equal in swapaxes test')
     for ax1, ax2 in zip(b.axes, c.axes):
-        yield nt.assert_true, ax1==ax2, 'axes not equal in swapaxes test'
+        nt.assert_true(ax1==ax2, 'axes not equal in swapaxes test')
 
 # -- Tests for wrapped ndarray methods ---------------------------------------
 
@@ -290,31 +290,31 @@ def assert_axes_correct(d_arr, op, axis):
 def test_wrapped_ops_data():
     a = DataArray(np.random.randn(4,2,6), 'xyz')
     for m in methods:
-        yield assert_data_correct, a, m, 'x'
+        assert_data_correct(a, m, 'x')
     for m in methods:
-        yield assert_data_correct, a, m, 'y'
+        assert_data_correct(a, m, 'y')
     for m in methods:
-        yield assert_data_correct, a, m, 'z'
+        assert_data_correct(a, m, 'z')
 
 def test_wrapped_ops_axes():
     a = DataArray(np.random.randn(4,2,6), 'xyz')
     for m in methods:
-        yield assert_axes_correct, a, m, 'x'
+        assert_axes_correct(a, m, 'x')
     for m in methods:
-        yield assert_axes_correct, a, m, 'y'
+        assert_axes_correct(a, m, 'y')
     for m in methods:
-        yield assert_axes_correct, a, m, 'z'
+        assert_axes_correct(a, m, 'z')
     
 # -- Tests for slicing with "newaxis" ----------------------------------------
 def test_newaxis_slicing():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
     b2 = b[np.newaxis]
-    yield nt.assert_true, b2.shape == (1,) + b.shape
-    yield nt.assert_true, b2.axes[0].name == None
+    nt.assert_true(b2.shape == (1,) + b.shape)
+    nt.assert_true(b2.axes[0].name == None)
 
     b2 = b[:,np.newaxis]
-    yield nt.assert_true, b2.shape == (3,1,2)
-    yield nt.assert_true, (b2[:,0,:]==b).all()
+    nt.assert_true(b2.shape == (3,1,2))
+    nt.assert_true((b2[:,0,:]==b).all())
 
 # -- Testing broadcasting features -------------------------------------------
 def test_broadcast():
@@ -322,36 +322,37 @@ def test_broadcast():
     a = DataArray([1,0], 'y')
     # both of these should work
     c = b + a
-    yield nt.assert_true, c.names == ('x', 'y'), 'simple broadcast failed'
+    nt.assert_true(c.names == ('x', 'y'), 'simple broadcast failed')
     c = a + b
-    yield nt.assert_true, c.names == ('x', 'y'), \
-          'backwards simple broadcast failed'
+    nt.assert_true(c.names == ('x', 'y'),
+                   'backwards simple broadcast failed')
     
     a = DataArray([1, 1, 1], 'x')
     # this should work too
     c = a[:,np.newaxis] + b
-    yield nt.assert_true, c.names == ('x', 'y'), 'forward broadcast1 failed'
+    nt.assert_true(c.names == ('x', 'y'), 'forward broadcast1 failed')
     c = b + a[:,np.newaxis] 
-    yield nt.assert_true, c.names == ('x', 'y'), 'forward broadcast2 failed'
+    nt.assert_true(c.names == ('x', 'y'), 'forward broadcast2 failed')
 
     b = DataArray(np.random.randn(3,2,4), ['x', None, 'y'])
     a = DataArray(np.random.randn(2,4), [None, 'y'])
     # this should work
     c = b + a
-    yield nt.assert_true, c.names == ('x', None, 'y'), \
-          'broadcast with unlabeled dimensions failed'
+    nt.assert_true(c.names == ('x', None, 'y'),
+                   'broadcast with unlabeled dimensions failed')
     # and this
     a = DataArray(np.random.randn(2,1), [None, 'y'])
     c = b + a
-    yield nt.assert_true, c.names == ('x', None, 'y'), \
-          'broadcast with matched name, but singleton dimension failed'
+    nt.assert_true(
+        c.names == ('x', None, 'y'),
+        'broadcast with matched name, but singleton dimension failed')
     # check that labeled Axis names the resulting Axis
     b = DataArray(np.random.randn(3,2,4), ['x', 'z', 'y'])
     a = DataArray(np.random.randn(2,4), [None, 'y'])
     # this should work
     c = b + a
-    yield nt.assert_true, c.names == ('x', 'z', 'y'), \
-          'broadcast with unlabeled dimensions failed'
+    nt.assert_true(c.names == ('x', 'z', 'y'),
+                   'broadcast with unlabeled dimensions failed')
 
 
 # -- Testing slicing failures ------------------------------------------------
@@ -381,12 +382,12 @@ def test_ambiguous_ellipsis_fails():
 
 def test_ellipsis_slicing():
     a = DataArray( np.random.randn(2,5,6), 'xy' )
-    yield nt.assert_true, (a[...,0] == a[:,:,0]).all(), \
-          'slicing with ellipsis failed'
-    yield nt.assert_true, (a[0,...] == a[0]).all(), \
-          'slicing with ellipsis failed'
-    yield nt.assert_true, (a[0,...,0] == a[0,:,0]).all(), \
-          'slicing with ellipsis failed'
+    nt.assert_true((a[...,0] == a[:,:,0]).all(),
+                   'slicing with ellipsis failed')
+    nt.assert_true((a[0,...] == a[0]).all(),
+                   'slicing with ellipsis failed')
+    nt.assert_true((a[0,...,0] == a[0,:,0]).all(),
+                   'slicing with ellipsis failed')
 
 def test_shifty_axes():
     arr = np.random.randn(2,5,6)
@@ -403,10 +404,10 @@ def test_ellipsis_expansion():
     slicing = ( slice(2), Ellipsis, 2 )
     fixed = _expand_ellipsis(slicing, 4)
     should_be = ( slice(2), slice(None), slice(None), 2 )
-    yield nt.assert_true, fixed==should_be, 'wrong slicer1'
+    nt.assert_true(fixed==should_be, 'wrong slicer1')
     fixed = _expand_ellipsis(slicing, 2)
     should_be = ( slice(2), 2 )
-    yield nt.assert_true, fixed==should_be, 'wrong slicer2'
+    nt.assert_true(fixed==should_be, 'wrong slicer2')
 
 def test_singleton_axis_prep():
     b = DataArray( np.random.randn(5,6), 'xz' )
@@ -417,10 +418,10 @@ def test_singleton_axis_prep():
     shape_should_be = (1,5,6)
     ax_should_be = [ Axis(l, i, b) for i, l in enumerate((None, 'x', 'z')) ]
 
-    yield nt.assert_true, key_should_be==key, 'key translated poorly'
-    yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
-    yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
-          'axes computed poorly'
+    nt.assert_true(key_should_be==key, 'key translated poorly')
+    nt.assert_true(shape_should_be==shape, 'shape computed poorly')
+    nt.assert_true(all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]),
+                   'axes computed poorly')
 
 def test_singleton_axis_prep2():
     # a little more complicated
@@ -432,10 +433,10 @@ def test_singleton_axis_prep2():
     shape_should_be = (5,1,6)
     ax_should_be = [ Axis(l, i, b) for i, l in enumerate(('x', None, 'z')) ]
 
-    yield nt.assert_true, key_should_be==key, 'key translated poorly'
-    yield nt.assert_true, shape_should_be==shape, 'shape computed poorly'
-    yield nt.assert_true, all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]), \
-          'axes computed poorly'
+    nt.assert_true(key_should_be==key, 'key translated poorly')
+    nt.assert_true(shape_should_be==shape, 'shape computed poorly')
+    nt.assert_true(all([a1==a2 for a1,a2 in zip(ax_should_be, axes)]),
+                   'axes computed poorly')
     
 # -- Test binary operations --------------------------------------------------
 
