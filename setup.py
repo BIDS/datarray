@@ -7,6 +7,9 @@ import os
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
+# Commit to setuptools
+import setuptools
+
 from distutils.core import setup
 
 # Get version and release info, which is all stored in datarray/version.py
@@ -29,13 +32,9 @@ opts = dict(name=NAME,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
             requires=REQUIRES,
+            zip_safe = False,
             )
 
-# Only add setuptools-specific flags if the user called for setuptools, but
-# otherwise leave it alone
-import sys
-if 'setuptools' in sys.modules:
-    opts['zip_safe'] = False
 
 # Now call the actual setup function
 if __name__ == '__main__':
