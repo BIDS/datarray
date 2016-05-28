@@ -989,9 +989,9 @@ class DataArray(np.ndarray):
             _set_axes(self, new_axes)
 
             # Pop the axes off in descending order to prevent index renumbering
-            # headaches 
-            reductions = list(reversed(sorted(zip(key, new_axes), 
-                                         key=lambda ax: ax.index)))
+            # headaches.
+            reductions = list(reversed(sorted(zip(key, new_axes),
+                                              key=lambda t: t[1].index)))
             arr = self
             for k,ax in reductions:
                 arr = arr.axes[ax.index][k]
