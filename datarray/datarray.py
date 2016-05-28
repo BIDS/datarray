@@ -1190,14 +1190,24 @@ class DataArray(np.ndarray):
     # -- Reductions ----------------------------------------------------------
     mean = _apply_reduction('mean', ('axis', 'dtype', 'out'))
     var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof'))
-    std = _apply_reduction('std', ('axis', 'dtype', 'out', 'ddof'))
+
+    def std(self, *args, **kwargs):
+        ret = self.var(*args, **kwargs)
+        if isinstance(ret, np.ndarray):
+            ret = np.sqrt(ret, out=ret)
+        elif hasattr(ret, 'dtype'):
+            ret = ret.dtype.type(np.sqrt(ret))
+        else:
+            ret = np.sqrt(ret)
+        return ret
+    std.__doc__ = np.ndarray.std.__doc__
 
     min = _apply_reduction('min', ('axis', 'out'))
     max = _apply_reduction('max', ('axis', 'out'))
 
     sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
     prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
-    
+
     ### these change the meaning of the axes..
     ### should probably return ndarrays
     argmax = _apply_reduction('argmax', ('axis',))
