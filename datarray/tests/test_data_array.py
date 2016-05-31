@@ -1,5 +1,8 @@
 '''Tests for DataArray and friend'''
 
+import sys
+PY3 = sys.version_info[0] >= 3
+
 import numpy as np
 
 from datarray.datarray import Axis, DataArray, NamedAxisError, \
@@ -446,7 +449,10 @@ def test_label_mismatch():
     nt.assert_raises(NamedAxisError, dar1.__add__, dar2)
     nt.assert_raises(NamedAxisError, dar1.__sub__, dar2)
     nt.assert_raises(NamedAxisError, dar1.__mul__, dar2)
-    nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__floordiv__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__truediv__, dar2)
+    if not PY3:
+        nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
     
 # -- Test DataArray.axes
 class TestAxesManager:
