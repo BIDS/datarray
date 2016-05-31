@@ -27,7 +27,7 @@ matrix:
     - python: 2.7
       env:
         # Check numpy minimum version in datarray/version.py
-        - DEPENDS="numpy==1.5.1"
+        - DEPENDS="numpy==1.7.0"
     - python: 2.7
       env:
         - INSTALL_TYPE=sdist

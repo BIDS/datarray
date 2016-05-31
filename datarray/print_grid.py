@@ -1,8 +1,11 @@
 """
 Functions for pretty-printing tabular data, such as a DataArray, as a grid.
 """
+import sys
+if sys.version_info[0] < 3:
+    range = xrange
+
 import numpy as np
-import itertools
 
 class GridDataFormatter(object):
     """
@@ -34,7 +37,7 @@ class GridDataFormatter(object):
         if self.data is None:
             # no information, so just use all the space we're given
             return 100
-        return max([len(unicode(val)) for val in self.data.flat])
+        return max([len(str(val)) for val in self.data.flat])
 
     def format(self, value, width=None):
         """
@@ -215,16 +218,21 @@ class ComplexFormatter(GridDataFormatter):
         result = '{0}{1}j'.format(real_part, imag_part)
         return '{0:<{width}}'.format(result, width=width)
 
+
+# Formatters for numpy dtype kinds
+_KIND2FORMAT = dict(b = BoolFormatter,
+                    u = IntFormatter,
+                    i = IntFormatter,
+                    f = FloatFormatter,
+                    c = ComplexFormatter)
+
+
 def get_formatter(arr):
     """
     Get a formatter for this array's data type, and prime it on this array.
     """
-    typeobj = arr.dtype.type
-    if issubclass(typeobj, np.bool): return BoolFormatter(arr)
-    elif issubclass(typeobj, np.int): return IntFormatter(arr)
-    elif issubclass(typeobj, np.floating): return FloatFormatter(arr)
-    elif issubclass(typeobj, np.complex): return ComplexFormatter(arr)
-    else: return StrFormatter(arr)
+    return _KIND2FORMAT.get(arr.dtype.kind, StrFormatter)(arr)
+
 
 def grid_layout(arr, width=75, height=10):
     """
@@ -305,7 +313,7 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         labels = cells_shown.axes[0].labels
         offset = 0
         if arr.axes[1].labels: offset = 1
-        for r in xrange(cells_shown.shape[0]):
+        for r in range(cells_shown.shape[0]):
             layout[r+offset][0] = label_formatter.format(str(labels[r]), row_label_width)
     
     if row_header or col_header:

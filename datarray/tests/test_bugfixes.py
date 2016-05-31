@@ -53,12 +53,17 @@ def test_bug34():
     from datarray.print_grid import datarray_to_string
     from datetime import date as D
     A = DataArray([[1,2],[3,4]], [('row', ('a', D(2010,1,1))),('col', 'cd')])
-    nt.assert_equal(datarray_to_string(A), """row       col                
+    exp_out = """row       col                
 --------- -------------------
           c         d        
 a                 1         2
-2010-01-0         3         4""")
-    
+2010-01-0         3         4"""
+    nt.assert_equal(datarray_to_string(A), exp_out)
+    # Output for unsigned integers
+    B = A.astype(np.uint32)
+    nt.assert_equal(datarray_to_string(B), exp_out)
+
+
 def test_bug35():
     "Bug 35"
     txt_array = DataArray(['a','b'], axes=['dummy'])
@@ -71,15 +76,15 @@ def test_bug35():
 def test_bug38():
     "Bug 38: DataArray.__repr__ should parse as a single entity"
     # Calling repr() on an ndarray prepends array (instead of np.array)
-    array = np.array
     arys = (
         DataArray(np.random.randint(0, 10000, size=(1,2,3,4,5)), 'abcde'),
         DataArray(np.random.randint(0, 10000, size=(3,3,3))), # Try with missing axes
         DataArray(np.random.randint(0, 10000, (2,4,5,6)), # Try with ticks
             ('a', ('b', ('b1','b2','b3','b4')), 'c', 'd')),
         )
+    # Load `array` into namespace for `eval`
+    array = np.array
     for A in arys:
-        print A
         assert_datarray_equal(A, eval(repr(A)))
 
 def test_bug44():

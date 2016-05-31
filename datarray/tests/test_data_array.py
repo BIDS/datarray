@@ -1,5 +1,8 @@
 '''Tests for DataArray and friend'''
 
+import sys
+PY3 = sys.version_info[0] >= 3
+
 import numpy as np
 
 from datarray.datarray import Axis, DataArray, NamedAxisError, \
@@ -85,13 +88,15 @@ def test_1d():
     adata = [2,3]
     a = DataArray(adata, 'x', int)
     # Verify scalar extraction
-    nt.assert_true(isinstance(a.axes.x[0], int))
+    nt.assert_true(np.isscalar(a.axes.x[0]))
+    nt.assert_equal(np.dtype(a.axes.x[0]), np.dtype(np.int))
     # Verify indexing of axis
     nt.assert_equals(a.axes.x.index, 0)
     # Iteration checks
     for i,val in enumerate(a.axes.x):
         nt.assert_equals(val, adata[i])
-        nt.assert_true(isinstance(val, int))
+        nt.assert_true(np.isscalar(val))
+        nt.assert_equal(np.dtype(val), np.dtype(np.int))
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
@@ -446,7 +451,10 @@ def test_label_mismatch():
     nt.assert_raises(NamedAxisError, dar1.__add__, dar2)
     nt.assert_raises(NamedAxisError, dar1.__sub__, dar2)
     nt.assert_raises(NamedAxisError, dar1.__mul__, dar2)
-    nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__floordiv__, dar2)
+    nt.assert_raises(NamedAxisError, dar1.__truediv__, dar2)
+    if not PY3:
+        nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
     
 # -- Test DataArray.axes
 class TestAxesManager:

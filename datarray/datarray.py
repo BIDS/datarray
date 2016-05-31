@@ -989,9 +989,9 @@ class DataArray(np.ndarray):
             _set_axes(self, new_axes)
 
             # Pop the axes off in descending order to prevent index renumbering
-            # headaches 
-            reductions = list(reversed(sorted(zip(key, new_axes), 
-                                         key=lambda ax: ax.index)))
+            # headaches.
+            reductions = list(reversed(sorted(zip(key, new_axes),
+                                              key=lambda t: t[1].index)))
             arr = self
             for k,ax in reductions:
                 arr = arr.axes[ax.index][k]
@@ -1042,7 +1042,7 @@ class DataArray(np.ndarray):
         # form a transpose operation with axes specified
         # by (axis1, axis2) swapped
         axis1, axis2 = _names_to_numbers(self.axes, [axis1, axis2])
-        ax_idx = range(self.ndim)
+        ax_idx = list(range(self.ndim))
         tmp = ax_idx[axis1]
         ax_idx[axis1] = ax_idx[axis2]
         ax_idx[axis2] = tmp
@@ -1190,14 +1190,24 @@ class DataArray(np.ndarray):
     # -- Reductions ----------------------------------------------------------
     mean = _apply_reduction('mean', ('axis', 'dtype', 'out'))
     var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof'))
-    std = _apply_reduction('std', ('axis', 'dtype', 'out', 'ddof'))
+
+    def std(self, *args, **kwargs):
+        ret = self.var(*args, **kwargs)
+        if isinstance(ret, np.ndarray):
+            ret = np.sqrt(ret, out=ret)
+        elif hasattr(ret, 'dtype'):
+            ret = ret.dtype.type(np.sqrt(ret))
+        else:
+            ret = np.sqrt(ret)
+        return ret
+    std.__doc__ = np.ndarray.std.__doc__
 
     min = _apply_reduction('min', ('axis', 'out'))
     max = _apply_reduction('max', ('axis', 'out'))
 
     sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
     prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
-    
+
     ### these change the meaning of the axes..
     ### should probably return ndarrays
     argmax = _apply_reduction('argmax', ('axis',))

@@ -128,4 +128,4 @@ ISRELEASED          = False
 VERSION             = __version__
 PACKAGES            = ["datarray", "datarray/tests", "datarray/testing"]
 PACKAGE_DATA        = {'datarray': ['LICENSE']}
-REQUIRES            = ["numpy"]
+REQUIRES            = ["numpy (>=1.7)"]
