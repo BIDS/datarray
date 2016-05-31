@@ -71,15 +71,15 @@ def test_bug35():
 def test_bug38():
     "Bug 38: DataArray.__repr__ should parse as a single entity"
     # Calling repr() on an ndarray prepends array (instead of np.array)
-    array = np.array
     arys = (
         DataArray(np.random.randint(0, 10000, size=(1,2,3,4,5)), 'abcde'),
         DataArray(np.random.randint(0, 10000, size=(3,3,3))), # Try with missing axes
         DataArray(np.random.randint(0, 10000, (2,4,5,6)), # Try with ticks
             ('a', ('b', ('b1','b2','b3','b4')), 'c', 'd')),
         )
+    # Load `array` into namespace for `eval`
+    array = np.array
     for A in arys:
-        print A
         assert_datarray_equal(A, eval(repr(A)))
 
 def test_bug44():
