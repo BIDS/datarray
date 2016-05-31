@@ -88,13 +88,15 @@ def test_1d():
     adata = [2,3]
     a = DataArray(adata, 'x', int)
     # Verify scalar extraction
-    nt.assert_true(isinstance(a.axes.x[0], int))
+    nt.assert_true(np.isscalar(a.axes.x[0]))
+    nt.assert_equal(np.dtype(a.axes.x[0]), np.dtype(np.int))
     # Verify indexing of axis
     nt.assert_equals(a.axes.x.index, 0)
     # Iteration checks
     for i,val in enumerate(a.axes.x):
         nt.assert_equals(val, adata[i])
-        nt.assert_true(isinstance(val, int))
+        nt.assert_true(np.isscalar(val))
+        nt.assert_equal(np.dtype(val), np.dtype(np.int))
 
 def test_2d():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')
