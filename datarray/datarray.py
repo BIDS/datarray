@@ -1042,7 +1042,7 @@ class DataArray(np.ndarray):
         # form a transpose operation with axes specified
         # by (axis1, axis2) swapped
         axis1, axis2 = _names_to_numbers(self.axes, [axis1, axis2])
-        ax_idx = range(self.ndim)
+        ax_idx = list(range(self.ndim))
         tmp = ax_idx[axis1]
         ax_idx[axis1] = ax_idx[axis2]
         ax_idx[axis2] = tmp
