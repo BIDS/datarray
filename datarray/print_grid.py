@@ -1,8 +1,11 @@
 """
 Functions for pretty-printing tabular data, such as a DataArray, as a grid.
 """
+import sys
+if sys.version_info[0] < 3:
+    range = xrange
+
 import numpy as np
-import itertools
 
 class GridDataFormatter(object):
     """
@@ -305,7 +308,7 @@ def labeled_layout(arr, width=75, height=10, row_label_width=9):
         labels = cells_shown.axes[0].labels
         offset = 0
         if arr.axes[1].labels: offset = 1
-        for r in xrange(cells_shown.shape[0]):
+        for r in range(cells_shown.shape[0]):
             layout[r+offset][0] = label_formatter.format(str(labels[r]), row_label_width)
     
     if row_header or col_header:

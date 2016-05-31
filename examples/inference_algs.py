@@ -1,4 +1,9 @@
 from __future__ import division
+
+import sys
+if sys.version_info[0] < 3:  # Use range iterator for Python 2
+    range = xrange
+
 import networkx as nx, numpy as np,itertools as it, operator as op
 from datarray import DataArray
 from numpy.testing import assert_almost_equal
@@ -412,7 +417,7 @@ def triangulate_min_fill(G):
     """
     G_elim = nx.Graph(G.edges())
     added_edges = []
-    for _ in xrange(G.number_of_nodes()):
+    for _ in range(G.number_of_nodes()):
         nodes,degrees = zip(*G_elim.degree().items())
         min_deg_node = nodes[np.argmin(degrees)]
         new_edges = [(n1,n2) for (n1,n2) in
