@@ -53,12 +53,17 @@ def test_bug34():
     from datarray.print_grid import datarray_to_string
     from datetime import date as D
     A = DataArray([[1,2],[3,4]], [('row', ('a', D(2010,1,1))),('col', 'cd')])
-    nt.assert_equal(datarray_to_string(A), """row       col                
+    exp_out = """row       col                
 --------- -------------------
           c         d        
 a                 1         2
-2010-01-0         3         4""")
-    
+2010-01-0         3         4"""
+    nt.assert_equal(datarray_to_string(A), exp_out)
+    # Output for unsigned integers
+    B = A.astype(np.uint32)
+    nt.assert_equal(datarray_to_string(B), exp_out)
+
+
 def test_bug35():
     "Bug 35"
     txt_array = DataArray(['a','b'], axes=['dummy'])

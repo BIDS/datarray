@@ -218,16 +218,21 @@ class ComplexFormatter(GridDataFormatter):
         result = '{0}{1}j'.format(real_part, imag_part)
         return '{0:<{width}}'.format(result, width=width)
 
+
+# Formatters for numpy dtype kinds
+_KIND2FORMAT = dict(b = BoolFormatter,
+                    u = IntFormatter,
+                    i = IntFormatter,
+                    f = FloatFormatter,
+                    c = ComplexFormatter)
+
+
 def get_formatter(arr):
     """
     Get a formatter for this array's data type, and prime it on this array.
     """
-    typeobj = arr.dtype.type
-    if issubclass(typeobj, np.bool): return BoolFormatter(arr)
-    elif issubclass(typeobj, np.int): return IntFormatter(arr)
-    elif issubclass(typeobj, np.floating): return FloatFormatter(arr)
-    elif issubclass(typeobj, np.complex): return ComplexFormatter(arr)
-    else: return StrFormatter(arr)
+    return _KIND2FORMAT.get(arr.dtype.kind, StrFormatter)(arr)
+
 
 def grid_layout(arr, width=75, height=10):
     """
