@@ -34,7 +34,7 @@ class GridDataFormatter(object):
         if self.data is None:
             # no information, so just use all the space we're given
             return 100
-        return max([len(unicode(val)) for val in self.data.flat])
+        return max([len(str(val)) for val in self.data.flat])
 
     def format(self, value, width=None):
         """
