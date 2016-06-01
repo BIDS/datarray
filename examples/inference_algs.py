@@ -99,8 +99,8 @@ def match_shape(x,yshape,axes):
     if isinstance(axes,int): axes = [axes]
     assert len(x.shape) == len(axes)
     assert all(xsize == yshape[yax] for xsize,yax in zip(x.shape,axes))
-    strides = np.zeros(len(yshape))
-    for yax,xstride in zip(axes,x.strides): 
+    strides = np.zeros(len(yshape), dtype=np.intp)
+    for yax,xstride in zip(axes,x.strides):
         strides[yax] = xstride
     return np.ndarray.__new__(np.ndarray, strides=strides, shape=yshape, buffer=x, dtype=x.dtype)
    
