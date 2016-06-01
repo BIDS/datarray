@@ -133,7 +133,7 @@ def multiply_potentials(*DAs):
     if len(DAs) == 0: return 1
     
     full_names, full_shape = [],[]
-    for axis,size in zip(_sum(DA.axes for DA in DAs), _sum(DA.shape for DA in DAs)):
+    for axis,size in zip(_sum(list(DA.axes) for DA in DAs), _sum(DA.shape for DA in DAs)):
         if axis.name not in full_names:
             full_names.append(axis.name)
             full_shape.append(size)
@@ -187,7 +187,7 @@ def calc_marginals_simple(cpts,evidence):
     likelihood : likelihood of observations in the model
     """
     joint_dist = multiply_potentials(*cpts)
-    joint_dist = joint_dist.axis.johncalls[evidence['johncalls']].axis.marycalls[evidence['marycalls']]
+    joint_dist = joint_dist.axes.johncalls[evidence['johncalls']].axes.marycalls[evidence['marycalls']]
     return (dict((ax.name, normalize(sum_over_other_axes(joint_dist, ax.name))) 
                 for ax in joint_dist.axes),
             joint_dist.sum())
@@ -229,7 +229,7 @@ def digraph_eliminate(cpts,evidence,query_list):
         # if node is in query set, we don't sum over it
         if rv not in query_list:
             # if node is in evidence set, take slice
-            if rv in evidence: product_pot = product_pot.axis[rv][evidence[rv]]
+            if rv in evidence: product_pot = product_pot.axes(rv)[evidence[rv]]
             # otherwise, sum over it
             else: product_pot = product_pot.sum(axis=rv)
 
@@ -249,8 +249,9 @@ def cpts2digraph(cpts):
     """
     G = nx.DiGraph()
     for cpt in cpts:
-        sources,targ = cpt.axes[:-1],cpt.axes[-1]
-        G.add_edges_from([(src.name,targ.name) for src in sources])
+        names = [ax.name for ax in cpt.axes]
+        target = names[-1]
+        G.add_edges_from((source, target) for source in names[:-1])
     return G
 
 ############# Sum-product #############
