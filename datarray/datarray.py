@@ -99,17 +99,26 @@ class AxesManager(object):
     DataArray(array(True, dtype=bool),
     ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
 
-
-    Axes can also be accessed numerically:
+    Axes can be accessed numerically:
 
     >>> A.axes[1] is A.axes.stocks
     True
 
-    Calling the AxesManager with string arguments will return an
+    The axis name can be used as an index, as well as an attribute:
+
+    >>> A.axes['stocks'] is A.axes.stocks
+    True
+
+    Axes can also be sliced:
+
+    >>> A.axes[1:]
+    (Axis(name='stocks', index=1, labels=('aapl', 'ibm', 'goog', 'msft')), Axis(name='metric', index=2, labels=None))
+
+    *Calling* the AxesManager with string arguments will return an
     :py:class:`AxisIndexer` object which can be used to restrict slices to
     specified axes:
 
-    >>> Ai = A.axes('stocks', 'date')
+    >>> Ai = A.axes('stocks', 'date')  # Note the parens
     >>> np.all(Ai['aapl':'goog', 100] == A[100, 0:2])
     DataArray(array(True, dtype=bool),
     (('stocks', ('aapl', 'ibm')), 'metric'))
@@ -156,20 +165,37 @@ class AxesManager(object):
 
         Parameters
         ----------
-        n : int
-            Index of axis to be returned.
+        n : int or string or slice
+            If int, index of axis to be returned.  If string, name of axis to
+            be returned.  If slice object, slice from AxesManager to return.
 
         Returns
         -------
-        The requested :py:class:`Axis`.
-
+        ax : Axis or AxesManager
+            The requested :py:class:`Axis` if `n` is an int or string.  A new
+            AxesManager object if `n` is a slice.
         """
-        if not isinstance(n, int):
-            raise TypeError("AxesManager expects integer index")
+        axes = object.__getattribute__(self, '_axes')
+        if isinstance(n, int):  # Integer slicing retuns Axis
+            try:
+                return axes[n]
+            except IndexError:
+                raise IndexError("Requested axis %i out of bounds" % n)
+        # Indexing by name returns Axis
+        namemap = object.__getattribute__(self, '_namemap')
         try:
-            return object.__getattribute__(self, '_axes')[n]
-        except IndexError:
-            raise IndexError("Requested axis %i out of bounds" % n)
+            n = namemap[n]
+        except TypeError:
+            pass
+        else:
+            return axes[n]
+        # Indexing with slice object returns new AxesManager
+        try:
+            new_axes = axes[n]
+        except TypeError:
+            raise TypeError("Invalid axis index {0}".format(n))
+        arr = object.__getattribute__(self, '_arr')
+        return type(self)(arr, new_axes)
 
     def __eq__(self, other):
         """Test for equality between two axes managers. Two axes managers are

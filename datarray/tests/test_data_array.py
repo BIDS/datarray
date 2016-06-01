@@ -5,8 +5,8 @@ PY3 = sys.version_info[0] >= 3
 
 import numpy as np
 
-from datarray.datarray import Axis, DataArray, NamedAxisError, \
-    _pull_axis, _reordered_axes
+from datarray.datarray import (Axis, AxesManager, DataArray, NamedAxisError,
+                               _pull_axis, _reordered_axes)
 
 import nose.tools as nt
 import numpy.testing as npt
@@ -461,6 +461,14 @@ class TestAxesManager:
     def setUp(self):
         self.axes_spec = ('date', ('stocks', ('aapl', 'ibm', 'goog', 'msft')), 'metric')
         self.A = DataArray(np.random.randn(200, 4, 10), axes=self.axes_spec)
+        self.axes = []
+        for i, spec in enumerate(self.axes_spec):
+            try:
+                name, labels = spec
+            except ValueError:
+                name, labels = spec, None
+            self.axes.append(
+                Axis(name=name, index=i, parent_arr=self.A, labels=labels))
 
     def test_axes_name_collision(self):
         "Test .axes object for attribute collisions with axis names"
@@ -475,21 +483,26 @@ class TestAxesManager:
         nt.assert_equal(B.shape, (1,1,2,3))
         nt.assert_true(np.all(A + A == 2*A))
 
-    def test_axes_numeric_access(self):
-        for i,spec in enumerate(self.axes_spec):
-            try:
-                name,labels = spec
-            except ValueError:
-                name,labels = spec,None
-            nt.assert_true(self.A.axes[i] == Axis(name=name, index=i,
-                parent_arr=self.A, labels=labels))
+    def test_axes_indexing(self):
+        n_axes = len(self.axes)
+        for i, exp_axis in enumerate(self.axes):
+            # Index with integer
+            nt.assert_equal(self.A.axes[i], exp_axis)
+            # Negative integer
+            nt.assert_equal(self.A.axes[i - n_axes], exp_axis)
+            # Name
+            nt.assert_equal(self.A.axes[exp_axis.name], exp_axis)
+            # Single element slice
+            one_axis = self.A.axes[i:i + 1]
+            nt.assert_equal(len(one_axis), 1)
+            nt.assert_equal(one_axis[0], exp_axis)
+        # Slice with more than one element
+        nt.assert_equal(self.A.axes[1:],
+                        AxesManager(np.array(self.A), self.axes[1:]))
 
     def test_axes_attribute_access(self):
-        for spec in self.axes_spec:
-            try:
-                name,labels = spec
-            except ValueError:
-                name,labels = spec,None
+        for axis in self.axes:
+            name = axis.name
             nt.assert_true(getattr(self.A.axes, name) is self.A.axes(name))
 
     def test_equality(self):
