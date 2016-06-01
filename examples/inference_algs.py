@@ -1,8 +1,9 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import sys
 if sys.version_info[0] < 3:  # Use range iterator for Python 2
     range = xrange
+from functools import reduce
 
 import networkx as nx, numpy as np,itertools as it, operator as op
 from datarray import DataArray
@@ -72,8 +73,8 @@ def test_pearl_network():
         assert_almost_equal(marg,margs1["burglary"])
         assert_almost_equal(lik,lik1)
     
-    print "p(burglary) = %s" % margs1["burglary"].__array__()
-    print "likelihood of observations = %.3f" % lik1
+    print("p(burglary) = %s" % margs1["burglary"].__array__())
+    print("likelihood of observations = %.3f" % lik1)
     
 ####### DataArray utilities ################
 
@@ -221,9 +222,9 @@ def digraph_eliminate(cpts,evidence,query_list):
     rvs_elim = [rv for rv in rvs if rv not in query_list] + query_list
     for rv in rvs_elim:
         # find potentials that reference that node
-        pots_here = filter(lambda cpt: rv in cpt.names, cpts)
+        pots_here = [cpt for cpt in cpts if rv in cpt.names]
         # remove them from cpts
-        cpts = filter(lambda cpt: rv not in cpt.names, cpts)
+        cpts = [cpt for cpt in cpts if rv not in cpt.names]
         # Find joint probability distribution of this variable and the ones coupled to it
         product_pot = multiply_potentials(*pots_here)
         # if node is in query set, we don't sum over it
