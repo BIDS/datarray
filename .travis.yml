@@ -77,10 +77,15 @@ script:
     - if [ "${DOCTESTS}" == "1" ]; then
       DOCTEST_ARGS="--with-doctest";
       fi
+    # Run unit tests
     - nosetests $COVER_ARGS $DOCTEST_ARGS datarray
+    # Run example to check for errors
+    - pip install networkx
+    - python ../examples/inference_algs.py
+    # Run doc doctests
     - if [ "${DOC_DOCTEST}" == "1" ]; then
       pip install sphinx;
-      cd ../doc && make doctest;
+      (cd ../doc && make doctest);
       fi
 
 after_success:
