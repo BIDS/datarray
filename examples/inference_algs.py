@@ -348,7 +348,7 @@ def dfs_edges(G):
     (source,target) for edges in directed spanning tree resulting from depth
     first search
     """
-    DG = nx.dfs_tree(G)
+    DG = nx.dfs_tree(G, source=None)
     return [(src,targ) for targ in nx.dfs_postorder_nodes(DG) for src in DG.predecessors(targ)]
 
 
