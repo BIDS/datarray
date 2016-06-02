@@ -92,13 +92,10 @@ class AxesManager(object):
     An axis can be indexed by integers or ticks:
 
     >>> np.all(A.axes.stocks['aapl':'goog'] == A.axes.stocks[0:2])
-    DataArray(array(True, dtype=bool),
-    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
+    True
 
     >>> np.all(A.axes.stocks[0:2] == A[:,0:2,:])
-    DataArray(array(True, dtype=bool),
-    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
-
+    True
 
     Axes can also be accessed numerically:
 
@@ -111,8 +108,7 @@ class AxesManager(object):
 
     >>> Ai = A.axes('stocks', 'date')
     >>> np.all(Ai['aapl':'goog', 100] == A[100, 0:2])
-    DataArray(array(True, dtype=bool),
-    (('stocks', ('aapl', 'ibm')), 'metric'))
+    True
 
     You can also mix axis names and integers when calling AxesManager.
     (Not yet supported.)
@@ -414,19 +410,15 @@ class Axis(object):
         >>> A = DataArray(np.arange(2*3*2).reshape([2,3,2]), \
                 ('a', ('b', ('b1','b2','b3')), 'c'))
         >>> b = A.axes.b
-       
+
         >>> np.all(b['b1'] == A[:,0,:])
-        DataArray(array(True, dtype=bool),
-        ('a', 'c'))
+        True
 
         >>> np.all(b['b2':] == A[:,1:,:])
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('b2', 'b3')), 'c'))
+        True
 
         >>> np.all(b['b1':'b2'] == A[:,0:1,:])
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('b1',)), 'c'))
-
+        True
         """
         # XXX We don't handle fancy indexing at the moment
         if isinstance(key, (np.ndarray, list)):
@@ -608,8 +600,7 @@ class Axis(object):
         >>> arr1 = darr.axes.b.keep(['c','d'])
         >>> arr2 = darr.axes.b.drop(['a','b','e'])
         >>> np.all(arr1 == arr2)
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('c', 'd'))))
+        True
         """
 
         if not self.labels:
@@ -1207,6 +1198,9 @@ class DataArray(np.ndarray):
 
     sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
     prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
+
+    all = _apply_reduction('all', ('axis', 'dtype', 'out'))
+    any = _apply_reduction('any', ('axis', 'dtype', 'out'))
 
     ### these change the meaning of the axes..
     ### should probably return ndarrays

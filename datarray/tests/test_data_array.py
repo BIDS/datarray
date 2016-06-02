@@ -266,7 +266,7 @@ def test_swapaxes():
 
 other_wraps = ['argmax', 'argmin']
 reductions = ['mean', 'var', 'std', 'min',
-              'max', 'sum', 'prod', 'ptp']
+              'max', 'sum', 'prod', 'ptp', 'any', 'all']
 accumulations = ['cumprod', 'cumsum']
 
 methods = other_wraps + reductions + accumulations
