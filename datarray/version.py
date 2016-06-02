@@ -129,3 +129,4 @@ VERSION             = __version__
 PACKAGES            = ["datarray", "datarray/tests", "datarray/testing"]
 PACKAGE_DATA        = {'datarray': ['LICENSE']}
 REQUIRES            = ["numpy (>=1.7)"]
+INSTALL_REQUIRES    = ["numpy>=1.7"]

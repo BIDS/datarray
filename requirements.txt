@@ -1,0 +1,5 @@
+# Requirements for datarray package
+# Use with:
+#  pip install -r requirements.txt
+
+numpy>=1.7

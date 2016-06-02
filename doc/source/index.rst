@@ -7,11 +7,11 @@ axes and optionally labeled ticks on said axes.
 
 The datarray code is being collaboratively developed and hosted at:
 
-http://github.com/fperez/datarray
+http://github.com/BIDS/datarray
 
 The documentation for various releases and a current build can be found here:
 
-http://fperez.github.com/datarray-doc
+http://bids.github.com/datarray
 
 Contents:
 
@@ -24,6 +24,7 @@ Contents:
    design/index
    other_projects/index
    license
+   API docs <generated/modules>
 
 Indices and tables
 ==================
