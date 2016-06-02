@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Larray (aka Larry) &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="Other projects" href="index.html" />
+    <link rel="next" title="Pandas" href="pandas_overview.html" />
+    <link rel="prev" title="Other projects" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="larray-aka-larry">
+<h1>Larray (aka Larry)<a class="headerlink" href="#larray-aka-larry" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Larray offers the notion of &#8220;ticks&#8221;, but the axes themselves are not named. The
+model seems to be something like <em>data with coordinates</em></p>
+<p>Importantly,</p>
+<ul class="simple">
+<li>Pure Python implementation</li>
+<li>Is <strong>not</strong> an ndarray<ul>
+<li>therefore, lots of redefined functionality</li>
+<li>also lots of presumed intention of data (shuffling labels, group means, ...)</li>
+<li>not lightweight</li>
+</ul>
+</li>
+<li>Does <strong>not</strong> offer named axes</li>
+<li><strong>Only one (class of) dtype!!</strong></li>
+<li>Can do n-D</li>
+<li>Good mixed indexing</li>
+</ul>
+<div class="section" id="construction">
+<h3>Construction<a class="headerlink" href="#construction" title="Permalink to this headline">¶</a></h3>
+<p>Larrays can be constructed from an array-like object and tick names for each
+axis. Alternatively, Larrays can be constructed from a number of
+data-with-coordinates representations.</p>
+<p>Here&#8217;s how to create a larry using <strong>fromtuples</strong> (note the cast to float, and
+the filled-in NaN):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">larry</span><span class="o">.</span><span class="n">fromtuples</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">label_0</span>
+<span class="go">    a</span>
+<span class="go">    b</span>
+<span class="go">label_1</span>
+<span class="go">    a</span>
+<span class="go">    b</span>
+<span class="go">x</span>
+<span class="go">array([[  1.,   2.],</span>
+<span class="go">       [  3.,  NaN]])</span>
+</pre></div>
+</div>
+<p>Here are examples of <strong>fromdict</strong> and <strong>fromlist</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">):</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">):</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">):</span> <span class="mi">4</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">larry</span><span class="o">.</span><span class="n">fromdict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">label_0</span>
+<span class="go">    a</span>
+<span class="go">    b</span>
+<span class="go">label_1</span>
+<span class="go">    c</span>
+<span class="go">    d</span>
+<span class="go">x</span>
+<span class="go">array([[ 1.,  2.],</span>
+<span class="go">       [ 3.,  4.]])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">larry</span><span class="o">.</span><span class="n">fromlist</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">label_0</span>
+<span class="go">    a</span>
+<span class="go">    b</span>
+<span class="go">label_1</span>
+<span class="go">    c</span>
+<span class="go">    d</span>
+<span class="go">x</span>
+<span class="go">array([[ 1.,  2.],</span>
+<span class="go">       [ 3.,  4.]])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="indexing">
+<h3>Indexing<a class="headerlink" href="#indexing" title="Permalink to this headline">¶</a></h3>
+<p>Indexing using the bracket syntax arr[ &lt;slicer&gt; ] seems to return you exactly
+what numpy would slice out of the underlying array. All slicing works, with the
+exception of &#8220;fancy&#8221; indexing, and ellipsis indexing, and the use of
+<strong>np.newaxis</strong>.</p>
+<p>There is also a smart slicer riding along with the larrays that can slice with
+label information. It seems to nicely blend labels and regular integer slicing.
+To disambiguate possible integer labels and integer indexing, labels always
+must be enclosed in a list:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">[</span> <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span>
+<span class="go">label_0</span>
+<span class="go">    u</span>
+<span class="go">    v</span>
+<span class="go">label_1</span>
+<span class="go">    2</span>
+<span class="go">    5</span>
+<span class="go">    3</span>
+<span class="go">x</span>
+<span class="go">array([[0, 1, 2],</span>
+<span class="go">       [3, 4, 5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">lix</span><span class="p">[[</span><span class="s1">&#39;u&#39;</span><span class="p">]]</span>
+<span class="go">label_0</span>
+<span class="go">    2</span>
+<span class="go">    5</span>
+<span class="go">    3</span>
+<span class="go">x</span>
+<span class="go">array([0, 1, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">lix</span><span class="p">[[</span><span class="s1">&#39;u&#39;</span><span class="p">],</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">lix</span><span class="p">[[</span><span class="s1">&#39;u&#39;</span><span class="p">],[</span><span class="mi">2</span><span class="p">]:[</span><span class="mi">5</span><span class="p">]]</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">lix</span><span class="p">[[</span><span class="s1">&#39;u&#39;</span><span class="p">],[</span><span class="mi">2</span><span class="p">]:[</span><span class="mi">3</span><span class="p">]]</span>
+<span class="go">label_0</span>
+<span class="go">    2</span>
+<span class="go">    5</span>
+<span class="go">x</span>
+<span class="go">array([0, 1])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="binary-operations-arithmetic">
+<h3>Binary Operations (arithmetic)<a class="headerlink" href="#binary-operations-arithmetic" title="Permalink to this headline">¶</a></h3>
+<p>Binary operations are not, in general, numpy-thonic</p>
+<div class="section" id="alignment">
+<h4>Alignment<a class="headerlink" href="#alignment" title="Permalink to this headline">¶</a></h4>
+<p>Larray seems to want to only make binary operations on data with identical
+coordinates. Furthermore, it will re-align the data if necessary. Therefore,
+this example is ok:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y1</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y2</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[[</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>What is <code class="docutils literal"><span class="pre">y1</span> <span class="pre">+</span> <span class="pre">y2</span></code>?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y1</span> <span class="o">+</span> <span class="n">y2</span>
+<span class="go">label_0</span>
+<span class="go">    a</span>
+<span class="go">    z</span>
+<span class="go">x</span>
+<span class="go">array([3, 3])</span>
+</pre></div>
+</div>
+<p>But this fails:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">z1</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z2</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[[</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">]])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z1</span> <span class="o">+</span> <span class="n">z2</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;la/la/deflarry.py&quot;</span>, line <span class="m">494</span>, in <span class="n">__add__</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__align</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+  File <span class="nb">&quot;la/la/deflarry.py&quot;</span>, line <span class="m">731</span>, in <span class="n">__align</span>
+    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="s1">&#39;A dimension has no matching labels&#39;</span>
+<span class="gr">IndexError</span>: <span class="n">A dimension has no matching labels</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="intersections-and-broadcasting">
+<h4>Intersections and Broadcasting<a class="headerlink" href="#intersections-and-broadcasting" title="Permalink to this headline">¶</a></h4>
+<p>Binary ops can introduce an implicit intersection operation, for example (this
+would be illegal code in numpy):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">[</span> <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr2</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">[</span> <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]]</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr2</span> <span class="o">+</span> <span class="n">arr</span>
+<span class="go">label_0</span>
+<span class="go">    u</span>
+<span class="go">    v</span>
+<span class="go">label_1</span>
+<span class="go">    x</span>
+<span class="go">    y</span>
+<span class="go">    z</span>
+<span class="go">x</span>
+<span class="go">array([[ 0,  2,  4],</span>
+<span class="go">       [ 6,  8, 10]])</span>
+</pre></div>
+</div>
+<p>According to the matched-coordinates operation rule, broadcasting does not happen:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr3</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr3</span> <span class="o">+</span> <span class="n">arr</span>
+<span class="go">------------------------------------------------------------</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;ipython console&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;/Users/mike/usr/lib/python2.5/site-packages/la/deflarry.py&quot;</span>, line <span class="m">583</span>, in <span class="n">__add__</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__align</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+  File <span class="nb">&quot;/Users/mike/usr/lib/python2.5/site-packages/la/deflarry.py&quot;</span>, line <span class="m">820</span>, in <span class="n">__align</span>
+    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="n">msg</span>
+<span class="gr">IndexError</span>: <span class="n">Binary operation on two larrys with different dimension</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Larray (aka Larry)</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#construction">Construction</a></li>
+<li><a class="reference internal" href="#indexing">Indexing</a></li>
+<li><a class="reference internal" href="#binary-operations-arithmetic">Binary Operations (arithmetic)</a><ul>
+<li><a class="reference internal" href="#alignment">Alignment</a></li>
+<li><a class="reference internal" href="#intersections-and-broadcasting">Intersections and Broadcasting</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Other projects</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Other projects</a></li>
+      <li>Next: <a href="pandas_overview.html" title="next chapter">Pandas</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/other_projects/larry_overview.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/other_projects/larry_overview.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

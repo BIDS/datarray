@@ -1,0 +1,45 @@
+datarray package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    datarray.testing
+
+Submodules
+----------
+
+datarray.datarray module
+------------------------
+
+.. automodule:: datarray.datarray
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+datarray.print_grid module
+--------------------------
+
+.. automodule:: datarray.print_grid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+datarray.version module
+-----------------------
+
+.. automodule:: datarray.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: datarray
+    :members:
+    :undoc-members:
+    :show-inheritance:

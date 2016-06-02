@@ -1,0 +1,461 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DataArrays &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="index.html" />
+    <link rel="next" title="Methods" href="ndarray_methods.html" />
+    <link rel="prev" title="Welcome to the documentation for the Datarray prototype" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dataarrays">
+<h1>DataArrays<a class="headerlink" href="#dataarrays" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-dataarray-creation-and-mixing">
+<span id="init-ufuncs"></span><h2>Basic DataArray Creation And Mixing<a class="headerlink" href="#basic-dataarray-creation-and-mixing" title="Permalink to this headline">¶</a></h2>
+<p>DataArrays are constructed with array-like sequences and axis names:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span>
+<span class="go">Axis(name=&#39;a&#39;, index=0, labels=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span>
+<span class="go">Axis(name=&#39;b&#39;, index=1, labels=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">c</span>
+<span class="go">Axis(name=&#39;c&#39;, index=2, labels=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(1, 2, 3)</span>
+</pre></div>
+</div>
+<p>Not all axes must necessarily be explicitly named, since None is a valid axis
+name:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span> <span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr2</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;a&#39;, None, &#39;b&#39;)</span>
+</pre></div>
+</div>
+<p>If no name is given for an axis, None is implicitly assumed.  So trailing axes
+without axes will be named as None:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span> <span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr2</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;a&#39;, &#39;b&#39;, None, None)</span>
+</pre></div>
+</div>
+<p>Combining named and unnamed arrays:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="s1">&#39;abc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">narr</span> <span class="o">+</span> <span class="mi">5</span> <span class="c1"># OK</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">narr</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span> <span class="c1"># OK</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">narr</span> <span class="o">+</span> <span class="n">n2</span> <span class="c1"># OK</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n3</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">narr</span> <span class="o">+</span> <span class="n">n3</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">NamedAxisError</span>: <span class="n">Axis names are incompatible for a binary operation: (&#39;a&#39;, &#39;b&#39;, &#39;c&#39;), (&#39;x&#39;, &#39;b&#39;, &#39;c&#39;)</span>
+</pre></div>
+</div>
+<p>Now, what about matching names, but different indices for the names?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n4</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">narr</span> <span class="o">+</span> <span class="n">n4</span> <span class="c1"># is this OK?</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">NamedAxisError</span>: <span class="n">Axis names are incompatible for a binary operation: (&#39;a&#39;, &#39;b&#39;, &#39;c&#39;), (&#39;b&#39;, &#39;a&#39;, &#39;c&#39;)</span>
+</pre></div>
+</div>
+<p>The names and the position have to be the same, and the above example should
+raise an error.  At least for now we will raise an error, and review later.</p>
+<div class="section" id="with-labels">
+<h3>With &#8220;labels&#8221;<a class="headerlink" href="#with-labels" title="Permalink to this headline">¶</a></h3>
+<p>Constructing a DataArray such that an Axis has labels, for example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cap_ax_spec</span> <span class="o">=</span> <span class="s1">&#39;capitals&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;washington&#39;</span><span class="p">,</span> <span class="s1">&#39;london&#39;</span><span class="p">,</span> <span class="s1">&#39;berlin&#39;</span><span class="p">,</span> <span class="s1">&#39;paris&#39;</span><span class="p">,</span> <span class="s1">&#39;moscow&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_ax_spec</span> <span class="o">=</span> <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;0015&#39;</span><span class="p">,</span> <span class="s1">&#39;0615&#39;</span><span class="p">,</span> <span class="s1">&#39;1215&#39;</span><span class="p">,</span> <span class="s1">&#39;1815&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="p">[</span><span class="n">time_ax_spec</span><span class="p">,</span> <span class="n">cap_ax_spec</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]), Axis(name=&#39;capitals&#39;, index=1, labels=[&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;]))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="slicing">
+<span id="id1"></span><h2>Slicing<a class="headerlink" href="#slicing" title="Permalink to this headline">¶</a></h2>
+<p>A DataArray with simple named axes can be sliced many ways.</p>
+<p>Per Axis:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span>
+<span class="go">Axis(name=&#39;a&#39;, index=0, labels=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">DataArray(array([[ 0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.]]),</span>
+<span class="go">(&#39;b&#39;, &#39;c&#39;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;b&#39;, index=0, labels=None), Axis(name=&#39;c&#39;, index=1, labels=None))</span>
+</pre></div>
+</div>
+<p>By normal &#8220;numpy&#8221; slicing:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;b&#39;, index=0, labels=None), Axis(name=&#39;c&#39;, index=1, labels=None))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axes</span> <span class="o">==</span> <span class="n">narr</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Also, slicing with <code class="docutils literal"><span class="pre">newaxis</span></code> is implemented:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[:,:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 2, 1, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[:,:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;x&#39;, &#39;y&#39;, None, &#39;z&#39;)</span>
+</pre></div>
+</div>
+<p>I can also slice with <code class="docutils literal"><span class="pre">newaxis</span></code> at each Axis.  The effect of this is always
+to insert an unnamed Axis with length-1 at the original index of the named
+Axis:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;x&#39;, index=0, labels=None), Axis(name=&#39;y&#39;, index=1, labels=None), Axis(name=&#39;z&#39;, index=2, labels=None))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;x&#39;, None, &#39;y&#39;, &#39;z&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 1, 2, 4)</span>
+</pre></div>
+</div>
+<div class="section" id="slicing-and-labels">
+<h3>Slicing and labels<a class="headerlink" href="#slicing-and-labels" title="Permalink to this headline">¶</a></h3>
+<p>It is also possible to use labels in any of the slicing syntax above:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span> 
+<span class="go">DataArray(array([[ 0,  1,  2,  3,  4],</span>
+<span class="go">       [ 5,  6,  7,  8,  9],</span>
+<span class="go">       [10, 11, 12, 13, 14],</span>
+<span class="go">       [15, 16, 17, 18, 19]]),</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)), (&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">capitals</span><span class="p">[</span><span class="s1">&#39;berlin&#39;</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
+<span class="go">DataArray(array([[ 2,  1,  0],</span>
+<span class="go">       [ 7,  6,  5],</span>
+<span class="go">       [12, 11, 10],</span>
+<span class="go">       [17, 16, 15]]),</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)), (&#39;capitals&#39;, (&#39;berlin&#39;, &#39;london&#39;, &#39;washington&#39;))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="s1">&#39;0015&#39;</span><span class="p">:</span><span class="s1">&#39;1815&#39;</span><span class="p">]</span> 
+<span class="go">DataArray(array([[ 0,  1,  2,  3,  4],</span>
+<span class="go">       [ 5,  6,  7,  8,  9],</span>
+<span class="go">       [10, 11, 12, 13, 14]]),</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;)), (&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_caps</span><span class="p">[:,</span> <span class="s1">&#39;london&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> 
+<span class="go">DataArray(array([[ 1,  2],</span>
+<span class="go">       [ 6,  7],</span>
+<span class="go">       [11, 12],</span>
+<span class="go">       [16, 17]]),</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)), (&#39;capitals&#39;, (&#39;london&#39;, &#39;berlin&#39;))))</span>
+</pre></div>
+</div>
+<p>The .start and .stop attributes of the slice object can be either None, an
+integer index, or a valid tick. They may even be mixed. <em>The .step attribute,
+however, must be None or an nonzero integer.</em></p>
+<p><strong>Historical note: previously integer labels clobbered indices.</strong> For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">centered_data</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;c_idx&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span> <span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centered_data</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">c_idx</span><span class="o">.</span><span class="n">make_slice</span><span class="p">(</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="p">)</span>
+<span class="go">(slice(3, 6, None),)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The code above doesn&#8217;t currently (as of Nov/2010) run, because integer
+labels haven&#8217;t been implemented.  See ticket gh-40.</p>
+</div>
+<p>make_slice() first tries to look up the key parameters as labels, and then sees
+if the key parameters can be used as simple indices. Thus 0 is found as index
+3, and 6 is passed through as index 6.</p>
+<div class="section" id="possible-resolution-1">
+<h4>Possible resolution 1<a class="headerlink" href="#possible-resolution-1" title="Permalink to this headline">¶</a></h4>
+<p>&#8220;larry&#8221; would make this distinction:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">centered_data</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">c_idx</span><span class="p">[</span> <span class="p">[</span><span class="mi">0</span><span class="p">]:[</span><span class="mi">2</span><span class="p">]</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">&lt;</span> <span class="n">returns</span> <span class="n">underlying</span> <span class="n">array</span> <span class="kn">from</span> <span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centered_data</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">c_idx</span><span class="p">[</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">&lt;</span> <span class="n">returns</span> <span class="n">underlying</span> <span class="n">array</span> <span class="kn">from</span> <span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>And I believe mixing of labels and is valid also.</p>
+</div>
+<div class="section" id="possible-resolution-2-the-winner">
+<h4>Possible resolution 2 (the winner)<a class="headerlink" href="#possible-resolution-2-the-winner" title="Permalink to this headline">¶</a></h4>
+<p>Do not allow integer labels &#8211; cast to float perhaps</p>
+<p><strong>Note</strong>: this will be the solution. When validating labels on an Axis, ensure
+that none of them <code class="docutils literal"><span class="pre">isinstance(t,</span> <span class="pre">int)</span></code></p>
+</div>
+<div class="section" id="possible-resolution-3">
+<h4>Possible resolution 3<a class="headerlink" href="#possible-resolution-3" title="Permalink to this headline">¶</a></h4>
+<p>Restrict access to tick based slicing to another special slicing object.</p>
+</div>
+</div>
+</div>
+<div class="section" id="broadcasting">
+<span id="id2"></span><h2>Broadcasting<a class="headerlink" href="#broadcasting" title="Permalink to this headline">¶</a></h2>
+<p>What about broadcasting between two named arrays, where the broadcasting
+adds an axis? All ordinary NumPy rules for shape compatibility apply.
+Additionally, DataArray imposes axis name consistency rules.</p>
+<p>The broadcasted DataArray below, &#8220;a&#8221;, takes on dummy dimensions that are taken
+to be compatible with the larger DataArray:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span>    
+<span class="go">DataArray(array([[ 1.,  1.,  1.],</span>
+<span class="go">       [ 1.,  1.,  1.],</span>
+<span class="go">       [ 1.,  1.,  1.]]),</span>
+<span class="go">(&#39;x&#39;, &#39;y&#39;))</span>
+</pre></div>
+</div>
+<p>When there are unnamed dimensions, they also must be consistently oriented
+across arrays when broadcasting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span>
+<span class="go">DataArray(array([[[ 0,  2,  4,  6],</span>
+<span class="go">        [ 8, 10, 12, 14]],</span>
+
+<span class="go">       [[ 8, 10, 12, 14],</span>
+<span class="go">        [16, 18, 20, 22]],</span>
+
+<span class="go">       [[16, 18, 20, 22],</span>
+<span class="go">        [24, 26, 28, 30]]]),</span>
+<span class="go">(&#39;x&#39;, None, &#39;y&#39;))</span>
+</pre></div>
+</div>
+<p>We already know that if the dimension names don&#8217;t match, this won&#8217;t be allowed
+(even though the shapes are correct):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">NamedAxisError</span>: <span class="n">Axis names are incompatible for a binary operation: (&#39;x&#39;, &#39;y&#39;), (&#39;x&#39;,)</span>
+</pre></div>
+</div>
+<p>But a numpy idiom for padding dimensions helps us in this case:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span>    
+<span class="go">DataArray(array([[ 1.,  1.,  1.],</span>
+<span class="go">       [ 1.,  1.,  1.],</span>
+<span class="go">       [ 1.,  1.,  1.]]),</span>
+<span class="go">(&#39;x&#39;, &#39;y&#39;))</span>
+</pre></div>
+</div>
+<p>In other words, this scenario is also a legal combination:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a2</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a2</span><span class="o">.</span><span class="n">names</span>
+<span class="go">(&#39;x&#39;, None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">+</span> <span class="n">a2</span>    
+<span class="go">DataArray(array([[ 2.,  2.,  2.],</span>
+<span class="go">       [ 2.,  2.,  2.],</span>
+<span class="go">       [ 2.,  2.,  2.]]),</span>
+<span class="go">(&#39;x&#39;, &#39;y&#39;))</span>
+</pre></div>
+</div>
+<p>The rule for dimension compatibility is that any two axes match if one of the following is true</p>
+<ul class="simple">
+<li>their (name, length) pairs are equal</li>
+<li>their dimensions are broadcast-compatible, and their axes are equal</li>
+<li>their dimensions are broadcast-compatible, and their axes are
+non-conflicting (ie, one or both are None)</li>
+</ul>
+<p><strong>Question</strong> &#8211; what about this situation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">+</span><span class="n">b</span>          
+<span class="go">DataArray(array([[ 2.,  2.,  2.],</span>
+<span class="go">       [ 2.,  2.,  2.],</span>
+<span class="go">       [ 2.,  2.,  2.]]),</span>
+<span class="go">(&#39;x&#39;, &#39;y&#39;))</span>
+</pre></div>
+</div>
+<p>The broadcasting rules currently allow this combination. I&#8217;m inclined to allow
+it. Even though the axes are different lengths in <code class="docutils literal"><span class="pre">a</span></code> and <code class="docutils literal"><span class="pre">b</span></code>, and
+therefore <em>might</em> be considered different logical axes, there is no actual
+information collision from <code class="docutils literal"><span class="pre">a.axes.y</span></code>.</p>
+</div>
+<div class="section" id="iteration">
+<span id="id3"></span><h2>Iteration<a class="headerlink" href="#iteration" title="Permalink to this headline">¶</a></h2>
+<p>seems to work:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">foo</span> <span class="ow">in</span> <span class="n">time_caps</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span> <span class="n">foo</span>
+<span class="gp">... </span>    <span class="nb">print</span> <span class="n">foo</span><span class="o">.</span><span class="n">axes</span>
+<span class="gp">...</span>
+<span class="go">DataArray([0 1 2 3 4],</span>
+<span class="go">((&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;)),))</span>
+<span class="go">(Axis(name=&#39;capitals&#39;, index=0, labels=[&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;]),)</span>
+<span class="go">DataArray([5 6 7 8 9],</span>
+<span class="go">((&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;)),))</span>
+<span class="go">(Axis(name=&#39;capitals&#39;, index=0, labels=[&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;]),)</span>
+<span class="go">DataArray([10 11 12 13 14],</span>
+<span class="go">((&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;)),))</span>
+<span class="go">(Axis(name=&#39;capitals&#39;, index=0, labels=[&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;]),)</span>
+<span class="go">DataArray([15 16 17 18 19],</span>
+<span class="go">((&#39;capitals&#39;, (&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;)),))</span>
+<span class="go">(Axis(name=&#39;capitals&#39;, index=0, labels=[&#39;washington&#39;, &#39;london&#39;, &#39;berlin&#39;, &#39;paris&#39;, &#39;moscow&#39;]),)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">foo</span> <span class="ow">in</span> <span class="n">time_caps</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span> <span class="n">foo</span>
+<span class="gp">... </span>   <span class="nb">print</span> <span class="n">foo</span><span class="o">.</span><span class="n">axes</span>
+<span class="gp">...</span>
+<span class="go">DataArray([ 0  5 10 15],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]),)</span>
+<span class="go">DataArray([ 1  6 11 16],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]),)</span>
+<span class="go">DataArray([ 2  7 12 17],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]),)</span>
+<span class="go">DataArray([ 3  8 13 18],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]),)</span>
+<span class="go">DataArray([ 4  9 14 19],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">(Axis(name=&#39;time&#39;, index=0, labels=[&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;]),)</span>
+</pre></div>
+</div>
+<p>Or even more conveniently:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">foo</span> <span class="ow">in</span> <span class="n">time_caps</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">capitals</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span> <span class="n">foo</span>
+<span class="gp">...</span>
+<span class="go">DataArray([ 0  5 10 15],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">DataArray([ 1  6 11 16],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">DataArray([ 2  7 12 17],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">DataArray([ 3  8 13 18],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+<span class="go">DataArray([ 4  9 14 19],</span>
+<span class="go">((&#39;time&#39;, (&#39;0015&#39;, &#39;0615&#39;, &#39;1215&#39;, &#39;1815&#39;)),))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="transposition-of-axes">
+<span id="transposition"></span><h2>Transposition of Axes<a class="headerlink" href="#transposition-of-axes" title="Permalink to this headline">¶</a></h2>
+<p>Transposition of a DataArray preserves the dimension names, and updates the
+corresponding indices:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;x&#39;, index=0, labels=None), Axis(name=None, index=1, labels=None), Axis(name=&#39;y&#39;, index=2, labels=None))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(4, 2, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;y&#39;, index=0, labels=None), Axis(name=None, index=1, labels=None), Axis(name=&#39;x&#39;, index=2, labels=None))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DataArrays</a><ul>
+<li><a class="reference internal" href="#basic-dataarray-creation-and-mixing">Basic DataArray Creation And Mixing</a><ul>
+<li><a class="reference internal" href="#with-labels">With &#8220;labels&#8221;</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#slicing">Slicing</a><ul>
+<li><a class="reference internal" href="#slicing-and-labels">Slicing and labels</a><ul>
+<li><a class="reference internal" href="#possible-resolution-1">Possible resolution 1</a></li>
+<li><a class="reference internal" href="#possible-resolution-2-the-winner">Possible resolution 2 (the winner)</a></li>
+<li><a class="reference internal" href="#possible-resolution-3">Possible resolution 3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#broadcasting">Broadcasting</a></li>
+<li><a class="reference internal" href="#iteration">Iteration</a></li>
+<li><a class="reference internal" href="#transposition-of-axes">Transposition of Axes</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to the documentation for the Datarray prototype</a></li>
+      <li>Next: <a href="ndarray_methods.html" title="next chapter">Methods</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/basic_data_array.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/basic_data_array.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

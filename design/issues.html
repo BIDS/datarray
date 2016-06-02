@@ -1,0 +1,761 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Issues, open questions and todo list &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="Design" href="index.html" />
+    <link rel="next" title="Other projects" href="../other_projects/index.html" />
+    <link rel="prev" title="DataArray: some design notes" href="design.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="issues-open-questions-and-todo-list">
+<h1><a class="toc-backref" href="#id2">Issues, open questions and todo list</a><a class="headerlink" href="#issues-open-questions-and-todo-list" title="Permalink to this headline">¶</a></h1>
+<p>Questions and issues about the datarray prototype.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#issues-open-questions-and-todo-list" id="id2">Issues, open questions and todo list</a><ul>
+<li><a class="reference internal" href="#labels" id="id3">Labels</a><ul>
+<li><a class="reference internal" href="#axis-label-dict-is-not-updated-when-labels-are-changed" id="id4">Axis._label_dict is not updated when labels are changed</a></li>
+<li><a class="reference internal" href="#can-i-have-labels-without-axis-names" id="id5">Can I have labels without axis names?</a></li>
+<li><a class="reference internal" href="#add-a-labels-input-parameter" id="id6">Add a labels input parameter?</a></li>
+<li><a class="reference internal" href="#create-axis-label-dict-when-needed" id="id7">Create Axis._label_dict when needed?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#axis-axes" id="id8">Axis, axes</a><ul>
+<li><a class="reference internal" href="#datarray1-datarrat2-which-axes" id="id9">datarray1 + datarrat2 = which axes?</a></li>
+<li><a class="reference internal" href="#why-does-axis-eq-require-the-index-to-be-equal" id="id10">Why does Axis.__eq__ require the index to be equal?</a></li>
+<li><a class="reference internal" href="#axis-axis-axes" id="id11">Axis, axis, axes</a></li>
+<li><a class="reference internal" href="#should-dataarray-axes-be-a-list-instead-of-a-tuple" id="id12">Should DataArray.axes be a list instead of a tuple?</a></li>
+<li><a class="reference internal" href="#can-axis-names-be-anything-besides-none-or-str" id="id13">Can axis names be anything besides None or str?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance" id="id14">Performance</a><ul>
+<li><a class="reference internal" href="#how-long-does-it-take-to-create-a-datarray" id="id15">How long does it take to create a datarray?</a></li>
+<li><a class="reference internal" href="#direct-access-to-array" id="id16">Direct access to array?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#alignment" id="id17">Alignment</a><ul>
+<li><a class="reference internal" href="#support-for-alignment" id="id18">Support for alignment?</a></li>
+<li><a class="reference internal" href="#how-can-datarrays-be-aligned" id="id19">How can datarrays be aligned?</a></li>
+<li><a class="reference internal" href="#datarray-reshape" id="id20">datarray.reshape</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#misc" id="id21">Misc</a><ul>
+<li><a class="reference internal" href="#how-do-i-save-a-datarray-in-hdf5-using-h5py" id="id22">How do I save a datarray in HDF5 using h5py?</a></li>
+<li><a class="reference internal" href="#can-names-and-labels-be-changed" id="id23">Can names and labels be changed?</a></li>
+<li><a class="reference internal" href="#fancy-indexing" id="id24">Fancy Indexing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#changing-names-on-dataarrays" id="id25">Changing Names on DataArrays</a><ul>
+<li><a class="reference internal" href="#tricky-attributes" id="id26">Tricky Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#todo" id="id27">ToDo</a><ul>
+<li><a class="reference internal" href="#indexing-semantics-possibilities" id="id28">Indexing semantics possibilities</a></li>
+<li><a class="reference internal" href="#axis-api" id="id29">Axis api</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="labels">
+<h2><a class="toc-backref" href="#id3">Labels</a><a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h2>
+<p>Labels are a relatively new addition to datarrays. The labels of a datarrays
+identify the axes of the array. The labels of a datarray identify the elements
+along an axis. Both labels and labels are optional.</p>
+<div class="section" id="axis-label-dict-is-not-updated-when-labels-are-changed">
+<h3><a class="toc-backref" href="#id4">Axis._label_dict is not updated when labels are changed</a><a class="headerlink" href="#axis-label-dict-is-not-updated-when-labels-are-changed" title="Permalink to this headline">¶</a></h3>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">_label_dict</span>
+   <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">labels</span>
+   <span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">]</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">_label_dict</span>
+   <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Possible solutions:</p>
+<ol class="arabic simple">
+<li>Don&#8217;t allow labels to be changed</li>
+<li>Only allow labels to be changed through a method that also updates _label_dict</li>
+<li>Don&#8217;t store _label_dict, create on the fly as needed</li>
+</ol>
+<p>pandas, I believe, makes the labels immutable (#1). larry allows the labels to
+be changed and calculates the mapping dict on the fly (#3).</p>
+</div>
+<div class="section" id="can-i-have-labels-without-axis-names">
+<h3><a class="toc-backref" href="#id5">Can I have labels without axis names?</a><a class="headerlink" href="#can-i-have-labels-without-axis-names" title="Permalink to this headline">¶</a></h3>
+<p>I&#8217;d like to use labels without names. At the moment that is not possible:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">))])</span>
+<span class="go">&lt;snip&gt;</span>
+<span class="go">ValueError: labels only supported when Axis has a name</span>
+</pre></div>
+</div>
+<p>Well, it is possible:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">))])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=None, index=0, labels=(&#39;a&#39;, &#39;b&#39;)),)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-a-labels-input-parameter">
+<h3><a class="toc-backref" href="#id6">Add a labels input parameter?</a><a class="headerlink" href="#add-a-labels-input-parameter" title="Permalink to this headline">¶</a></h3>
+<p>What do you think of adding a <code class="docutils literal"><span class="pre">labels</span></code> parameter to DataArray?</p>
+<p>Current behavior:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">((</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">])))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;row&#39;, index=0, labels=[&#39;A&#39;, &#39;B&#39;]),</span>
+<span class="go"> Axis(name=&#39;col&#39;, index=1, labels=[&#39;C&#39;, &#39;D&#39;]))</span>
+</pre></div>
+</div>
+<p>Proposed labels as separate input parameter:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="s1">&#39;col&#39;</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>I think this would make it easier for new users to construct a DataArray with
+labels just from looking at the DataArray signature. It would match the
+signature of Axis. My use case is to use labels only and not names axes (at
+first), so:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>instead of the current:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">])))</span>
+</pre></div>
+</div>
+<p>It might also cause less typos (parentheses matching) at the command line.</p>
+<p>Having separate names and labels input parameters would also leave the option
+open to allow any hashable object, like a tuple, to be used as a name.
+Currently tuples have a special meaning, the (names, labels) tuple.</p>
+</div>
+<div class="section" id="create-axis-label-dict-when-needed">
+<h3><a class="toc-backref" href="#id7">Create Axis._label_dict when needed?</a><a class="headerlink" href="#create-axis-label-dict-when-needed" title="Permalink to this headline">¶</a></h3>
+<p>How about creating Axis._label_dict on the fly when needed (but not saving it)?</p>
+<p><strong>Pros</strong></p>
+<ul class="simple">
+<li>Faster datarray creation (it does look like you get _label_dict for free
+since you need to check that the labels are unique anyway, but set()
+is faster)</li>
+<li>Faster datarray copy</li>
+<li>Use less memory</li>
+<li>Easier to archive</li>
+<li>Simplify Axis</li>
+<li>Prevent user from doing <code class="docutils literal"><span class="pre">dar.axes[0]._label_dict['a']</span> <span class="pre">=</span> <span class="pre">10</span></code></li>
+<li>Catches (on calls to <code class="docutils literal"><span class="pre">make_slice</span></code> and <code class="docutils literal"><span class="pre">keep</span></code>) user mischief like
+dar.axes[0].labels = (&#8216;a&#8217;, &#8216;a&#8217;)</li>
+<li>No need to update Axis._label_dict when user changes labels</li>
+</ul>
+<p><strong>Cons</strong></p>
+<ul class="simple">
+<li>Slower <code class="docutils literal"><span class="pre">make_slice</span></code></li>
+<li>Slower <code class="docutils literal"><span class="pre">keep</span></code></li>
+</ul>
+</div>
+</div>
+<div class="section" id="axis-axes">
+<h2><a class="toc-backref" href="#id8">Axis, axes</a><a class="headerlink" href="#axis-axes" title="Permalink to this headline">¶</a></h2>
+<p>Datarrays were created from the need to name the axes of a numpy array.</p>
+<div class="section" id="datarray1-datarrat2-which-axes">
+<h3><a class="toc-backref" href="#id9">datarray1 + datarrat2 = which axes?</a><a class="headerlink" href="#datarray1-datarrat2-which-axes" title="Permalink to this headline">¶</a></h3>
+<p>Which axes are returned by binary operations?</p>
+<p>Make two datarrays:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;B1&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A2&#39;</span><span class="p">,</span> <span class="s1">&#39;B2&#39;</span><span class="p">])])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">dar1</span></code> on the left-hand side:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar12</span> <span class="o">=</span> <span class="n">dar1</span> <span class="o">+</span> <span class="n">dar2</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar12</span><span class="o">.</span><span class="n">axes</span>
+   <span class="p">(</span><span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;B1&#39;</span><span class="p">]),)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">dar1</span></code> on the right-hand side:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar21</span> <span class="o">=</span> <span class="n">dar2</span> <span class="o">+</span> <span class="n">dar1</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar21</span><span class="o">.</span><span class="n">axes</span>
+   <span class="p">(</span><span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A2&#39;</span><span class="p">,</span> <span class="s1">&#39;B2&#39;</span><span class="p">]),)</span>
+</pre></div>
+</div>
+<p>So a binary operation returns the axes from the left-hand side? No. Seems the
+left most non-None axes are used:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar3</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar31</span> <span class="o">=</span> <span class="n">dar3</span> <span class="o">+</span> <span class="n">dar1</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar31</span><span class="o">.</span><span class="n">axes</span>
+   <span class="p">(</span><span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;B1&#39;</span><span class="p">]),)</span>
+</pre></div>
+</div>
+<p>So binary operation may returns parts of both axes:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">[(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">]),</span> <span class="kc">None</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar12</span> <span class="o">=</span> <span class="n">dar1</span> <span class="o">+</span> <span class="n">dar2</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar12</span><span class="o">.</span><span class="n">axes</span>
+
+<span class="p">(</span><span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">]),</span>
+ <span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Is that the intended behavior?</p>
+</div>
+<div class="section" id="why-does-axis-eq-require-the-index-to-be-equal">
+<h3><a class="toc-backref" href="#id10">Why does Axis.__eq__ require the index to be equal?</a><a class="headerlink" href="#why-does-axis-eq-require-the-index-to-be-equal" title="Permalink to this headline">¶</a></h3>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">[(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;r0&#39;</span><span class="p">,</span> <span class="s1">&#39;r1&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;c0&#39;</span><span class="p">,</span> <span class="s1">&#39;c1&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">[(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;c0&#39;</span><span class="p">,</span> <span class="s1">&#39;c1&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;r0&#39;</span><span class="p">,</span> <span class="s1">&#39;r1&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar1</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dar2</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+   <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="axis-axis-axes">
+<h3><a class="toc-backref" href="#id11">Axis, axis, axes</a><a class="headerlink" href="#axis-axis-axes" title="Permalink to this headline">¶</a></h3>
+<p>The functions, classes, and methods that take care of axes are:</p>
+<ul class="simple">
+<li>Axis (class)</li>
+<li>DataArray.axis (meth)</li>
+<li>DataArray.axes (meth)</li>
+<li>_reordered_axes (func)</li>
+<li>_expand_ellipsis (func)</li>
+<li>_make_singleton_axes (func)</li>
+</ul>
+<p>I find having both DataArray.axis and DataArray.axes confusing at first. I
+wonder if it would simplify things if there was only:</p>
+<ul class="simple">
+<li>Axes (class)</li>
+<li>Data.axes (instance of Axes)</li>
+</ul>
+<p>That would consolidate everything in the Axes class. For example, in
+DataArray.__getitem__ this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="n">old_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">old_axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span>
+    <span class="n">new_shape</span><span class="p">,</span> <span class="n">new_axes</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">_make_singleton_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="c1"># Will undo this later</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">new_shape</span>
+    <span class="n">_set_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_axes</span><span class="p">)</span>
+    <span class="c1"># data is accessed recursively, starting with</span>
+    <span class="c1"># the full array</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="c1"># We must copy of the names of the axes</span>
+    <span class="c1"># before looping through the elements of key,</span>
+    <span class="c1"># as the index of a given axis may change.</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">]</span>
+
+    <span class="c1"># If an Axis gets sliced out entirely, then any following</span>
+    <span class="c1"># unnamed Axis in the array will spontaneously change name.</span>
+    <span class="c1"># So anticipate the name change here.</span>
+    <span class="n">reduction</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">adjustments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">adjustments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="c1"># reduce the idx # on the remaining default names</span>
+            <span class="n">reduction</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="s1">&#39;_</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">r</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">,</span> <span class="n">adjustments</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">slice_or_int</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">slice_or_int</span><span class="p">]</span>
+
+    <span class="c1"># restore old shape and axes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">old_shape</span>
+    <span class="n">_set_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_axes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>could be replaced with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>So it would pull out the axes logic from DataArray and place it in Axes.</p>
+</div>
+<div class="section" id="should-dataarray-axes-be-a-list-instead-of-a-tuple">
+<h3><a class="toc-backref" href="#id12">Should DataArray.axes be a list instead of a tuple?</a><a class="headerlink" href="#should-dataarray-axes-be-a-list-instead-of-a-tuple" title="Permalink to this headline">¶</a></h3>
+<p>Why not make DataArray.axes a list instead of a tuple? Then user can replace
+an axis from one datarray to another, can pop an Axis, etc.</p>
+</div>
+<div class="section" id="can-axis-names-be-anything-besides-none-or-str">
+<h3><a class="toc-backref" href="#id13">Can axis names be anything besides None or str?</a><a class="headerlink" href="#can-axis-names-be-anything-besides-none-or-str" title="Permalink to this headline">¶</a></h3>
+<p>from <a class="reference external" href="http://projects.scipy.org/numpy/wiki/NdarrayWithNamedAxes">http://projects.scipy.org/numpy/wiki/NdarrayWithNamedAxes</a>: &#8220;Axis names
+(the name of a dimension) must be valid Python identifiers.&#8221; I don&#8217;t know
+what that means.</p>
+<p>It would be nice if axis names could be anything hashable like str,
+datetime.date(), int, tuple.</p>
+<p>But names must be strings to do indexing like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">((</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">])))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span>
+<span class="go">DataArray([1, 2])</span>
+<span class="go">(&#39;col&#39;,)</span>
+</pre></div>
+</div>
+<p>One way to make it work would be to rewrite the above as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="s1">&#39;row&#39;</span><span class="p">][</span><span class="s1">&#39;A&#39;</span><span class="p">]</span>
+<span class="go">DataArray([1, 2])</span>
+<span class="go">(&#39;col&#39;,)</span>
+</pre></div>
+</div>
+<p>which would also make it easier to loop through the axes by name:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span> <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">axisname</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="n">col</span><span class="s1">&#39;]:</span>
+<span class="o">....</span><span class="p">:</span>    <span class="n">dar</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="n">axisname</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+<span class="o">....</span><span class="p">:</span>    <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="performance">
+<h2><a class="toc-backref" href="#id14">Performance</a><a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h2>
+<p>Performance is not the primary concern during the prototype phase of datarray.
+But some attention to performance issue will help guide the development of
+datarrays.</p>
+<div class="section" id="how-long-does-it-take-to-create-a-datarray">
+<h3><a class="toc-backref" href="#id15">How long does it take to create a datarray?</a><a class="headerlink" href="#how-long-does-it-take-to-create-a-datarray" title="Permalink to this headline">¶</a></h3>
+<p>Set up data:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">&gt;&gt;</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="o">&gt;&gt;</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="n">idx1</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+<span class="o">&gt;&gt;</span> <span class="n">idx2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Time the creation of a datarray:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">from</span> <span class="nn">datarray</span> <span class="k">import</span> <span class="n">DataArray</span>
+<span class="o">&gt;&gt;</span> <span class="kn">import</span> <span class="nn">datarray</span>
+<span class="o">&gt;&gt;</span> <span class="n">names</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="n">idx1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="n">idx2</span><span class="p">)]</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">datarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+<span class="mi">1000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">160</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+</pre></div>
+</div>
+<p>Time the creation of a pandas DataMatrix. A DataMatrix it is also a subclass
+of numpy&#8217;s ndarray, but it has been optimized so should be a proxy for how
+fast a datarray can become:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">import</span> <span class="nn">pandas</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataMatrix</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">idx1</span><span class="p">,</span> <span class="n">idx2</span><span class="p">)</span>
+<span class="mi">10000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">50.7</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+</pre></div>
+</div>
+<p>larry is not a subclass of numpy&#8217;s ndarray, I think that is one reason it is
+faster to create:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">import</span> <span class="nn">la</span>
+<span class="o">&gt;&gt;</span> <span class="n">name</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx1</span><span class="p">,</span> <span class="n">idx2</span><span class="p">]</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="mi">100000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">13.5</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">integrity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="mi">1000000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">1.25</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+</pre></div>
+</div>
+<p>Also both datarray and DataMatrix make a mapping dictionary when the data
+object is created&#8212;that takes time. larry makes a mapping dictionary on the
+fly, when needed.</p>
+<p>Why is the time to create a datarray important? Because even an operation as
+simple as <code class="docutils literal"><span class="pre">dar1</span> <span class="pre">+</span> <span class="pre">dar2</span></code> creates a datarray.</p>
+</div>
+<div class="section" id="direct-access-to-array">
+<h3><a class="toc-backref" href="#id16">Direct access to array?</a><a class="headerlink" href="#direct-access-to-array" title="Permalink to this headline">¶</a></h3>
+<p>Names and labels add overhead. Sometimes, after aligning my datarrays, I would
+like to work directly with the numpy arrays. Is there a way to do that with
+datarrays?</p>
+<p>For example, with a named array, <a class="reference external" href="http://github.com/kwgoodman/la">larry</a>, the underlying numpy array is always
+accessible as the attribute <code class="docutils literal"><span class="pre">x</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">la</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lar</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lar</span><span class="o">.</span><span class="n">x</span>
+<span class="go">array([1, 2, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lar</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">myfunc</span><span class="p">(</span><span class="n">lar</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This might be one solution (base):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">from</span> <span class="nn">datarray</span> <span class="k">import</span> <span class="n">DataArray</span>
+<span class="o">&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span> <span class="p">[(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;r1&#39;</span><span class="p">,</span> <span class="s1">&#39;r2&#39;</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;c1&#39;</span><span class="p">,</span> <span class="s1">&#39;c2&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">x</span> <span class="o">+</span> <span class="n">x</span>
+<span class="mi">10000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">61.4</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+<span class="o">&gt;&gt;</span> <span class="n">timeit</span> <span class="n">x</span><span class="o">.</span><span class="n">base</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">base</span>
+<span class="mi">100000</span> <span class="n">loops</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mf">2.16</span> <span class="n">us</span> <span class="n">per</span> <span class="n">loop</span>
+</pre></div>
+</div>
+<p>and:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">x</span><span class="o">.</span><span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9</span>
+<span class="o">&gt;&gt;</span> <span class="n">x</span>
+
+<span class="n">DataArray</span><span class="p">([</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>But base is not guaranteed to be a view. What&#8217;s another solution? Could create
+an attribute at init time, but that slows down init.</p>
+</div>
+</div>
+<div class="section" id="alignment">
+<h2><a class="toc-backref" href="#id17">Alignment</a><a class="headerlink" href="#alignment" title="Permalink to this headline">¶</a></h2>
+<p>Datarray may not handle alignment directly. But some users of datarrays would
+like an easy way to align datarrays.</p>
+<div class="section" id="support-for-alignment">
+<h3><a class="toc-backref" href="#id18">Support for alignment?</a><a class="headerlink" href="#support-for-alignment" title="Permalink to this headline">¶</a></h3>
+<p>Will datarray provide any support for those who want binary operations between
+two datarrays to join names or labels using various join methods?</p>
+<p><a class="reference external" href="http://larry.sourceforge.net/work.html#alignment">A use case</a> from <a class="reference external" href="http://github.com/kwgoodman/la">larry</a>:</p>
+<p>By default, binary operations between two larrys use an inner join of the
+names (the intersection of the names):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lar1</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lar2</span> <span class="o">=</span> <span class="n">larry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lar1</span> <span class="o">+</span> <span class="n">lar2</span>
+<span class="go">name_0</span>
+<span class="go">    0</span>
+<span class="go">    1</span>
+<span class="go">x</span>
+<span class="go">array([2, 4])</span>
+</pre></div>
+</div>
+<p>The sum of two larrys using an outer join (union of the names):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">la</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lar1</span><span class="p">,</span> <span class="n">lar2</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">)</span>
+<span class="go">name_0</span>
+<span class="go">    0</span>
+<span class="go">    1</span>
+<span class="go">    2</span>
+<span class="go">x</span>
+<span class="go">array([  2.,   4.,  NaN])</span>
+</pre></div>
+</div>
+<p>The available join methods are inner, outer, left, right, and list. If the
+join method is specified as a list then the first element in the list is the
+join method for axis=0, the second element is the join method for axis=1, and
+so on.</p>
+</div>
+<div class="section" id="how-can-datarrays-be-aligned">
+<h3><a class="toc-backref" href="#id19">How can datarrays be aligned?</a><a class="headerlink" href="#how-can-datarrays-be-aligned" title="Permalink to this headline">¶</a></h3>
+<p>What&#8217;s an outer join (or inner, left, right) along an axis of two datarrays if
+one datarray has labels and the other doesn&#8217;t?</p>
+<p>Background:</p>
+<p>It is often useful to align two datarrays before performing binary operations
+such as +, -, *, /. Two datarrays are aligned when both datarrays have the same
+names and labels along all axes.</p>
+<p>Aligned:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar1</span><span class="o">.</span><span class="n">axes</span> <span class="o">==</span> <span class="n">dar2</span><span class="o">.</span><span class="n">axes</span>
+   <span class="kc">True</span>
+</pre></div>
+</div>
+<p>Unaligned:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,))</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;distance&quot;</span><span class="p">,))</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar1</span><span class="o">.</span><span class="n">axes</span> <span class="o">==</span> <span class="n">dar2</span><span class="o">.</span><span class="n">axes</span>
+   <span class="kc">False</span>
+</pre></div>
+</div>
+<p>Unaligned but returns aligned since Axis.__eq__ doesn&#8217;t (yet) check for
+equality of labels:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;different&#39;</span><span class="p">])])</span>
+<span class="o">&gt;&gt;</span> <span class="n">dar1</span><span class="o">.</span><span class="n">axes</span> <span class="o">==</span> <span class="n">dar2</span><span class="o">.</span><span class="n">axes</span>
+   <span class="kc">True</span>
+</pre></div>
+</div>
+<p>Let&#8217;s say we make an add function with user control of the join method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">add</span><span class="p">(</span><span class="n">dar1</span><span class="p">,</span> <span class="n">dar2</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Since datarray allows empty axis names (None) and labels (None), what does an
+outer join mean if dar1 has labels but dar2 doesn&#8217;t:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar1</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">])])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar2</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,)])</span>
+</pre></div>
+</div>
+<p>What would the following return?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">add</span><span class="p">(</span><span class="n">dar1</span><span class="p">,</span> <span class="n">dar2</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>larry requires all axes to have labels, if none are given then the labels default
+to range(n).</p>
+</div>
+<div class="section" id="datarray-reshape">
+<h3><a class="toc-backref" href="#id20">datarray.reshape</a><a class="headerlink" href="#datarray-reshape" title="Permalink to this headline">¶</a></h3>
+<p>Reshape operations scramble names and labels. Some numpy functions and
+array methods use reshape. Should reshape convert a datarray to an array?</p>
+<p>Looks like datarray will need unit tests for every numpy function and array
+method.</p>
+</div>
+</div>
+<div class="section" id="misc">
+<h2><a class="toc-backref" href="#id21">Misc</a><a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<p>Miscellaneous observation on datarrays.</p>
+<div class="section" id="how-do-i-save-a-datarray-in-hdf5-using-h5py">
+<h3><a class="toc-backref" href="#id22">How do I save a datarray in HDF5 using h5py?</a><a class="headerlink" href="#how-do-i-save-a-datarray-in-hdf5-using-h5py" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://h5py.alfven.org">h5py</a>, which stores data in HDF5 format, can only
+save numpy arrays.</p>
+<p>What are the parts of a datarray that need to be saved? And can they be stored
+as numpy arrays?</p>
+<p>A datarray can be broken down to the following components:</p>
+<ul class="simple">
+<li>data (store directly as numpy array)</li>
+<li>names (store as object array since it contains None and str and covert
+back on load?)</li>
+<li>labels (each axis stored as numpy array with axis number stored as HDF5
+Dataset attribute, but then labels along any one axis must be homogeneous
+in dtype)</li>
+<li>Dictionary of label index mappings (ignore, recreate on load)</li>
+</ul>
+<p>(I need to write a function that saves an Axis object to HDF5.)</p>
+<p>If I don&#8217;t save Axis._label_dict, would I have to worry about a user changing
+the mapping?</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">Axis(name=&#39;one&#39;, index=0, labels=(&#39;a&#39;, &#39;b&#39;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_label_dict</span>
+<span class="go">{&#39;a&#39;: 0, &#39;b&#39;: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_label_dict</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_label_dict</span>
+<span class="go">{&#39;a&#39;: 10, &#39;b&#39;: 1}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="can-names-and-labels-be-changed">
+<h3><a class="toc-backref" href="#id23">Can names and labels be changed?</a><a class="headerlink" href="#can-names-and-labels-be-changed" title="Permalink to this headline">¶</a></h3>
+<p>Labels can be changed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">])])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;row&#39;, index=0, labels=[&#39;A&#39;, &#39;B&#39;]),)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;CHANGED&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;row&#39;, index=0, labels=[&#39;CHANGED&#39;, &#39;B&#39;]),)</span>
+</pre></div>
+</div>
+<p>But Axis._label_dict is not updated when user changes labels.</p>
+<p>And so can names:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;new name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dar</span>
+<span class="go">DataArray([1, 2])</span>
+<span class="go">(&#39;new name&#39;,)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fancy-indexing">
+<h3><a class="toc-backref" href="#id24">Fancy Indexing</a><a class="headerlink" href="#fancy-indexing" title="Permalink to this headline">¶</a></h3>
+<p>It&#8217;s not implemented at all yet.</p>
+</div>
+</div>
+<div class="section" id="changing-names-on-dataarrays">
+<span id="name-updates"></span><h2><a class="toc-backref" href="#id25">Changing Names on DataArrays</a><a class="headerlink" href="#changing-names-on-dataarrays" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tricky-attributes">
+<h3><a class="toc-backref" href="#id26">Tricky Attributes</a><a class="headerlink" href="#tricky-attributes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>.names &#8211; currently a mutable list of Axis.name attributes</li>
+<li>.axes &#8211; currently a mutable list of Axis objects</li>
+<li>.axis &#8211; a key-to-attribute dictionary</li>
+</ul>
+<p>Need an event-ful way to change an Axis&#8217;s label, such that all the above
+attributes are updated.</p>
+<p><strong>Proposed solution</strong>:</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>use a set_label() method. This will consequently update the parent array&#8217;s</dt>
+<dd><p class="first last">(names, axes, axis) attributes.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">make the mutable lists into <em>tuples</em> to deny write access.</p>
+</li>
+<li><p class="first">make the KeyStruct <code class="docutils literal"><span class="pre">.axis</span></code> have write-once access</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="todo">
+<span id="id1"></span><h2><a class="toc-backref" href="#id27">ToDo</a><a class="headerlink" href="#todo" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Support DataArray instances with mixed axes: simple ones with no values
+and &#8216;fancy&#8217; ones with data in them.  Syntax?</li>
+</ul>
+<p><code class="docutils literal"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">DataArray.from_names(data,</span> <span class="pre">axes=['a','b','c'])</span></code></p>
+<p><code class="docutils literal"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">DataArray(data,</span> <span class="pre">axes=[('a',['1','2','3']),</span> <span class="pre">('b',['one','two']),</span> <span class="pre">('c',['red','black'])])</span></code></p>
+<p><code class="docutils literal"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">DataArray(data,</span> <span class="pre">axes=[('a',['1','2','3']),</span> <span class="pre">('b',None),</span> <span class="pre">('c',['red','black'])])</span></code></p>
+<ul class="simple">
+<li>Can a, b, and c be combined in binary operations, given the different tick
+combinations?</li>
+<li>How to handle complicated reshaping (not flattening or, padding/trimming with
+1s)</li>
+<li>Units support (Darren&#8217;s)</li>
+<li>Jagged arrays? Kilian&#8217;s suggestion.  Drop the base array altogether, and
+access data via the .axis objects alone.</li>
+<li>&#8220;Enum dtype&#8221;, could be useful for event selection.</li>
+<li>&#8220;Ordered factors&#8221;? Something R supports.</li>
+<li>How many axis classes?</li>
+<li>Allowing non-string axis names?</li>
+</ul>
+<ul class="simple">
+<li>At least they must be hashable...</li>
+<li>Serialization?</li>
+</ul>
+<ul class="simple">
+<li>Allowing multiple names per axis?</li>
+<li>Rob Speer&#8217;s proposal for purely top-level, &#8216;magical&#8217; attributes?</li>
+<li>Finish the semantics of .lix indexing, especially with regards to what it
+should do when integer labels are present.</li>
+<li>What should a.axis.x[object] do: .lix-style indexing or pure numpy indexing?</li>
+</ul>
+<div class="section" id="indexing-semantics-possibilities">
+<h3><a class="toc-backref" href="#id28">Indexing semantics possibilities</a><a class="headerlink" href="#indexing-semantics-possibilities" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>.lix: Integers always labels.  a.lix[3:10] means labels 3 and 10 MUST exist.</li>
+<li>.nix: Integers are never treated as labels.</li>
+<li>.awful_ix: 1, then 2.</li>
+</ol>
+</div>
+<div class="section" id="axis-api">
+<h3><a class="toc-backref" href="#id29">Axis api</a><a class="headerlink" href="#axis-api" title="Permalink to this headline">¶</a></h3>
+<p>If a is an axis from an array: a = x.axis.a</p>
+<ul class="simple">
+<li>a.at(key): return the slice at that key, with one less dimension than x</li>
+<li>a.keep(keys): join slices for given keys, dims=dims(x)</li>
+<li>a.drop(keys): like keep, but the opposite</li>
+</ul>
+<p>a[i] valid cases:</p>
+<ul class="simple">
+<li>i: integer =&gt; normal numpy scalar indexing, one less dim than x</li>
+<li>i: slice: numpy view slicing.  same dims as x, must recover the labels</li>
+<li>i: list/array: numpy fancy indexing, as long as the index list is 1d only.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Issues, open questions and todo list</a><ul>
+<li><a class="reference internal" href="#labels">Labels</a><ul>
+<li><a class="reference internal" href="#axis-label-dict-is-not-updated-when-labels-are-changed">Axis._label_dict is not updated when labels are changed</a></li>
+<li><a class="reference internal" href="#can-i-have-labels-without-axis-names">Can I have labels without axis names?</a></li>
+<li><a class="reference internal" href="#add-a-labels-input-parameter">Add a labels input parameter?</a></li>
+<li><a class="reference internal" href="#create-axis-label-dict-when-needed">Create Axis._label_dict when needed?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#axis-axes">Axis, axes</a><ul>
+<li><a class="reference internal" href="#datarray1-datarrat2-which-axes">datarray1 + datarrat2 = which axes?</a></li>
+<li><a class="reference internal" href="#why-does-axis-eq-require-the-index-to-be-equal">Why does Axis.__eq__ require the index to be equal?</a></li>
+<li><a class="reference internal" href="#axis-axis-axes">Axis, axis, axes</a></li>
+<li><a class="reference internal" href="#should-dataarray-axes-be-a-list-instead-of-a-tuple">Should DataArray.axes be a list instead of a tuple?</a></li>
+<li><a class="reference internal" href="#can-axis-names-be-anything-besides-none-or-str">Can axis names be anything besides None or str?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance">Performance</a><ul>
+<li><a class="reference internal" href="#how-long-does-it-take-to-create-a-datarray">How long does it take to create a datarray?</a></li>
+<li><a class="reference internal" href="#direct-access-to-array">Direct access to array?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#alignment">Alignment</a><ul>
+<li><a class="reference internal" href="#support-for-alignment">Support for alignment?</a></li>
+<li><a class="reference internal" href="#how-can-datarrays-be-aligned">How can datarrays be aligned?</a></li>
+<li><a class="reference internal" href="#datarray-reshape">datarray.reshape</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#misc">Misc</a><ul>
+<li><a class="reference internal" href="#how-do-i-save-a-datarray-in-hdf5-using-h5py">How do I save a datarray in HDF5 using h5py?</a></li>
+<li><a class="reference internal" href="#can-names-and-labels-be-changed">Can names and labels be changed?</a></li>
+<li><a class="reference internal" href="#fancy-indexing">Fancy Indexing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#changing-names-on-dataarrays">Changing Names on DataArrays</a><ul>
+<li><a class="reference internal" href="#tricky-attributes">Tricky Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#todo">ToDo</a><ul>
+<li><a class="reference internal" href="#indexing-semantics-possibilities">Indexing semantics possibilities</a></li>
+<li><a class="reference internal" href="#axis-api">Axis api</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Design</a><ul>
+      <li>Previous: <a href="design.html" title="previous chapter">DataArray: some design notes</a></li>
+      <li>Next: <a href="../other_projects/index.html" title="next chapter">Other projects</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/design/issues.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/design/issues.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

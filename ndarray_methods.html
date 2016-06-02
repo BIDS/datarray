@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Methods &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="index.html" />
+    <link rel="next" title="Printing Datarrays" href="printing.html" />
+    <link rel="prev" title="DataArrays" href="basic_data_array.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="methods">
+<h1>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h1>
+<p>Here is a list of the <code class="docutils literal"><span class="pre">array</span></code> methods:</p>
+<ul class="simple">
+<li>&#8216;__array__&#8217;,</li>
+<li><a class="reference internal" href="#explicitly-redef"><span class="std std-ref">&#8216;__array_prepare__&#8217;,</span></a></li>
+<li><a class="reference internal" href="#explicitly-redef"><span class="std std-ref">&#8216;__array_wrap__&#8217;,</span></a></li>
+<li>&#8216;__copy__&#8217;,</li>
+<li>&#8216;__deepcopy__&#8217;,</li>
+<li><a class="reference internal" href="#explicitly-redef"><span class="std std-ref">&#8216;__new__&#8217;,</span></a></li>
+<li>&#8216;__reduce__&#8217;,</li>
+<li>&#8216;__reduce_ex__&#8217;,</li>
+<li>&#8216;__setstate__&#8217;,</li>
+<li>&#8216;all&#8217;,</li>
+<li>&#8216;any&#8217;,</li>
+<li><a class="reference internal" href="#wrapped-reduction-special"><span class="std std-ref">&#8216;argmax&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction-special"><span class="std std-ref">&#8216;argmin&#8217;,</span></a></li>
+<li><a class="reference internal" href="#sorting-methods"><span class="std std-ref">&#8216;argsort&#8217;,</span></a></li>
+<li>&#8216;astype&#8217;,</li>
+<li>&#8216;byteswap&#8217;,</li>
+<li><a class="reference internal" href="#wtf-methods"><span class="std std-ref">&#8216;choose&#8217;,</span></a></li>
+<li>&#8216;clip&#8217;,</li>
+<li>&#8216;compress&#8217;,</li>
+<li>&#8216;conj&#8217;,</li>
+<li>&#8216;conjugate&#8217;,</li>
+<li>&#8216;copy&#8217;,</li>
+<li><a class="reference internal" href="#incomplete-reductions"><span class="std std-ref">&#8216;cumprod&#8217;,</span></a></li>
+<li><a class="reference internal" href="#incomplete-reductions"><span class="std std-ref">&#8216;cumsum&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wtf-methods"><span class="std std-ref">&#8216;diagonal&#8217;,</span></a></li>
+<li>&#8216;dump&#8217;,</li>
+<li>&#8216;dumps&#8217;,</li>
+<li>&#8216;fill&#8217;,</li>
+<li><a class="reference internal" href="#reshaping-methods"><span class="std std-ref">&#8216;flatten&#8217;,</span></a></li>
+<li>&#8216;getfield&#8217;,</li>
+<li>&#8216;item&#8217;,</li>
+<li>&#8216;itemset&#8217;,</li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;max&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;mean&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;min&#8217;,</span></a></li>
+<li>&#8216;newbyteorder&#8217;,</li>
+<li>&#8216;nonzero&#8217;,</li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;prod&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;ptp&#8217;,</span></a></li>
+<li>&#8216;put&#8217;,</li>
+<li><a class="reference internal" href="#reshaping-methods"><span class="std std-ref">&#8216;ravel&#8217;,</span></a></li>
+<li><a class="reference internal" href="#incomplete-reductions"><span class="std std-ref">&#8216;repeat&#8217;,</span></a></li>
+<li><a class="reference internal" href="#reshaping-methods"><span class="std std-ref">&#8216;reshape&#8217;,</span></a></li>
+<li><a class="reference internal" href="#reshaping-methods"><span class="std std-ref">&#8216;resize&#8217;,</span></a></li>
+<li>&#8216;round&#8217;,</li>
+<li><a class="reference internal" href="#wtf-methods"><span class="std std-ref">&#8216;searchsorted&#8217;,</span></a></li>
+<li>&#8216;setfield&#8217;,</li>
+<li>&#8216;setflags&#8217;,</li>
+<li><a class="reference internal" href="#sorting-methods"><span class="std std-ref">&#8216;sort&#8217;,</span></a></li>
+<li><a class="reference internal" href="#reshaping-methods"><span class="std std-ref">&#8216;squeeze&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;std&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;sum&#8217;,</span></a></li>
+<li><a class="reference internal" href="#explicitly-redef"><span class="std std-ref">&#8216;swapaxes&#8217;,</span></a></li>
+<li><a class="reference internal" href="#incomplete-reductions"><span class="std std-ref">&#8216;take&#8217;,</span></a></li>
+<li>&#8216;tofile&#8217;,</li>
+<li>&#8216;tolist&#8217;,</li>
+<li>&#8216;tostring&#8217;,</li>
+<li>&#8216;trace&#8217;,</li>
+<li><a class="reference internal" href="#explicitly-redef"><span class="std std-ref">&#8216;transpose&#8217;,</span></a></li>
+<li><a class="reference internal" href="#wrapped-reduction"><span class="std std-ref">&#8216;var&#8217;,</span></a></li>
+<li>&#8216;view&#8217;]</li>
+</ul>
+<div class="section" id="sorting">
+<span id="sorting-methods"></span><h2>Sorting<a class="headerlink" href="#sorting" title="Permalink to this headline">¶</a></h2>
+<p>sort() and argsort()</p>
+<p>These methods default to sorting the flattened array (returning an
+ndarray). If given an axis keyword, then it is possible to preserve
+the axes meta-data <em>only if</em> there are no ticks on the sorted
+Axis. Otherwise, an ndarray is returned.</p>
+</div>
+<div class="section" id="explicitly-overloaded">
+<span id="explicitly-redef"></span><h2>Explicitly overloaded<a class="headerlink" href="#explicitly-overloaded" title="Permalink to this headline">¶</a></h2>
+<p>These methods do not fit into a simple pattern, and are explicitly overloaded
+in the DataArray class definition.</p>
+</div>
+<div class="section" id="regular-reductions-eg-min">
+<span id="wrapped-reduction"></span><h2>Regular reductions (eg, min)<a class="headerlink" href="#regular-reductions-eg-min" title="Permalink to this headline">¶</a></h2>
+<p>These methods are wrapped in a generic runner that pays attention to which axis
+is being trimmed out (if only one), and then sets the remaining axes on the
+resulting array. It also allows for the translation of Axis-name to Axis-index.</p>
+</div>
+<div class="section" id="special-reductions-eg-argmin">
+<span id="wrapped-reduction-special"></span><h2>Special reductions (eg, argmin)<a class="headerlink" href="#special-reductions-eg-argmin" title="Permalink to this headline">¶</a></h2>
+<p>These methods are currently wrapped as a generic reduction.</p>
+<p>These methods return an index, or an array of indices into the array in
+question. That significantly changes the model of the array in question. Should
+the return type here NOT be DataArray?</p>
+</div>
+<div class="section" id="accumulations">
+<span id="incomplete-reductions"></span><h2>Accumulations<a class="headerlink" href="#accumulations" title="Permalink to this headline">¶</a></h2>
+<p>These methods are wrapped in a generic accumulator.</p>
+<p>These methods have the property of taking an &#8220;axis&#8221; keyword argument, and yet
+not eliminating that axis. They also default to working on the flattened array
+if the axis parameter is left unspecified.</p>
+</div>
+<div class="section" id="not-applicable-methods">
+<span id="wtf-methods"></span><h2>Not-applicable methods<a class="headerlink" href="#not-applicable-methods" title="Permalink to this headline">¶</a></h2>
+<p>Possibly N/A methods?</p>
+</div>
+<div class="section" id="reshapes">
+<span id="reshaping-methods"></span><h2>Reshapes<a class="headerlink" href="#reshapes" title="Permalink to this headline">¶</a></h2>
+<p>Reshaping is prickly.. I&#8217;ve already implemented certain slicing
+mechanisms that can insert unlabeled axes with length-1. This seems
+legitimate. Also squeezing out length-1 seems legitimate (<strong>even if
+the Axis is labeled?</strong>).</p>
+<p>The reshaping currently only trims or pads the array shape with 1s, or
+flattens the array entirely (returning an ndarray).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Methods</a><ul>
+<li><a class="reference internal" href="#sorting">Sorting</a></li>
+<li><a class="reference internal" href="#explicitly-overloaded">Explicitly overloaded</a></li>
+<li><a class="reference internal" href="#regular-reductions-eg-min">Regular reductions (eg, min)</a></li>
+<li><a class="reference internal" href="#special-reductions-eg-argmin">Special reductions (eg, argmin)</a></li>
+<li><a class="reference internal" href="#accumulations">Accumulations</a></li>
+<li><a class="reference internal" href="#not-applicable-methods">Not-applicable methods</a></li>
+<li><a class="reference internal" href="#reshapes">Reshapes</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="basic_data_array.html" title="previous chapter">DataArrays</a></li>
+      <li>Next: <a href="printing.html" title="next chapter">Printing Datarrays</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ndarray_methods.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/ndarray_methods.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

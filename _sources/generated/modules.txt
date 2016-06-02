@@ -1,0 +1,7 @@
+datarray
+========
+
+.. toctree::
+   :maxdepth: 4
+
+   datarray

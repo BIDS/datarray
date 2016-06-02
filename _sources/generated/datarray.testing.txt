@@ -1,0 +1,30 @@
+datarray.testing package
+========================
+
+Submodules
+----------
+
+datarray.testing.testlib module
+-------------------------------
+
+.. automodule:: datarray.testing.testlib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+datarray.testing.utils module
+-----------------------------
+
+.. automodule:: datarray.testing.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: datarray.testing
+    :members:
+    :undoc-members:
+    :show-inheritance:

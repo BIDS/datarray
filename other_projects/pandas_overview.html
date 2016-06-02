@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pandas &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="Other projects" href="index.html" />
+    <link rel="next" title="License" href="../license.html" />
+    <link rel="prev" title="Larray (aka Larry)" href="larry_overview.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pandas">
+<h1>Pandas<a class="headerlink" href="#pandas" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Pandas provides a timeseries and stack-of-timeseries objects. They
+seem heavily geared towards financial data. Despite the fact of
+<strong>being</strong> an ndarray, Pandas objects seem to be a specialized
+alternative to ndarrays rather than an augmentation of them.</p>
+<p>Features</p>
+<ul class="simple">
+<li><strong>Is</strong> an ndarray</li>
+<li>axes are not named</li>
+<li>Is dict-like, with respect to its indices (ticks)</li>
+<li>If ticks are indices, semantics of indexing are ambiguous</li>
+<li>Separate objects from 1D and 2D, no support for n&gt;2</li>
+</ul>
+<div class="section" id="indexing">
+<h3>Indexing<a class="headerlink" href="#indexing" title="Permalink to this headline">¶</a></h3>
+<p>Point-indexing syntax can use ticks or integer indices. Range indexing
+only works with integers, but uses the same syntax</p>
+<div class="section" id="semantic-ambiguity">
+<h4>Semantic Ambiguity<a class="headerlink" href="#semantic-ambiguity" title="Permalink to this headline">¶</a></h4>
+<p>Integer tick values interfere with integer indexing, for example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">fromValue</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span>
+<span class="go">5    23</span>
+<span class="go">4    62</span>
+<span class="go">3    66</span>
+<span class="go">2    91</span>
+<span class="go">1    91</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span>
+<span class="go">5    23</span>
+<span class="go">4    62</span>
+<span class="go">3    66</span>
+<span class="go">2    0</span>
+<span class="go">1    91</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="binary-operations">
+<h3>Binary Operations<a class="headerlink" href="#binary-operations" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="alignment">
+<h4>Alignment<a class="headerlink" href="#alignment" title="Permalink to this headline">¶</a></h4>
+<p>If data is partially aligned, missing data is filled with NaNs. This
+introduces a union with respect to the &#8220;range&#8221; of the data. This also
+will <strong>cast</strong> the data to floating point.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go"> dtype(&#39;int32&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">-</span> <span class="n">t</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">5    0.0</span>
+<span class="go">4    0.0</span>
+<span class="go">3    0.0</span>
+<span class="go">2    NaN</span>
+<span class="go">1    NaN</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Pandas</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#indexing">Indexing</a><ul>
+<li><a class="reference internal" href="#semantic-ambiguity">Semantic Ambiguity</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#binary-operations">Binary Operations</a><ul>
+<li><a class="reference internal" href="#alignment">Alignment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Other projects</a><ul>
+      <li>Previous: <a href="larry_overview.html" title="previous chapter">Larray (aka Larry)</a></li>
+      <li>Next: <a href="../license.html" title="next chapter">License</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/other_projects/pandas_overview.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/other_projects/pandas_overview.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

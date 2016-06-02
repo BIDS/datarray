@@ -1,0 +1,690 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>datarray package &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="datarray" href="modules.html" />
+    <link rel="next" title="datarray.testing package" href="datarray.testing.html" />
+    <link rel="prev" title="datarray" href="modules.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="datarray-package">
+<h1>datarray package<a class="headerlink" href="#datarray-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="datarray.testing.html">datarray.testing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datarray.testing.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datarray.testing.html#module-datarray.testing.testlib">datarray.testing.testlib module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datarray.testing.html#module-datarray.testing.utils">datarray.testing.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datarray.testing.html#module-datarray.testing">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-datarray.datarray">
+<span id="datarray-datarray-module"></span><h2>datarray.datarray module<a class="headerlink" href="#module-datarray.datarray" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="datarray.datarray.AxesManager">
+<em class="property">class </em><code class="descclassname">datarray.datarray.</code><code class="descname">AxesManager</code><span class="sig-paren">(</span><em>arr</em>, <em>axes</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.AxesManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class to manage the logic of the datarray.axes object.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>                 <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;aapl&#39;</span><span class="p">,</span> <span class="s1">&#39;ibm&#39;</span><span class="p">,</span> <span class="s1">&#39;goog&#39;</span><span class="p">,</span> <span class="s1">&#39;msft&#39;</span><span class="p">)),</span> <span class="s1">&#39;metric&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">,</span> <span class="n">AxesManager</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>At a basic level, AxesManager acts like a sequence of axes:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">axes</span> 
+<span class="go">(Axis(name=&#39;date&#39;, index=0, labels=None), ..., Axis(name=&#39;metric&#39;, index=2, labels=None))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">Axis(name=&#39;date&#39;, index=0, labels=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">IndexError</span>: <span class="n">Requested axis 4 out of bounds</span>
+</pre></div>
+</div>
+<p>Each axis is accessible as a named attribute:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span>
+<span class="go">Axis(name=&#39;stocks&#39;, index=1, labels=(&#39;aapl&#39;, &#39;ibm&#39;, &#39;goog&#39;, &#39;msft&#39;))</span>
+</pre></div>
+</div>
+<p>An axis can be indexed by integers or ticks:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">DataArray(array(True, dtype=bool),</span>
+<span class="go">(&#39;date&#39;, (&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,:])</span>
+<span class="go">DataArray(array(True, dtype=bool),</span>
+<span class="go">(&#39;date&#39;, (&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+</pre></div>
+</div>
+<p>Axes can also be accessed numerically:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Calling the AxesManager with string arguments will return an
+<a class="reference internal" href="#datarray.datarray.AxisIndexer" title="datarray.datarray.AxisIndexer"><code class="xref py py-class docutils literal"><span class="pre">AxisIndexer</span></code></a> object which can be used to restrict slices to
+specified axes:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Ai</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Ai</span><span class="p">[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">DataArray(array(True, dtype=bool),</span>
+<span class="go">((&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+</pre></div>
+</div>
+<p>You can also mix axis names and integers when calling AxesManager.
+(Not yet supported.)</p>
+<p># &gt;&gt;&gt; np.all(A.axes(1, &#8216;date&#8217;)[&#8216;aapl&#8217;:&#8217;goog&#8217;,100:200] == A[100:200, 0:2])
+# True</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.datarray.Axis">
+<em class="property">class </em><code class="descclassname">datarray.datarray.</code><code class="descname">Axis</code><span class="sig-paren">(</span><em>name</em>, <em>index</em>, <em>parent_arr</em>, <em>labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Object to access a given axis of an array.</p>
+<dl class="method">
+<dt id="datarray.datarray.Axis.at">
+<code class="descname">at</code><span class="sig-paren">(</span><em>label</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis.at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return data at a given label.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;abcde&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">axes</span>
+<span class="go">(Axis(name=&#39;a&#39;, index=0, labels=None),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.Axis.drop">
+<code class="descname">drop</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis.drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep only certain labels of an axis.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">darr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">)),</span>
+<span class="gp">... </span>                 <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">])])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr1</span> <span class="o">=</span> <span class="n">darr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">keep</span><span class="p">([</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr2</span> <span class="o">=</span> <span class="n">darr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">arr1</span> <span class="o">==</span> <span class="n">arr2</span><span class="p">)</span>
+<span class="go">DataArray(array(True, dtype=bool),</span>
+<span class="go">(&#39;a&#39;, (&#39;b&#39;, (&#39;c&#39;, &#39;d&#39;))))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.Axis.keep">
+<code class="descname">keep</code><span class="sig-paren">(</span><em>labels</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis.keep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep only certain labels of an axis.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">narr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">)),</span>
+<span class="gp">... </span>                 <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;abcde&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">narr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span><span class="s1">&#39;cd&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">labels</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arr</span><span class="o">.</span><span class="n">axes</span><span class="p">]</span>
+<span class="go">[None, &#39;cd&#39;]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">axis must have labels to extract data at a given label</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.Axis.make_slice">
+<code class="descname">make_slice</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis.make_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a slicing tuple into the parent array such that
+this Axis is cut up in the requested manner</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>a slice object, single label-like item, or None</em>) &#8211; This slice object may have arbitrary types for .start, .stop,
+in which case label labels will be looked up. The .step attribute
+of course must be None or an integer.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>keys</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">parent_arr.ndim-length tuple for slicing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.Axis.set_name">
+<code class="descname">set_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.Axis.set_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.datarray.AxisIndexer">
+<em class="property">class </em><code class="descclassname">datarray.datarray.</code><code class="descname">AxisIndexer</code><span class="sig-paren">(</span><em>arr</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.AxisIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>An object which holds a reference to a DataArray and a list of axes and
+allows slicing by those axes.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.datarray.DataArray">
+<em class="property">class </em><code class="descclassname">datarray.datarray.</code><code class="descname">DataArray</code><a class="headerlink" href="#datarray.datarray.DataArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></code></p>
+<dl class="attribute">
+<dt id="datarray.datarray.DataArray.T">
+<code class="descname">T</code><a class="headerlink" href="#datarray.datarray.DataArray.T" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.argmax">
+<code class="descname">argmax</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmax" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.argmin">
+<code class="descname">argmin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.argsort">
+<code class="descname">argsort</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argsort" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.cumprod">
+<code class="descname">cumprod</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumprod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.cumsum">
+<code class="descname">cumsum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumsum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.diagonal">
+<code class="descname">diagonal</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.flatten">
+<code class="descname">flatten</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.index_by">
+<code class="descname">index_by</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.index_by" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.max">
+<code class="descname">max</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.mean">
+<code class="descname">mean</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.min">
+<code class="descname">min</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.min" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="datarray.datarray.DataArray.names">
+<code class="descname">names</code><a class="headerlink" href="#datarray.datarray.DataArray.names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple with all the axis names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.prod">
+<code class="descname">prod</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.prod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.ptp">
+<code class="descname">ptp</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.ptp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.ravel">
+<code class="descname">ravel</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.ravel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.repeat">
+<code class="descname">repeat</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.repeat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.reshape">
+<code class="descname">reshape</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.reshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.set_name">
+<code class="descname">set_name</code><span class="sig-paren">(</span><em>i</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.set_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.sort">
+<code class="descname">sort</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.sort" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.squeeze">
+<code class="descname">squeeze</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.squeeze" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.std">
+<code class="descname">std</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>ddof=0</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the standard deviation of the array elements along given axis.</p>
+<p>Refer to <cite>numpy.std</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.std()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.sum">
+<code class="descname">sum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.swapaxes">
+<code class="descname">swapaxes</code><span class="sig-paren">(</span><em>axis1</em>, <em>axis2</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.swapaxes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.transpose">
+<code class="descname">transpose</code><span class="sig-paren">(</span><em>*axes</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.transpose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.var">
+<code class="descname">var</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.datarray.KeyStruct">
+<em class="property">class </em><code class="descclassname">datarray.datarray.</code><code class="descname">KeyStruct</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.KeyStruct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A slightly enhanced version of a struct-like class with named key access.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">KeyStruct</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">hasattr(): attribute name must be string</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">KeyStruct</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">x</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">AttributeError</span>: <span class="n">KeyStruct already has atribute &#39;y&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="exception">
+<dt id="datarray.datarray.NamedAxisError">
+<em class="property">exception </em><code class="descclassname">datarray.datarray.</code><code class="descname">NamedAxisError</code><a class="headerlink" href="#datarray.datarray.NamedAxisError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.datarray.is_numpy_scalar">
+<code class="descclassname">datarray.datarray.</code><code class="descname">is_numpy_scalar</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.is_numpy_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="datarray.datarray.names2namedict">
+<code class="descclassname">datarray.datarray.</code><code class="descname">names2namedict</code><span class="sig-paren">(</span><em>names</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.names2namedict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a name map out of any name input.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-datarray.print_grid">
+<span id="datarray-print-grid-module"></span><h2>datarray.print_grid module<a class="headerlink" href="#module-datarray.print_grid" title="Permalink to this headline">¶</a></h2>
+<p>Functions for pretty-printing tabular data, such as a DataArray, as a grid.</p>
+<dl class="class">
+<dt id="datarray.print_grid.BoolFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">BoolFormatter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.BoolFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#datarray.print_grid.GridDataFormatter" title="datarray.print_grid.GridDataFormatter"><code class="xref py py-class docutils literal"><span class="pre">datarray.print_grid.GridDataFormatter</span></code></a></p>
+<p>The BoolFormatter prints &#8216;True&#8217; and &#8216;False&#8217; if there is room, and
+otherwise prints &#8216;T&#8217; and &#8216;-&#8216; (&#8216;T&#8217; and &#8216;F&#8217; are too visually similar).</p>
+<dl class="method">
+<dt id="datarray.print_grid.BoolFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>value</em>, <em>width=5</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.BoolFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.BoolFormatter.max_width">
+<code class="descname">max_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.BoolFormatter.max_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.BoolFormatter.standard_width">
+<code class="descname">standard_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.BoolFormatter.standard_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.print_grid.ComplexFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">ComplexFormatter</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.ComplexFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#datarray.print_grid.GridDataFormatter" title="datarray.print_grid.GridDataFormatter"><code class="xref py py-class docutils literal"><span class="pre">datarray.print_grid.GridDataFormatter</span></code></a></p>
+<p>A ComplexFormatter uses two FloatFormatters side by side. This can make
+its min_width fairly large.</p>
+<dl class="method">
+<dt id="datarray.print_grid.ComplexFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>value</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.ComplexFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.ComplexFormatter.max_width">
+<code class="descname">max_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.ComplexFormatter.max_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.ComplexFormatter.min_width">
+<code class="descname">min_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.ComplexFormatter.min_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.ComplexFormatter.standard_width">
+<code class="descname">standard_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.ComplexFormatter.standard_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.print_grid.FloatFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">FloatFormatter</code><span class="sig-paren">(</span><em>data</em>, <em>sign=False</em>, <em>strip_zeros=True</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#datarray.print_grid.GridDataFormatter" title="datarray.print_grid.GridDataFormatter"><code class="xref py py-class docutils literal"><span class="pre">datarray.print_grid.GridDataFormatter</span></code></a></p>
+<p>Formats floating point numbers either in standard or exponential notation,
+whichever fits better and represents the numbers better in the given amount
+of space.</p>
+<dl class="method">
+<dt id="datarray.print_grid.FloatFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>value</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.FloatFormatter.format_all">
+<code class="descname">format_all</code><span class="sig-paren">(</span><em>values</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter.format_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats an array of values to a fixed width, returning a string array.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.FloatFormatter.max_width">
+<code class="descname">max_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter.max_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.FloatFormatter.min_width">
+<code class="descname">min_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter.min_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.FloatFormatter.standard_width">
+<code class="descname">standard_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.FloatFormatter.standard_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.print_grid.GridDataFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">GridDataFormatter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A GridDataFormatter takes an ndarray of objects and represents them as
+equal-length strings. It is flexible about what string length to use,
+and can make suggestions about the string length based on the data it
+will be asked to render.</p>
+<p>Each GridDataFormatter instance specifies:</p>
+<ul class="simple">
+<li><cite>min_width</cite>, the smallest acceptable width</li>
+<li><cite>standard_width</cite>, a reasonable width when putting many items on the
+screen</li>
+<li><cite>max_width</cite>, the width it prefers if space is not limited</li>
+</ul>
+<p>This top-level class specifies reasonable defaults for a formatter, and
+subclasses refine it for particular data types.</p>
+<dl class="method">
+<dt id="datarray.print_grid.GridDataFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>value</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a given value to a fixed width.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.GridDataFormatter.format_all">
+<code class="descname">format_all</code><span class="sig-paren">(</span><em>values</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter.format_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats an array of values to a fixed width, returning a string array.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.GridDataFormatter.max_width">
+<code class="descname">max_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter.max_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.GridDataFormatter.min_width">
+<code class="descname">min_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter.min_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="datarray.print_grid.GridDataFormatter.standard_width">
+<code class="descname">standard_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.GridDataFormatter.standard_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.print_grid.IntFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">IntFormatter</code><span class="sig-paren">(</span><em>data</em>, <em>sign=False</em>, <em>strip_zeros=True</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.IntFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#datarray.print_grid.FloatFormatter" title="datarray.print_grid.FloatFormatter"><code class="xref py py-class docutils literal"><span class="pre">datarray.print_grid.FloatFormatter</span></code></a></p>
+<p>The IntFormatter tries to just print all the digits of the ints, but falls
+back on being an exponential FloatFormatter if there isn&#8217;t room.</p>
+<dl class="method">
+<dt id="datarray.print_grid.IntFormatter.standard_width">
+<code class="descname">standard_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.IntFormatter.standard_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datarray.print_grid.StrFormatter">
+<em class="property">class </em><code class="descclassname">datarray.print_grid.</code><code class="descname">StrFormatter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.StrFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#datarray.print_grid.GridDataFormatter" title="datarray.print_grid.GridDataFormatter"><code class="xref py py-class docutils literal"><span class="pre">datarray.print_grid.GridDataFormatter</span></code></a></p>
+<p>A StrFormatter&#8217;s behavior is almost entirely defined by the default.
+When it must truncate strings, it insists on showing at least 3
+characters.</p>
+<dl class="method">
+<dt id="datarray.print_grid.StrFormatter.min_width">
+<code class="descname">min_width</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.StrFormatter.min_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.array_to_string">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">array_to_string</code><span class="sig-paren">(</span><em>arr</em>, <em>width=75</em>, <em>height=10</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.array_to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a 2-D text representation of a NumPy array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.datarray_to_string">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">datarray_to_string</code><span class="sig-paren">(</span><em>arr</em>, <em>width=75</em>, <em>height=10</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.datarray_to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a 2-D text representation of a datarray.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.get_formatter">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">get_formatter</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.get_formatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a formatter for this array&#8217;s data type, and prime it on this array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.grid_layout">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">grid_layout</code><span class="sig-paren">(</span><em>arr</em>, <em>width=75</em>, <em>height=10</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.grid_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a 2-D non-empty array, turn it into a list of lists of strings to be
+joined.</p>
+<p>This uses plain lists instead of a string array, because certain
+formatting tricks might want to join columns, resulting in a ragged-
+shaped array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.labeled_layout">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">labeled_layout</code><span class="sig-paren">(</span><em>arr</em>, <em>width=75</em>, <em>height=10</em>, <em>row_label_width=9</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.labeled_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a 2-D non-empty array that may have labeled axes, rows, or columns,
+render the array as strings to be joined and attach the axes in visually
+appropriate places.</p>
+<p>Returns a list of lists of strings to be joined.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datarray.print_grid.layout_to_string">
+<code class="descclassname">datarray.print_grid.</code><code class="descname">layout_to_string</code><span class="sig-paren">(</span><em>layout</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.print_grid.layout_to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-datarray.version">
+<span id="datarray-version-module"></span><h2>datarray.version module<a class="headerlink" href="#module-datarray.version" title="Permalink to this headline">¶</a></h2>
+<p>datarray version information</p>
+</div>
+<div class="section" id="module-datarray">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-datarray" title="Permalink to this headline">¶</a></h2>
+<p>Arrays with rich geometric semantics.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">datarray package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-datarray.datarray">datarray.datarray module</a></li>
+<li><a class="reference internal" href="#module-datarray.print_grid">datarray.print_grid module</a></li>
+<li><a class="reference internal" href="#module-datarray.version">datarray.version module</a></li>
+<li><a class="reference internal" href="#module-datarray">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">datarray</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">datarray</a></li>
+      <li>Next: <a href="datarray.testing.html" title="next chapter">datarray.testing package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/datarray.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/generated/datarray.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

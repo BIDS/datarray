@@ -1,0 +1,446 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DataArray: some design notes &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="Design" href="index.html" />
+    <link rel="next" title="Issues, open questions and todo list" href="issues.html" />
+    <link rel="prev" title="Design" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dataarray-some-design-notes">
+<h1>DataArray: some design notes<a class="headerlink" href="#dataarray-some-design-notes" title="Permalink to this headline">¶</a></h1>
+<p>A DataArray is a subclass of the basic Numpy ndarray object that provides an
+explicit mechanism for attaching information to the <em>axes</em> of the underlying
+numpy array.  This is achieved by attaching an Axis object to each dimension of
+the array; an Axis object has an optional <em>name</em> as well as optional <em>labels</em>
+(think of them as tick labels in a figure).</p>
+<p>With Axis objects attached to an array, it becomes possible to manipulate the
+array by named axis, to slice an axis by named label, etc.  These features
+complement the rich semantics that numpy has for the <em>contents</em> of an array,
+encapsulated its dtype machinery for structured/record arrays.</p>
+<div class="section" id="arrays-with-named-labeled-axes">
+<h2>Arrays with named / labeled axes<a class="headerlink" href="#arrays-with-named-labeled-axes" title="Permalink to this headline">¶</a></h2>
+<p>ndarrays extended to have an explicit &#8220;hypercross&#8221; of axes, each with
+names (possibly defaulted).</p>
+<ul>
+<li><p class="first">for methods in which an &#8220;axis&#8221; is denoted, an axis name may be used</p>
+</li>
+<li><p class="first">indexing/slicing along a named axis returns that slicing, at that axis,
+along with slice(None) slicing along all other axes</p>
+</li>
+<li><p class="first">for all arithmetic/binary-op matters under which dimension numbers and
+lengths must match, also the hypercrosses must be consistent</p>
+</li>
+<li><p class="first">broadcasting will &#8220;inherit&#8221; labels from the super-hyper-cross
+(see np.broadcast)</p>
+</li>
+<li><p class="first">padding dimensions will insert &#8220;dummy&#8221; dimensions, eg:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">datarray</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">a</span><span class="p">[:,</span><span class="kc">None</span><span class="p">,:]</span><span class="o">.</span><span class="n">axes</span> <span class="o">--&gt;</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">axes may be transposed</p>
+</li>
+</ul>
+</div>
+<div class="section" id="arrays-with-named-axes-whose-named-axes-have-ticks">
+<h2>Arrays with named axes, whose named axes have ticks<a class="headerlink" href="#arrays-with-named-axes-whose-named-axes-have-ticks" title="Permalink to this headline">¶</a></h2>
+<p>each named axis has tick labels</p>
+<ul>
+<li><p class="first">numpy, fancy and slice-like indexing on each axis:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">named_axis</span><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="o">--&gt;</span> <span class="n">does</span> <span class="nb">any</span> <span class="n">kind</span> <span class="n">of</span> <span class="n">numpy</span> <span class="n">indexing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">axis</span>
+<span class="n">x</span><span class="o">.</span><span class="n">named_axis</span><span class="o">.</span><span class="n">at</span><span class="p">(</span> <span class="o">*</span><span class="n">args</span> <span class="p">)</span>
+<span class="o">--&gt;</span> <span class="n">returns</span> <span class="n">essentially</span> <span class="s2">&quot;fancy&quot;</span> <span class="n">indexing</span> <span class="n">along</span> <span class="n">the</span> <span class="n">axis</span><span class="p">,</span> <span class="n">at</span> <span class="n">valid</span> <span class="n">ticks</span> <span class="ow">in</span> <span class="n">args</span>
+<span class="n">x</span><span class="o">.</span><span class="n">named_axis</span><span class="o">.</span><span class="n">t_slice</span><span class="p">(</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="p">[</span><span class="n">step</span><span class="p">])</span>
+<span class="o">--&gt;</span> <span class="n">where</span> <span class="n">arguments</span> <span class="n">are</span> <span class="n">valid</span> <span class="n">ticks</span><span class="p">,</span> <span class="n">performs</span> <span class="n">a</span> <span class="n">slicing</span><span class="o">-</span><span class="n">like</span> <span class="n">operation</span> <span class="n">along</span> <span class="n">the</span> <span class="n">axis</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">mixed indexing on the array:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">at</span><span class="p">(</span> <span class="o">*</span><span class="n">args</span> <span class="p">)</span>
+<span class="o">--&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">--</span> <span class="k">for</span> <span class="n">each</span> <span class="n">indexing</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">args</span><span class="p">,</span> <span class="n">perform</span> <span class="n">that</span> <span class="n">indexing</span>
+       <span class="n">on</span> <span class="n">the</span> <span class="n">enumerated</span> <span class="n">axes</span>
+<span class="n">x</span><span class="o">.</span><span class="n">t_slice</span><span class="p">(</span> <span class="o">*</span><span class="n">args</span> <span class="p">)</span>
+<span class="o">--&gt;</span> <span class="n">same</span> <span class="k">as</span> <span class="n">above</span><span class="p">,</span> <span class="n">but</span> <span class="n">perform</span> <span class="n">t_slice</span> <span class="n">slicing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">enumerated</span> <span class="n">axes</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="my-thoughts-on-what-is-the-dataarray">
+<h2>(my thoughts on) What Is The DataArray?<a class="headerlink" href="#my-thoughts-on-what-is-the-dataarray" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>1st and foremost, <strong>an ndarray</strong>, in N dimensions, with any dtype</li>
+<li>has means to locate data more descriptively (IE, with custom names
+for dimensions/axes, and custom names for indices along any axis)</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">darr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ex&#39;</span><span class="p">,</span> <span class="s1">&#39;why&#39;</span><span class="p">,</span> <span class="s1">&#39;zee&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;ex&#39;</span><span class="p">)</span>
+<span class="go">DataArray([[-0.39052695, -2.07493873,  1.19664474,  0.36681094],</span>
+<span class="go">       [-1.04287781,  0.5767191 , -0.35425298,  1.10468356],</span>
+<span class="go">       [ 0.08331866, -0.36532857,  0.12905265, -1.94559672]])</span>
+<span class="go">(&#39;why&#39;, &#39;zee&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">subarr</span> <span class="ow">in</span> <span class="n">darr</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">why</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span> <span class="n">subarr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">subarr</span><span class="o">.</span><span class="n">labels</span>
+<span class="gp">...</span>
+<span class="go">(2, 4) (&#39;ex&#39;, &#39;zee&#39;)</span>
+<span class="go">(2, 4) (&#39;ex&#39;, &#39;zee&#39;)</span>
+<span class="go">(2, 4) (&#39;ex&#39;, &#39;zee&#39;)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>An axis &#8220;label&#8221; can always stand in for an axis number; an index
+&#8220;tick&#8221; can (in some TBD sense) stand in for an integer index</li>
+<li>if anything is <strong>more restrictive</strong> in operations, for example</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ndarr_ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ndarr_twos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span><span class="o">*</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ndarr_3s</span> <span class="o">=</span> <span class="n">ndarr_ones</span> <span class="o">+</span> <span class="n">ndarr_twos</span> <span class="c1"># OK!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr_abc</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">ndarr_ones</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr_bac</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">ndarr_twos</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr_wtf</span> <span class="o">=</span> <span class="n">darr_abc</span> <span class="o">+</span> <span class="n">darr_bac</span> <span class="c1"># BAD! frames are rotated</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="and-my-very-own-thoughts-on-what-the-dataarray-is-not">
+<h2>(and my very own thoughts on) What The DataArray Is Not<a class="headerlink" href="#and-my-very-own-thoughts-on-what-the-dataarray-is-not" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="unions-and-intersections">
+<h3>Unions And Intersections<a class="headerlink" href="#unions-and-intersections" title="Permalink to this headline">¶</a></h3>
+<p>DataArray may broadcast with certain union rules for adapting
+metadata, but it does not do any data union/intersection rule for
+operations. For example, the result of adding an array with axes (&#8216;a&#8217;, &#8216;c&#8217;) with an
+array with axis &#8216;c&#8217; takes on information from the &#8220;superset&#8221; of
+axes. This is analogous to ndarray taking on shape information from
+the superset of shapes.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">darr_abc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,:]</span>
+<span class="go">DataArray([[ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.],</span>
+<span class="go">       ...</span>
+<span class="go">       [ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.]])</span>
+<span class="go">(&#39;a&#39;, &#39;c&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr_bac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">DataArray([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.])</span>
+<span class="go">(&#39;c&#39;,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darr_abc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">+</span> <span class="n">darr_bac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">DataArray([[ 3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.],</span>
+<span class="go">       ...</span>
+<span class="go">       [ 3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.,  3.]])</span>
+<span class="go">(&#39;a&#39;, &#39;c&#39;)</span>
+</pre></div>
+</div>
+<p>But it will not fill or trim any dimension to fit the shape of a
+fellow operand&#8217;s array (it seems this violation is simply caught at the C-level of an ndarray):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">darr_abc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">+</span> <span class="n">darr_bac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">------------------------------------------------------------</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;ipython console&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">ValueError</span>: <span class="n">shape mismatch: objects cannot be broadcast to a single shape</span>
+</pre></div>
+</div>
+<p>For me, this looks like the <strong>domain of utility functions</strong> (or
+possibly utility methods that yield new DataArrays).</p>
+</div>
+<div class="section" id="namespace">
+<h3>Namespace<a class="headerlink" href="#namespace" title="Permalink to this headline">¶</a></h3>
+<p>It would be good practice to keep all the dynamically generated
+DataArray attributes (eg, Axis labels) removed from the top-level
+array attribute list. This is what we currently have as &#8220;axis&#8221;.</p>
+<p>It might(?) be a good idea to put all future special purpose methods
+under that object too.</p>
+</div>
+</div>
+<div class="section" id="lessons-learned">
+<h2>Lessons Learned<a class="headerlink" href="#lessons-learned" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="smart-indexing">
+<h3>&#8220;Smart&#8221; Indexing<a class="headerlink" href="#smart-indexing" title="Permalink to this headline">¶</a></h3>
+<p>The smart indexing implemented by Larry is very full featured. I believe the
+design of using lists to separating labels from integers in mixed indexing is a
+good choice (and necessary). However, I think it illustrates the potential
+confusion created by mixed indexing and is a good argument for discouraging/not
+allowing it.</p>
+</div>
+<div class="section" id="smart-arithmetic">
+<h3>&#8220;Smart&#8221; Arithmetic<a class="headerlink" href="#smart-arithmetic" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Larry makes attempts to align its arrays when performing arithmetic, so as to
+operate on identical coordinates.</li>
+<li>It also might introduce intersections between arrays.</li>
+<li>It does not broadcast</li>
+</ul>
+</div>
+</div>
+<div class="section" id="ideas">
+<h2>Ideas<a class="headerlink" href="#ideas" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="axis-slicing">
+<h3>Axis Slicing<a class="headerlink" href="#axis-slicing" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="use-case-chained-axis-slicing">
+<h4>Use Case: chained axis slicing<a class="headerlink" href="#use-case-chained-axis-slicing" title="Permalink to this headline">¶</a></h4>
+<p>slicing on an axis returns a new DataArray:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">arr</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;freq&#39;</span><span class="p">))</span>
+<span class="n">arr</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">time</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="n">new</span> <span class="n">DataArray</span> <span class="k">with</span> <span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span> <span class="n">axes</span>
+</pre></div>
+</div>
+<p>However, slicing on the special slicing object &#8220;aix&#8221; returns a new Special
+Tuple (stuple).</p>
+<p>Stuple:</p>
+<ul class="simple">
+<li>is len-N, for ND arrays</li>
+<li>only one entry is (potentially) not <code class="docutils literal"><span class="pre">slice(None)</span></code></li>
+<li>has knowledge of its own index</li>
+<li>has knowledge of other axes (static or dynamically generated attributes)</li>
+<li>can be composed with other stuples in a special way (??) &#8211;</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">s1</span> <span class="o">--&gt;</span> <span class="p">(</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">s2</span> <span class="o">--&gt;</span> <span class="p">(</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">s1</span> <span class="o">&lt;</span><span class="n">compose</span><span class="o">&gt;</span> <span class="n">s2</span> <span class="o">--&gt;</span> <span class="p">(</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span> <span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>can be given a &#8220;parent&#8221; stuple when constructed, into which the new stuple
+merges its own slicing in <code class="docutils literal"><span class="pre">__getitem__</span></code></li>
+</ul>
+<p>Constructor prototype:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>def __init__(self, *args, parent=None, index=None, name=None) ??
+</pre></div>
+</div>
+<p>To chain slicing, the syntax would be like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">arr</span><span class="o">.</span><span class="n">aix</span><span class="o">.</span><span class="n">time</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">freq</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+<span class="o">--</span><span class="n">OR</span><span class="o">--</span>
+<span class="n">arr</span><span class="p">[</span> <span class="n">arr</span><span class="o">.</span><span class="n">aix</span><span class="o">.</span><span class="n">time</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">freq</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>Chaining an axis on itself <strong>will not</strong> be implemented yet (possibly ever):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">arr</span><span class="o">.</span><span class="n">aix</span><span class="o">.</span><span class="n">time</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="k">raise</span> <span class="n">error</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="the-may-2011-dataarray-summit-at-enthought">
+<h1>The May 2011 DataArray summit at Enthought<a class="headerlink" href="#the-may-2011-dataarray-summit-at-enthought" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-handle-datarray-indexing">
+<h2>How to handle datarray indexing<a class="headerlink" href="#how-to-handle-datarray-indexing" title="Permalink to this headline">¶</a></h2>
+<p>This document is a summary of the syntax and semantics that was agreed upon at
+the Data Array summit held at Enthought in May 2011.</p>
+<p>The DataArray object will have a .axes attribute which exhibits the following
+behaviour:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span> <span class="o">...</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;aapl&#39;</span><span class="p">,</span> <span class="s1">&#39;ibm&#39;</span> <span class="s1">&#39;goog&#39;</span><span class="p">,</span> <span class="s1">&#39;msft&#39;</span><span class="p">)),</span> <span class="s1">&#39;metric&#39;</span><span class="p">))</span>
+
+<span class="go"># get the axis object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span>
+
+<span class="go"># the same as a[:,0:2,:]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">]</span>
+
+<span class="go"># get the nth axis object (particularly if not named)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+<span class="go"># get an &quot;axes indexer&quot; object for the indicated objects.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This indexer object returns something that is meant to be indexed with as many
+dimensions as it was passed arguments, but that will, upon indexing, return
+arrays with dimensions ordered just like the original underlying array.</p>
+<p>The information that is all available at the point where you are constructing
+the slicer, so you don&#8217;t need to go rummaging around the code to find the
+correct order of the axes from where the array was originally defined.  It also
+potentially permits you to use underlying arrays with different axis orders in
+the same code unambiguously.</p>
+<p>There was also the thought that with numerical arguments that this would fill a
+hole in the current numpy API for arbitrary re-ordering of axes in a view for
+slicing (essentially a super-generalized transpose-ish sort of thing)</p>
+<p>The result of the slicing operation retains the original ordering, but the
+slices provided to a.axes()[] need to match the order of the arguments to
+a.axes. So in other words, when you do:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tslicer</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>then:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tslicer</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>returns an array with axes x, y, z, t in that order, but sliced as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span><span class="p">[:,:,:,</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>When you have:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">xyslicer</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">yxslicer</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>then I would expect to do:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">xyslicer</span><span class="p">[</span><span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>but:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">yxslicer</span><span class="p">[</span><span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">,</span> <span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>However, these are two equivalent ways of writing <code class="docutils literal"><span class="pre">a[x1:x2,</span> <span class="pre">y1:y2,</span> <span class="pre">:,</span> <span class="pre">:]</span></code>.
+If explicit transposition of the returned data is desired, it can be done
+with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span><span class="s1">&#39;date&#39;</span><span class="p">)[</span><span class="o">...</span><span class="p">]</span>
+
+<span class="go"># Now, actually do the slicing: equivalent to a[100, 0:2, :]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">,</span><span class="mi">100</span><span class="p">]</span>
+
+<span class="go"># can supply an axis number as well</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">,</span><span class="mi">100</span><span class="p">:</span><span class="mi">200</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In addition axes can have the notion of a index mapper which allows indexing and
+slicing by labels or values other than strings and integers.  To use these, you
+have to supply a keyword argument to the axes call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># add a datetime.date -&gt; index map</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">date_mapper</span> <span class="o">=</span> <span class="n">DictMapper</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">(</span> <span class="o">...</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="n">date_mapper</span><span class="p">),</span> <span class="o">...</span> <span class="p">))</span>
+
+<span class="c1"># do mapped indexing XXX - this might not have been the final decision</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="n">mapped</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2011</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2011</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">14</span><span class="p">)]</span>
+
+<span class="c1"># For mapped indexing</span>
+</pre></div>
+</div>
+<p>The exact semantics of mapping are yet to be determined, but the thought is that
+there would be standard mappers to do things like interpolation, mapped integer
+indexing.</p>
+<div class="section" id="other-notes">
+<h3>Other notes<a class="headerlink" href="#other-notes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Axis names can only be strings that are valid Python identifiers.</li>
+<li>Labels can only be strings, and must be unique.</li>
+<li>All other indexing cases are handled by mapping (however that will work).</li>
+<li>Axes can have arbitrary aliases which do not have to be unique.</li>
+<li>An axis can have an associated array of the same length as the set of labels
+for additional data storage.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DataArray: some design notes</a><ul>
+<li><a class="reference internal" href="#arrays-with-named-labeled-axes">Arrays with named / labeled axes</a></li>
+<li><a class="reference internal" href="#arrays-with-named-axes-whose-named-axes-have-ticks">Arrays with named axes, whose named axes have ticks</a></li>
+<li><a class="reference internal" href="#my-thoughts-on-what-is-the-dataarray">(my thoughts on) What Is The DataArray?</a></li>
+<li><a class="reference internal" href="#and-my-very-own-thoughts-on-what-the-dataarray-is-not">(and my very own thoughts on) What The DataArray Is Not</a><ul>
+<li><a class="reference internal" href="#unions-and-intersections">Unions And Intersections</a></li>
+<li><a class="reference internal" href="#namespace">Namespace</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lessons-learned">Lessons Learned</a><ul>
+<li><a class="reference internal" href="#smart-indexing">&#8220;Smart&#8221; Indexing</a></li>
+<li><a class="reference internal" href="#smart-arithmetic">&#8220;Smart&#8221; Arithmetic</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ideas">Ideas</a><ul>
+<li><a class="reference internal" href="#axis-slicing">Axis Slicing</a><ul>
+<li><a class="reference internal" href="#use-case-chained-axis-slicing">Use Case: chained axis slicing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-may-2011-dataarray-summit-at-enthought">The May 2011 DataArray summit at Enthought</a><ul>
+<li><a class="reference internal" href="#how-to-handle-datarray-indexing">How to handle datarray indexing</a><ul>
+<li><a class="reference internal" href="#other-notes">Other notes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Design</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Design</a></li>
+      <li>Next: <a href="issues.html" title="next chapter">Issues, open questions and todo list</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/design/design.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/design/design.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

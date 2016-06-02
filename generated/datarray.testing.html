@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>datarray.testing package &mdash; DataArray Docs 0.0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="up" title="datarray package" href="datarray.html" />
+    <link rel="prev" title="datarray package" href="datarray.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="datarray-testing-package">
+<h1>datarray.testing package<a class="headerlink" href="#datarray-testing-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-datarray.testing.testlib">
+<span id="datarray-testing-testlib-module"></span><h2>datarray.testing.testlib module<a class="headerlink" href="#module-datarray.testing.testlib" title="Permalink to this headline">¶</a></h2>
+<p>Module defining the main test entry point exposed at the top level.</p>
+<dl class="function">
+<dt id="datarray.testing.testlib.test">
+<code class="descclassname">datarray.testing.testlib.</code><code class="descname">test</code><span class="sig-paren">(</span><em>doctests=True</em>, <em>extra_argv=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.testing.testlib.test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the nitime test suite using nose.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>doctests</strong> (<em>bool, optional  (default True)</em>) &#8211; If true, also run the doctests in all docstrings.</li>
+<li><strong>kw</strong> (<em>dict</em>) &#8211; Any other keywords are passed directly to nose.TestProgram(), which
+itself is a subclass of unittest.TestProgram().</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-datarray.testing.utils">
+<span id="datarray-testing-utils-module"></span><h2>datarray.testing.utils module<a class="headerlink" href="#module-datarray.testing.utils" title="Permalink to this headline">¶</a></h2>
+<p>datarray unit testing utilities</p>
+<dl class="function">
+<dt id="datarray.testing.utils.assert_datarray_equal">
+<code class="descclassname">datarray.testing.utils.</code><code class="descname">assert_datarray_equal</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>err_msg=''</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.testing.utils.assert_datarray_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise an AssertionError if two datarrays are not equal.</p>
+<p>Given two datarrays, assert that the shapes are equal, axes are equal, and
+all elements of the datarrays are equal. Given two scalars assert equality.
+In contrast to the standard usage in numpy, NaNs are compared like numbers,
+no assertion is raised if both objects have NaNs in the same positions.</p>
+<p>The usual caution for verifying equality with floating point numbers is
+advised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>{datarray, scalar}</em>) &#8211; If you are testing a datarray method, for example, then this is the
+datarray (or scalar) returned by the method.</li>
+<li><strong>y</strong> (<em>{datarray, scalar}</em>) &#8211; This datarray represents the expected result. If <cite>x</cite> is not equal to
+<cite>y</cite>, then an AssertionError is raised.</li>
+<li><strong>err_msg</strong> (<em>str</em>) &#8211; If <cite>x</cite> is not equal to <cite>y</cite>, then the string <cite>err_msg</cite> will be added to
+the top of the AssertionError message.</li>
+<li><strong>verbose</strong> (<em>bool</em>) &#8211; If True, the conflicting values are appended to the error message.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">AssertionError</span></code> &#8211; If actual and desired datarrays are not equal.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>If the two datarrays are equal then None is returned:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datarray.testing</span> <span class="k">import</span> <span class="n">assert_datarray_equal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datarray.datarray</span> <span class="k">import</span> <span class="n">DataArray</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">assert_datarray_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the two datarrays are not equal then an AssertionError is raised:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;distance&#39;</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">assert_datarray_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;datarray/testing/utils.py&quot;</span>, line <span class="m">133</span>, in <span class="n">assert_datarray_equal</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">,</span> <span class="n">err_msg</span>
+<span class="gr">AssertionError</span>:
+
+<span class="go">    ----------</span>
+<span class="go">    AXIS NAMES</span>
+<span class="go">    ----------</span>
+
+<span class="go">    Items are not equal:</span>
+<span class="go">        item=0</span>
+
+<span class="go">     ACTUAL: &#39;time&#39;</span>
+<span class="go">     DESIRED: &#39;distance&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-datarray.testing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-datarray.testing" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">datarray.testing package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-datarray.testing.testlib">datarray.testing.testlib module</a></li>
+<li><a class="reference internal" href="#module-datarray.testing.utils">datarray.testing.utils module</a></li>
+<li><a class="reference internal" href="#module-datarray.testing">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">datarray</a><ul>
+  <li><a href="datarray.html">datarray package</a><ul>
+      <li>Previous: <a href="datarray.html" title="previous chapter">datarray package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/datarray.testing.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/generated/datarray.testing.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
