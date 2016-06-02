@@ -716,10 +716,11 @@ def _apply_reduction(opname, kwnames):
         # try to convert a named Axis to an integer..
         # don't try to catch an error
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
-        axes = _pull_axis(axes, inst.axes[axis_idx])
+        if not kwargs.get('keepdims', False):
+            axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
         arr = super_op(inst, **kwargs)
-        if not is_numpy_scalar(arr): 
+        if not is_numpy_scalar(arr):
             _set_axes(arr, axes)
         return arr
     runs_op.func_name = opname
@@ -1179,8 +1180,8 @@ class DataArray(np.ndarray):
         return arr
 
     # -- Reductions ----------------------------------------------------------
-    mean = _apply_reduction('mean', ('axis', 'dtype', 'out'))
-    var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof'))
+    mean = _apply_reduction('mean', ('axis', 'dtype', 'out', 'keepdims'))
+    var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof', 'keepdims'))
 
     def std(self, *args, **kwargs):
         ret = self.var(*args, **kwargs)
@@ -1193,19 +1194,19 @@ class DataArray(np.ndarray):
         return ret
     std.__doc__ = np.ndarray.std.__doc__
 
-    min = _apply_reduction('min', ('axis', 'out'))
-    max = _apply_reduction('max', ('axis', 'out'))
+    min = _apply_reduction('min', ('axis', 'out', 'keepdims'))
+    max = _apply_reduction('max', ('axis', 'out', 'keepdims'))
 
-    sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
-    prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
+    sum = _apply_reduction('sum', ('axis', 'dtype', 'out', 'keepdims'))
+    prod = _apply_reduction('prod', ('axis', 'dtype', 'out', 'keepdims'))
 
-    all = _apply_reduction('all', ('axis', 'dtype', 'out'))
-    any = _apply_reduction('any', ('axis', 'dtype', 'out'))
+    all = _apply_reduction('all', ('axis', 'dtype', 'out', 'keepdims'))
+    any = _apply_reduction('any', ('axis', 'dtype', 'out', 'keepdims'))
 
     ### these change the meaning of the axes..
     ### should probably return ndarrays
-    argmax = _apply_reduction('argmax', ('axis',))
-    argmin = _apply_reduction('argmin', ('axis',))
+    argmax = _apply_reduction('argmax', ('axis', 'out'))
+    argmin = _apply_reduction('argmin', ('axis', 'out'))
 
     # -- Accumulations -------------------------------------------------------
     cumsum = _apply_accumulation('cumsum', ('axis', 'dtype', 'out'))
