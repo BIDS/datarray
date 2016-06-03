@@ -5,9 +5,16 @@ if sys.version_info[0] < 3:  # Use range iterator for Python 2
     range = xrange
 from functools import reduce
 
-import networkx as nx, numpy as np,itertools as it, operator as op
+import operator
+from itertools import combinations
+
+import networkx as nx
+import numpy as np
+
 from datarray import DataArray
+
 from numpy.testing import assert_almost_equal
+
 
 def test_pearl_network():
     """ From Russell and Norvig, "Artificial Intelligence, A Modern Approach,"
@@ -165,8 +172,8 @@ def sum_over_other_axes(DA, kept_axis_name):
     return sum_over_axes(DA, 
             [axname for axname in DA.names if axname != kept_axis_name])
 
-def _sum(seq): return reduce(op.add, seq)
-def _prod(seq): return reduce(op.mul, seq)
+def _sum(seq): return reduce(operator.add, seq)
+def _prod(seq): return reduce(operator.mul, seq)
 
 ####### Simple marginalization #############
     
@@ -423,7 +430,7 @@ def triangulate_min_fill(G):
         nodes,degrees = zip(*G_elim.degree().items())
         min_deg_node = nodes[np.argmin(degrees)]
         new_edges = [(n1,n2) for (n1,n2) in
-                it.combinations(G_elim.neighbors(min_deg_node),2) if not
+                combinations(G_elim.neighbors(min_deg_node),2) if not
                 G_elim.has_edge(n1,n2)]
         added_edges.extend(new_edges)        
         G_elim.remove_node(min_deg_node)
@@ -440,7 +447,7 @@ def make_jtree_from_tri_graph(G):
     # (i.e., it satisfies running intersection property)
     # where weight is the size of the intersection between adjacent cliques.
     CG.add_weighted_edges_from((tuple(c1),tuple(c2),-c1c2) 
-                      for (c1,c2) in it.combinations(nx.find_cliques(G),2)
+                      for (c1,c2) in combinations(nx.find_cliques(G),2)
                       for c1c2 in [len(set(c1).intersection(set(c2)))] if c1c2 > 0)
     JT = nx.Graph(nx.mst(CG)) # Minimal weight spanning tree for CliqueGraph
     for src,targ in JT.edges():
@@ -482,7 +489,7 @@ def make_jtree_from_factors(factors):
 def moral_graph_from_factors(factors):
     G = nx.Graph()
     for factor in factors:
-        for label1,label2 in it.combinations(factor.names, 2):
+        for label1,label2 in combinations(factor.names, 2):
             G.add_edge(label1,label2)    
                     
     return G
