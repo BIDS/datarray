@@ -731,8 +731,8 @@ def _apply_reduction(opname, kwnames):
         if not is_numpy_scalar(arr): 
             _set_axes(arr, axes)
         return arr
-    runs_op.func_name = opname
-    runs_op.func_doc = super_op.__doc__
+    runs_op.__name__ = opname
+    runs_op.__doc__ = super_op.__doc__
     return runs_op
 
 def is_numpy_scalar(arr):
@@ -760,8 +760,8 @@ def _apply_accumulation(opname, kwnames):
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
         kwargs['axis'] = axis_idx
         return super_op(inst, **kwargs)
-    runs_op.func_name = opname
-    runs_op.func_doc = super_op.__doc__
+    runs_op.__name__ = opname
+    runs_op.__doc__ = super_op.__doc__
     return runs_op
             
 class DataArray(np.ndarray):
@@ -1025,7 +1025,7 @@ class DataArray(np.ndarray):
         # implement tuple-or-*args logic of np.transpose
         axes = list(axes)
         if not axes:
-            axes = range(self.ndim-1,-1,-1)
+            axes = list(range(self.ndim-1,-1,-1))
         # expand sequence if sequence passed as first and only arg
         elif len(axes) < self.ndim:
             try:
@@ -1036,7 +1036,7 @@ class DataArray(np.ndarray):
         out = np.ndarray.transpose(self, proc_axids)
         _set_axes(out, _reordered_axes(self.axes, proc_axids, parent=out))
         return out
-    transpose.func_doc = np.ndarray.transpose.__doc__
+    transpose.__doc__ = np.ndarray.transpose.__doc__
 
     def swapaxes(self, axis1, axis2):
         # form a transpose operation with axes specified
@@ -1049,7 +1049,7 @@ class DataArray(np.ndarray):
         out = np.ndarray.transpose(self, ax_idx)
         _set_axes(out, _reordered_axes(self.axes, ax_idx, parent=out))
         return out
-    swapaxes.func_doc = np.ndarray.swapaxes.__doc__
+    swapaxes.__doc__ = np.ndarray.swapaxes.__doc__
 
     def ptp(self, axis=None, out=None):
         mn = self.min(axis=axis)
@@ -1059,32 +1059,32 @@ class DataArray(np.ndarray):
             return mx
         else:
             return mx-mn
-    ptp.func_doc = np.ndarray.ptp.__doc__
+    ptp.__doc__ = np.ndarray.ptp.__doc__
 
     # -- Various extraction and reshaping methods ----------------------------
     def diagonal(self, *args, **kwargs):
         # reverts to being an ndarray
         args = (np.asarray(self),) + args
         return np.diagonal(*args, **kwargs)
-    diagonal.func_doc = np.ndarray.diagonal.__doc__
+    diagonal.__doc__ = np.ndarray.diagonal.__doc__
     
     def flatten(self, **kwargs):
         # reverts to being an ndarray
         return np.asarray(self).flatten(**kwargs)
-    flatten.func_doc = np.ndarray.flatten.__doc__
+    flatten.__doc__ = np.ndarray.flatten.__doc__
 
     def ravel(self, **kwargs):
         # reverts to being an ndarray
         return np.asarray(self).ravel(**kwargs)
-    ravel.func_doc = np.ndarray.ravel.__doc__
+    ravel.__doc__ = np.ndarray.ravel.__doc__
 
     def repeat(self, *args, **kwargs):
         raise NotImplementedError
 
     def squeeze(self):
         axes = list(self.axes)
-        pinched_axes = list(filter(lambda x: self.shape[x.index]==1, axes))
-        squeezed_shape = list(filter(lambda d: d>1, self.shape))
+        pinched_axes = [x for x in axes if self.shape[x.index] == 1]
+        squeezed_shape = [d for d in self.shape if d > 1]
         axes = _pull_axis(axes, pinched_axes)
         arr = self.reshape(squeezed_shape)
         _set_axes(arr, axes)
@@ -1105,8 +1105,8 @@ class DataArray(np.ndarray):
         # or pop an Axis
         old_shape = list(self.shape)
         new_shape = list(args)
-        old_non_single_dims = list(filter(lambda d: d>1, old_shape))
-        new_non_single_dims = list(filter(lambda d: d>1, new_shape))
+        old_non_single_dims = [d for d in old_shape if d > 1]
+        new_non_single_dims = [d for d in new_shape if d > 1]
         axes_to_pull = []
         axes = list(self.axes)
         if old_non_single_dims == new_non_single_dims:
@@ -1300,7 +1300,7 @@ def _make_singleton_axes(arr, key):
 
     # The full slicer will be length=arr.ndim + # of dummy-dims..
     # Boost up the slices to full "rank" ( can cut it down later for savings )
-    n_new_dims = len(list(filter(lambda x: x is None, key)))
+    n_new_dims = len([x for x in key if x is None])
     key = key + (slice(None),) * (arr.ndim + n_new_dims - len(key))
     # wherever there is a None in the key,
     # * replace it with slice(None)

@@ -457,7 +457,7 @@ def test_label_mismatch():
         nt.assert_raises(NamedAxisError, dar1.__div__, dar2)
     
 # -- Test DataArray.axes
-class TestAxesManager:
+class TestAxesManager(object):
     def setUp(self):
         self.axes_spec = ('date', ('stocks', ('aapl', 'ibm', 'goog', 'msft')), 'metric')
         self.A = DataArray(np.random.randn(200, 4, 10), axes=self.axes_spec)
