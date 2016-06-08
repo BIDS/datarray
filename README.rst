@@ -1,32 +1,6 @@
-"""datarray version information"""
+.. image:: https://travis-ci.org/BIDS/datarray.svg?branch=master
+    :target: https://travis-ci.org/BIDS/datarray
 
-# Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
-_version_major = 0
-_version_minor = 0
-_version_micro = 7
-_version_extra = 'dev'
-# Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
-__version__ = "%s.%s.%s%s" % (_version_major,
-                              _version_minor,
-                              _version_micro,
-                              _version_extra)
-
-
-CLASSIFIERS = ["Development Status :: 3 - Alpha",
-               "Environment :: Console",
-               "Intended Audience :: Science/Research",
-               "License :: OSI Approved :: BSD License",
-               "Operating System :: OS Independent",
-               "Programming Language :: Python",
-               "Topic :: Scientific/Engineering"]
-
-description = "NumPy arrays with named axes and named indices."
-
-# Note: this long_description is actually a copy/paste from the top-level
-# README.rst, so that it shows up nicely on PyPI.  So please remember to edit
-# it only in one place and sync it correctly.  I (MB) edit both in vim windows
-# and use vim diff mode to push the changes from one to the other.
-long_description = """
 ######################################
 Datarray: Numpy arrays with named axes
 ######################################
@@ -135,27 +109,3 @@ Please put up issues on the `datarray issue tracker
 .. _Documentation: http://bids.github.com/datarray
 .. _current trunk: http://github.com/bids/datarray/archives/master
 .. _available releases: http://github.com/bids/datarray/releases
-"""
-
-
-NAME                = 'datarray'
-MAINTAINER          = "Numpy Developers"
-MAINTAINER_EMAIL    = "numpy-discussion@scipy.org"
-DESCRIPTION         = description
-LONG_DESCRIPTION    = long_description
-URL                 = "http://github.com/bids/datarray"
-DOWNLOAD_URL        = "http://github.com/bids/datarray/archives/master"
-LICENSE             = "Simplified BSD"
-CLASSIFIERS         = CLASSIFIERS
-AUTHOR              = "Datarray developers"
-AUTHOR_EMAIL        = "numpy-discussion@scipy.org"
-PLATFORMS           = "OS Independent"
-MAJOR               = _version_major
-MINOR               = _version_minor
-MICRO               = _version_micro
-ISRELEASED          = False
-VERSION             = __version__
-PACKAGES            = ["datarray", "datarray/tests", "datarray/testing"]
-PACKAGE_DATA        = {'datarray': ['LICENSE']}
-REQUIRES            = ["numpy (>=1.7)"]
-INSTALL_REQUIRES    = ["numpy>=1.7"]
