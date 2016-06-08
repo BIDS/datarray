@@ -11,13 +11,16 @@ env:
         - MANYLINUX_URL=https://nipy.bic.berkeley.edu/manylinux
 
 python:
-    - 2.6
     - 3.3
     - 3.4
     - 3.5
 
 matrix:
   include:
+    - python: 2.6
+      env:
+        # Last networkx version that runs on 2.6
+        - NETWORKX_VER_SPEC="==1.9"
     - python: 2.7
       env:
         - COVERAGE=1
@@ -84,7 +87,7 @@ script:
     # Run unit tests
     - nosetests $COVER_ARGS $DOCTEST_ARGS datarray
     # Run example to check for errors
-    - pip install networkx
+    - pip install networkx${NETWORKX_VER_SPEC}
     - python ../examples/inference_algs.py
     # Run doc doctests
     - if [ "${DOC_DOCTEST}" == "1" ]; then
