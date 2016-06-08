@@ -41,28 +41,28 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
         the top of the AssertionError message.
     verbose : bool
         If True, the conflicting values are appended to the error message.
-        
+
     Returns
     -------
-    None        
+    None
 
     Raises
     ------
     AssertionError
-      If actual and desired datarrays are not equal.
+        If actual and desired datarrays are not equal.
 
     Examples
     --------
     If the two datarrays are equal then None is returned:
-    
+
     >>> from datarray.testing import assert_datarray_equal
-    >>> from datarray.datarray import DataArray 
+    >>> from datarray.datarray import DataArray
     >>> x = DataArray([1, 2])
     >>> y = DataArray([1, 2])
     >>> assert_datarray_equal(x, y)
 
     If the two datarrays are not equal then an AssertionError is raised:
-     
+
     >>> x = DataArray([1, 2], ('time',))
     >>> y = DataArray([1, 2], ('distance',))
     >>> assert_datarray_equal(x, y)
@@ -70,20 +70,19 @@ def assert_datarray_equal(x, y, err_msg='', verbose=True):
       File "<stdin>", line 1, in <module>
       File "datarray/testing/utils.py", line 133, in assert_datarray_equal
         raise AssertionError, err_msg
-    AssertionError: 
-	
-	    ----------
-	    AXIS NAMES
-	    ----------
-	
-	    Items are not equal:
-	    item=0
-	
-	     ACTUAL: 'time'
-	     DESIRED: 'distance'
-
+    AssertionError:
+    <BLANKLINE>
+        ----------
+        AXIS NAMES
+        ----------
+    <BLANKLINE>
+        Items are not equal:
+            item=0
+    <BLANKLINE>
+         ACTUAL: 'time'
+         DESIRED: 'distance'
+    <BLANKLINE>
     """
-    
     # Initialize
     fail = []        
             

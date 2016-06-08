@@ -145,14 +145,7 @@ class AxesManager(object):
         return str(tuple(self))
 
     def __getitem__(self, n):
-        """Return the `n`th axis object of the array.
-
-        Examples
-        --------
-        >>> A = DataArray([[1,2],[3,4]], 'ab'); A.axes[0] is A.axes.a
-        True
-        >>> A.axes[1] is A.axes.b
-        True
+        """Return the axis object at integer index `n`
 
         Parameters
         ----------
@@ -161,8 +154,15 @@ class AxesManager(object):
 
         Returns
         -------
-        The requested :py:class:`Axis`.
+        ax : :class:`Axis` instance
+            The requested :py:class:`Axis`.
 
+        Examples
+        --------
+        >>> A = DataArray([[1,2],[3,4]], 'ab'); A.axes[0] is A.axes.a
+        True
+        >>> A.axes[1] is A.axes.b
+        True
         """
         if not isinstance(n, int):
             raise TypeError("AxesManager expects integer index")
