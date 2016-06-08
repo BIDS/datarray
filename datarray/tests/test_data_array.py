@@ -5,11 +5,18 @@ PY3 = sys.version_info[0] >= 3
 
 import numpy as np
 
-from datarray.datarray import Axis, DataArray, NamedAxisError, \
-    _pull_axis, _reordered_axes
+from datarray.datarray import (Axis, DataArray, NamedAxisError, AxesManager,
+                               _pull_axis, _reordered_axes)
 
 import nose.tools as nt
 import numpy.testing as npt
+
+DA = DataArray(np.random.randn(4, 2, 6), 'xyz')
+YZ = AxesManager(DA, (Axis('y', 0, None), Axis('z', 1, None)))
+XZ = AxesManager(DA, (Axis('x', 0, None), Axis('z', 1, None)))
+XY = AxesManager(DA, (Axis('x', 0, None), Axis('y', 1, None)))
+AXES_REMOVED = dict(x=YZ, y=XZ, z=XY)
+
 
 def test_axis_equal():
     ax1 = Axis('aname', 0, None)
@@ -264,52 +271,71 @@ def test_swapaxes():
 
 # -- Tests for wrapped ndarray methods ---------------------------------------
 
-other_wraps = ['argmax', 'argmin']
 reductions = ['mean', 'var', 'std', 'min',
-              'max', 'sum', 'prod', 'ptp']
+              'max', 'sum', 'prod', 'ptp', 'any', 'all',
+              'argmax', 'argmin']
 accumulations = ['cumprod', 'cumsum']
 
-methods = other_wraps + reductions + accumulations
+methods = reductions + accumulations
 
-def assert_data_correct(d_arr, op, axis):
-    from datarray.datarray import _names_to_numbers 
+def check_data_axes(d_arr, op, axis, exp_axes, *args, **kwargs):
+    """ Check data and axes correct after operation `op`
+    """
+    from datarray.datarray import _names_to_numbers
     super_opr = getattr(np.ndarray, op)
     axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
-    d1 = super_opr(np.asarray(d_arr), axis=axis_idx)
+    d1 = super_opr(np.asarray(d_arr), axis_idx, *args, **kwargs)
     opr = getattr(d_arr, op)
-    d2 = np.asarray(opr(axis=axis))
-    assert (d1==d2).all(), 'data computed incorrectly on operation %s'%op
+    d_arr_out = opr(axis, *args, **kwargs)
+    nt.assert_equal(d_arr_out.axes, exp_axes)
+    d2 = np.asarray(d_arr_out)
+    npt.assert_equal(d1.shape, d2.shape)
+    npt.assert_array_equal(d1, d2)
 
-def assert_axes_correct(d_arr, op, axis):
-    from datarray.datarray import _names_to_numbers, _pull_axis
-    opr = getattr(d_arr, op)
-    d = opr(axis=axis)
-    axis_idx = _names_to_numbers(d_arr.axes, [axis])[0]
-    if op not in accumulations:
-        axes = _pull_axis(d_arr.axes, d_arr.axes[axis_idx])
-    else:
-        axes = d_arr.axes
-    assert all( [ax1==ax2 for ax1, ax2 in zip(d.axes, axes)] ), \
-           'mislabeled axes from operation %s'%op
 
 def test_wrapped_ops_data():
     a = DataArray(np.random.randn(4,2,6), 'xyz')
     for m in methods:
-        assert_data_correct(a, m, 'x')
-    for m in methods:
-        assert_data_correct(a, m, 'y')
-    for m in methods:
-        assert_data_correct(a, m, 'z')
+        check_data_axes(a, m, 'x', YZ if m in reductions else DA.axes)
+        check_data_axes(a, m, 'y', XZ if m in reductions else DA.axes)
+        check_data_axes(a, m, 'z', XY if m in reductions else DA.axes)
 
-def test_wrapped_ops_axes():
-    a = DataArray(np.random.randn(4,2,6), 'xyz')
-    for m in methods:
-        assert_axes_correct(a, m, 'x')
-    for m in methods:
-        assert_axes_correct(a, m, 'y')
-    for m in methods:
-        assert_axes_correct(a, m, 'z')
-    
+
+def test_reductions_keepdims():
+    names = 'xyz'
+    a = np.arange(24).reshape((2, 3, 4))
+    da = DataArray(a, names)
+    for idx, name in enumerate(names):
+        axes_removed = AXES_REMOVED[name]
+        # Test keepdims as kwarg
+        for method in reductions:
+            check_data_axes(da, method, name, axes_removed)
+            if method not in ('ptp', 'argmin', 'argmax'):
+                # Reductions taking keepdims argument
+                check_data_axes(da, method, name, DA.axes, keepdims=True)
+        # Test the individual functions with positional args
+        dt = np.dtype(float)
+        out = np.mean(da, axis=name)
+        kd_out = DataArray(np.mean(a, axis=idx, keepdims=True), names)
+        # Functions with signature axis, dtype, out, keepdims
+        for method in ('mean', 'sum', 'prod', 'all', 'any'):
+            check_data_axes(da, method, name, axes_removed, dt, out)
+            check_data_axes(da, method, name, DA.axes, dt, kd_out, True)
+        # Signature axis, out, dtype, ddof, keepdims
+        for method in ('var', 'std'):
+            check_data_axes(da, method, name, axes_removed, dt, out, 0)
+            check_data_axes(da, method, name, DA.axes, dt, kd_out, 0, True)
+        # Signature axis, out, keepdims
+        for method in ('min', 'max'):
+            check_data_axes(da, method, name, axes_removed, out)
+            check_data_axes(da, method, name, DA.axes, kd_out, True)
+        # Test reductions not using keepdims
+        out_int = out.astype(np.intp)  # argmin/max have integer output
+        for method in ('argmin', 'argmax'):
+            check_data_axes(da, method, name, axes_removed, out_int)
+        check_data_axes(da, 'ptp', name, axes_removed, out)
+
+
 # -- Tests for slicing with "newaxis" ----------------------------------------
 def test_newaxis_slicing():
     b = DataArray([[1,2],[3,4],[5,6]], 'xy')

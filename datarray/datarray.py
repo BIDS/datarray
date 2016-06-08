@@ -92,13 +92,10 @@ class AxesManager(object):
     An axis can be indexed by integers or ticks:
 
     >>> np.all(A.axes.stocks['aapl':'goog'] == A.axes.stocks[0:2])
-    DataArray(array(True, dtype=bool),
-    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
+    True
 
     >>> np.all(A.axes.stocks[0:2] == A[:,0:2,:])
-    DataArray(array(True, dtype=bool),
-    ('date', ('stocks', ('aapl', 'ibm')), 'metric'))
-
+    True
 
     Axes can also be accessed numerically:
 
@@ -111,8 +108,7 @@ class AxesManager(object):
 
     >>> Ai = A.axes('stocks', 'date')
     >>> np.all(Ai['aapl':'goog', 100] == A[100, 0:2])
-    DataArray(array(True, dtype=bool),
-    (('stocks', ('aapl', 'ibm')), 'metric'))
+    True
 
     You can also mix axis names and integers when calling AxesManager.
     (Not yet supported.)
@@ -414,19 +410,15 @@ class Axis(object):
         >>> A = DataArray(np.arange(2*3*2).reshape([2,3,2]), \
                 ('a', ('b', ('b1','b2','b3')), 'c'))
         >>> b = A.axes.b
-       
+
         >>> np.all(b['b1'] == A[:,0,:])
-        DataArray(array(True, dtype=bool),
-        ('a', 'c'))
+        True
 
         >>> np.all(b['b2':] == A[:,1:,:])
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('b2', 'b3')), 'c'))
+        True
 
         >>> np.all(b['b1':'b2'] == A[:,0:1,:])
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('b1',)), 'c'))
-
+        True
         """
         # XXX We don't handle fancy indexing at the moment
         if isinstance(key, (np.ndarray, list)):
@@ -608,8 +600,7 @@ class Axis(object):
         >>> arr1 = darr.axes.b.keep(['c','d'])
         >>> arr2 = darr.axes.b.drop(['a','b','e'])
         >>> np.all(arr1 == arr2)
-        DataArray(array(True, dtype=bool),
-        ('a', ('b', ('c', 'd'))))
+        True
         """
 
         if not self.labels:
@@ -725,10 +716,11 @@ def _apply_reduction(opname, kwnames):
         # try to convert a named Axis to an integer..
         # don't try to catch an error
         axis_idx = _names_to_numbers(inst.axes, [axis])[0]
-        axes = _pull_axis(axes, inst.axes[axis_idx])
+        if not kwargs.get('keepdims', False):
+            axes = _pull_axis(axes, inst.axes[axis_idx])
         kwargs['axis'] = axis_idx
         arr = super_op(inst, **kwargs)
-        if not is_numpy_scalar(arr): 
+        if not is_numpy_scalar(arr):
             _set_axes(arr, axes)
         return arr
     runs_op.__name__ = opname
@@ -1188,8 +1180,8 @@ class DataArray(np.ndarray):
         return arr
 
     # -- Reductions ----------------------------------------------------------
-    mean = _apply_reduction('mean', ('axis', 'dtype', 'out'))
-    var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof'))
+    mean = _apply_reduction('mean', ('axis', 'dtype', 'out', 'keepdims'))
+    var = _apply_reduction('var', ('axis', 'dtype', 'out', 'ddof', 'keepdims'))
 
     def std(self, *args, **kwargs):
         ret = self.var(*args, **kwargs)
@@ -1202,16 +1194,19 @@ class DataArray(np.ndarray):
         return ret
     std.__doc__ = np.ndarray.std.__doc__
 
-    min = _apply_reduction('min', ('axis', 'out'))
-    max = _apply_reduction('max', ('axis', 'out'))
+    min = _apply_reduction('min', ('axis', 'out', 'keepdims'))
+    max = _apply_reduction('max', ('axis', 'out', 'keepdims'))
 
-    sum = _apply_reduction('sum', ('axis', 'dtype', 'out'))
-    prod = _apply_reduction('prod', ('axis', 'dtype', 'out'))
+    sum = _apply_reduction('sum', ('axis', 'dtype', 'out', 'keepdims'))
+    prod = _apply_reduction('prod', ('axis', 'dtype', 'out', 'keepdims'))
+
+    all = _apply_reduction('all', ('axis', 'dtype', 'out', 'keepdims'))
+    any = _apply_reduction('any', ('axis', 'dtype', 'out', 'keepdims'))
 
     ### these change the meaning of the axes..
     ### should probably return ndarrays
-    argmax = _apply_reduction('argmax', ('axis',))
-    argmin = _apply_reduction('argmin', ('axis',))
+    argmax = _apply_reduction('argmax', ('axis', 'out'))
+    argmin = _apply_reduction('argmin', ('axis', 'out'))
 
     # -- Accumulations -------------------------------------------------------
     cumsum = _apply_accumulation('cumsum', ('axis', 'dtype', 'out'))
