@@ -37,6 +37,10 @@ matrix:
     - python: 2.7
       env:
         - INSTALL_TYPE=requirements
+    # test against pre-release builds
+    - python: 3.5
+      env:
+        - EXTRA_PIP_FLAGS="--pre"
 
 before_install:
     - virtualenv venv
