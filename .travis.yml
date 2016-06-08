@@ -43,7 +43,7 @@ matrix:
         - EXTRA_PIP_FLAGS="--pre"
 
 before_install:
-    - virtualenv venv
+    - virtualenv --python=python venv
     - source venv/bin/activate
     - python -m pip install -U pip wheel
     - pip install -f $MANYLINUX_URL $EXTRA_PIP_FLAGS $DEPENDS
