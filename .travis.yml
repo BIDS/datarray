@@ -46,7 +46,7 @@ before_install:
     - virtualenv venv
     - source venv/bin/activate
     - python -m pip install -U pip wheel
-    - pip install -f $MANYLINUX_URL $DEPENDS
+    - pip install -f $MANYLINUX_URL $EXTRA_PIP_FLAGS $DEPENDS
     - if [ "${COVERAGE}" == "1" ]; then
       pip install coverage;
       pip install coveralls;
