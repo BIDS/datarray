@@ -45,7 +45,7 @@ matrix:
 before_install:
     - virtualenv --python=python venv
     - source venv/bin/activate
-    - python -m pip install -U pip wheel
+    - pip install -U pip wheel
     - pip install -f $MANYLINUX_URL $EXTRA_PIP_FLAGS $DEPENDS
     - if [ "${COVERAGE}" == "1" ]; then
       pip install coverage;
