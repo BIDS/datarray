@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>datarray package &mdash; DataArray Docs 0.0.7 documentation</title>
+    <title>datarray package &mdash; DataArray Docs 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.7',
+        VERSION:     '0.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="DataArray Docs 0.0.7 documentation" href="../index.html" />
+    <link rel="top" title="DataArray Docs 0.1.0 documentation" href="../index.html" />
     <link rel="up" title="datarray" href="modules.html" />
     <link rel="next" title="datarray.testing package" href="datarray.testing.html" />
     <link rel="prev" title="datarray" href="modules.html" />
@@ -93,13 +93,11 @@
 </div>
 <p>An axis can be indexed by integers or ticks:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
-<span class="go">DataArray(array(True, dtype=bool),</span>
-<span class="go">(&#39;date&#39;, (&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,:])</span>
-<span class="go">DataArray(array(True, dtype=bool),</span>
-<span class="go">(&#39;date&#39;, (&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <p>Axes can also be accessed numerically:</p>
@@ -112,8 +110,7 @@
 specified axes:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Ai</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="s1">&#39;stocks&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Ai</span><span class="p">[</span><span class="s1">&#39;aapl&#39;</span><span class="p">:</span><span class="s1">&#39;goog&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span> <span class="o">==</span> <span class="n">A</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
-<span class="go">DataArray(array(True, dtype=bool),</span>
-<span class="go">((&#39;stocks&#39;, (&#39;aapl&#39;, &#39;ibm&#39;)), &#39;metric&#39;))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <p>You can also mix axis names and integers when calling AxesManager.
@@ -149,8 +146,7 @@ specified axes:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">arr1</span> <span class="o">=</span> <span class="n">darr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">keep</span><span class="p">([</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">arr2</span> <span class="o">=</span> <span class="n">darr</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">arr1</span> <span class="o">==</span> <span class="n">arr2</span><span class="p">)</span>
-<span class="go">DataArray(array(True, dtype=bool),</span>
-<span class="go">(&#39;a&#39;, (&#39;b&#39;, (&#39;c&#39;, &#39;d&#39;))))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -220,14 +216,60 @@ allows slicing by those axes.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="datarray.datarray.DataArray.all">
+<code class="descname">all</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if all elements evaluate to True.</p>
+<p>Refer to <cite>numpy.all</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.all()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datarray.datarray.DataArray.any">
+<code class="descname">any</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.any" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if any of the elements of <cite>a</cite> evaluate to True.</p>
+<p>Refer to <cite>numpy.any</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.any()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="datarray.datarray.DataArray.argmax">
-<code class="descname">argmax</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmax" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">argmax</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices of the maximum values along the given axis.</p>
+<p>Refer to <cite>numpy.argmax</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.argmax()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.argmin">
-<code class="descname">argmin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">argmin</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.argmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices of the minimum values along the given axis of <cite>a</cite>.</p>
+<p>Refer to <cite>numpy.argmin</cite> for detailed documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.argmin()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.argsort">
@@ -236,23 +278,88 @@ allows slicing by those axes.</p>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.cumprod">
-<code class="descname">cumprod</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumprod" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">cumprod</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumprod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cumulative product of the elements along the given axis.</p>
+<p>Refer to <cite>numpy.cumprod</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.cumprod()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.cumsum">
-<code class="descname">cumsum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumsum" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">cumsum</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.cumsum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cumulative sum of the elements along the given axis.</p>
+<p>Refer to <cite>numpy.cumsum</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.cumsum()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.diagonal">
-<code class="descname">diagonal</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.diagonal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">diagonal</code><span class="sig-paren">(</span><em>offset=0</em>, <em>axis1=0</em>, <em>axis2=1</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.diagonal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return specified diagonals. In NumPy 1.9 the returned array is a
+read-only view instead of a copy as in previous NumPy versions.  In
+a future version the read-only restriction will be removed.</p>
+<p>Refer to <code class="xref py py-func docutils literal"><span class="pre">numpy.diagonal()</span></code> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.diagonal()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.flatten">
-<code class="descname">flatten</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.flatten" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">flatten</code><span class="sig-paren">(</span><em>order='C'</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a copy of the array collapsed into one dimension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>order</strong> (<em>{'C', 'F', 'A', 'K'}, optional</em>) &#8211; &#8216;C&#8217; means to flatten in row-major (C-style) order.
+&#8216;F&#8217; means to flatten in column-major (Fortran-
+style) order. &#8216;A&#8217; means to flatten in column-major
+order if <cite>a</cite> is Fortran <em>contiguous</em> in memory,
+row-major order otherwise. &#8216;K&#8217; means to flatten
+<cite>a</cite> in the order the elements occur in memory.
+The default is &#8216;C&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>y</strong> &#8211; A copy of the input array, flattened to one dimension.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#datarray.datarray.DataArray.ravel" title="datarray.datarray.DataArray.ravel"><code class="xref py py-meth docutils literal"><span class="pre">ravel()</span></code></a></dt>
+<dd>Return a flattened array.</dd>
+<dt><code class="xref py py-meth docutils literal"><span class="pre">flat()</span></code></dt>
+<dd>A 1-D flat iterator over the array.</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="go">array([1, 2, 3, 4])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+<span class="go">array([1, 3, 2, 4])</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.index_by">
@@ -261,18 +368,45 @@ allows slicing by those axes.</p>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.max">
-<code class="descname">max</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.max" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">max</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the maximum along a given axis.</p>
+<p>Refer to <cite>numpy.amax</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.amax()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.mean">
-<code class="descname">mean</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.mean" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">mean</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average of the array elements along given axis.</p>
+<p>Refer to <cite>numpy.mean</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.mean()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.min">
-<code class="descname">min</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.min" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">min</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimum along a given axis.</p>
+<p>Refer to <cite>numpy.amin</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.amin()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="datarray.datarray.DataArray.names">
@@ -282,18 +416,47 @@ allows slicing by those axes.</p>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.prod">
-<code class="descname">prod</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.prod" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">prod</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the product of the array elements over the given axis</p>
+<p>Refer to <cite>numpy.prod</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.prod()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.ptp">
 <code class="descname">ptp</code><span class="sig-paren">(</span><em>axis=None</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.ptp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Peak to peak (maximum - minimum) value along a given axis.</p>
+<p>Refer to <cite>numpy.ptp</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.ptp()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.ravel">
-<code class="descname">ravel</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.ravel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">ravel</code><span class="sig-paren">(</span><span class="optional">[</span><em>order</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.ravel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a flattened array.</p>
+<p>Refer to <cite>numpy.ravel</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.ravel()</span></code></dt>
+<dd>equivalent function</dd>
+<dt><code class="xref py py-meth docutils literal"><span class="pre">ndarray.flat()</span></code></dt>
+<dd>a flat iterator on the array.</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.repeat">
@@ -336,23 +499,100 @@ allows slicing by those axes.</p>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.sum">
-<code class="descname">sum</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.sum" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">sum</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sum of the array elements over the given axis.</p>
+<p>Refer to <cite>numpy.sum</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.sum()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.swapaxes">
 <code class="descname">swapaxes</code><span class="sig-paren">(</span><em>axis1</em>, <em>axis2</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.swapaxes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a view of the array with <cite>axis1</cite> and <cite>axis2</cite> interchanged.</p>
+<p>Refer to <cite>numpy.swapaxes</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.swapaxes()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.transpose">
 <code class="descname">transpose</code><span class="sig-paren">(</span><em>*axes</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.transpose" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a view of the array with axes transposed.</p>
+<p>For a 1-D array, this has no effect. (To change between column and
+row vectors, first cast the 1-D array into a matrix object.)
+For a 2-D array, this is the usual matrix transpose.
+For an n-D array, if axes are given, their order indicates how the
+axes are permuted (see Examples). If axes are not provided and
+<code class="docutils literal"><span class="pre">a.shape</span> <span class="pre">=</span> <span class="pre">(i[0],</span> <span class="pre">i[1],</span> <span class="pre">...</span> <span class="pre">i[n-2],</span> <span class="pre">i[n-1])</span></code>, then
+<code class="docutils literal"><span class="pre">a.transpose().shape</span> <span class="pre">=</span> <span class="pre">(i[n-1],</span> <span class="pre">i[n-2],</span> <span class="pre">...</span> <span class="pre">i[1],</span> <span class="pre">i[0])</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>axes</strong> (None, tuple of ints, or <cite>n</cite> ints) &#8211; <ul class="simple">
+<li>None or no argument: reverses the order of the axes.</li>
+<li>tuple of ints: <cite>i</cite> in the <cite>j</cite>-th place in the tuple means <cite>a</cite>&#8216;s
+<cite>i</cite>-th axis becomes <cite>a.transpose()</cite>&#8216;s <cite>j</cite>-th axis.</li>
+<li><cite>n</cite> ints: same as an n-tuple of the same ints (this form is
+intended simply as a &#8220;convenience&#8221; alternative to the tuple form)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>out</strong> &#8211; View of <cite>a</cite>, with axes suitably permuted.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">ndarray.T()</span></code></dt>
+<dd>Array property returning the array transposed.</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [3, 4]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+<span class="go">array([[1, 3],</span>
+<span class="go">       [2, 4]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">array([[1, 3],</span>
+<span class="go">       [2, 4]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">array([[1, 3],</span>
+<span class="go">       [2, 4]])</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="datarray.datarray.DataArray.var">
-<code class="descname">var</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.var" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">var</code><span class="sig-paren">(</span><em>axis=None</em>, <em>dtype=None</em>, <em>out=None</em>, <em>ddof=0</em>, <em>keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#datarray.datarray.DataArray.var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the variance of the array elements, along given axis.</p>
+<p>Refer to <cite>numpy.var</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-meth docutils literal"><span class="pre">numpy.var()</span></code></dt>
+<dd>equivalent function</dd>
+</dl>
+</div>
+</dd></dl>
 
 </dd></dl>
 
@@ -391,7 +631,7 @@ allows slicing by those axes.</p>
 <dl class="exception">
 <dt id="datarray.datarray.NamedAxisError">
 <em class="property">exception </em><code class="descclassname">datarray.datarray.</code><code class="descname">NamedAxisError</code><a class="headerlink" href="#datarray.datarray.NamedAxisError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
 </dd></dl>
 
 <dl class="function">
@@ -675,7 +915,7 @@ appropriate places.</p>
       &copy;2010-2016, Numpy Developers <numpy-discussion@scipy.org>.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
