@@ -32,9 +32,11 @@ Prior Art
 
 In no particular order:
 
-* `xray <http://xarray.pydata.org/en/stable>`_ - very close in spirit to this
-  package, xray implements named ND array axes and tick labels.  It integrates
-  with (and depends on) Pandas;
+* `xarray <http://xarray.pydata.org/en/stable>`_ - very close in spirit to
+  this package, xarray implements named ND array axes and tick labels.  It
+  integrates with (and depends on) Pandas.  If you are doing production work,
+  and don't mind the pandas dependency, please use xarray rather than this
+  package.  Xarray used to be called "xray".
 
 * `pandas <http://pandas.pydata.org>`_ is based around a number of
   DataFrame-esque datatypes.
