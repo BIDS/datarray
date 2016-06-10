@@ -54,8 +54,8 @@ Release checklist
 
   Do this on a Python 2 and Python 3 setup.
 
-* Run the same tests after installing into a virtualenv, to test that
-  installing works correctly::
+* Consider running the same tests after installing into a virtualenv, to test
+  that installing works correctly::
 
     mkvirtualenv datarray-test
     pip install nose wheel
@@ -78,33 +78,24 @@ Doing the release
 
 * Edit :file:`datarray/version.py` to set ``_version_*`` strings to the
   version you want.  Make ``_version_extra`` be the empty string for the
-  release.
+  release;
 
-You might want to tag the release commit on your local machine, push to
-pypi_, review, fix, rebase, until all is good.  Then and only then do you push
-to upstream on github.
+* Check you are getting the version / package name that you want by doing::
+
+    git clean -fxd
+    python setup.py sdist --formats=gztar,zip
+    python setup.py bdist_wheel
+
+  and checking the output filenames in ``dist/``;
 
 * Make a signed tag for the release with tag of form ``0.6.0``::
 
-    git tag -s 'Fifth public release' 0.6.0
+    git tag -s -m 'Fifth public release' 0.6.0
 
-* Once everything looks good, upload the source release to PyPi.  See
-  `setuptools intro`_::
+* Once everything looks good, upload the source release to PyPi, using `twine
+  <https://pypi.python.org/pypi/twine>`_::
 
-    python setup.py register
-    python setup.py sdist --formats=gztar,zip upload
-
-* Upload wheels by building in virtualenvs, something like::
-
-   workon py27
-   rm -rf build
-   python setup.py bdist_wheel upload
-   workon py33
-   rm -rf build
-   python setup.py bdist_wheel upload
-   workon py34
-   rm -rf build
-   python setup.py bdist_wheel upload
+    twine upload dist/datarray*
 
 * Remember you'll need your ``~/.pypirc`` file set up right for this to work.
   See `setuptools intro`_.  The file should look something like this::
@@ -121,17 +112,19 @@ to upstream on github.
     username:your.pypi.username
     password:your-password
 
-* Check how everything looks on pypi - the description, the packages.  If
-  necessary delete the release and try again if it doesn't look right.
+* Check how everything looks on pypi - the description, the packages.
 
 * Push the tag with ``git push origin 0.6.0``
+
+* Push the documentation up to github with::
+
+    cd doc
+    make github
 
 * Edit ``datarray/version.py`` to set to the next upcoming version.  Set
   ``_version_extra`` to ``dev``. Commit and push.
 
 * Announce to the mailing lists.
-
-.. _setuptools intro: http://packages.python.org/an_example_pypi_project/setuptools.html
 
 .. datarray code stuff
 .. _datarray github: http://github.com/bids/datarray
