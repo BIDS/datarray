@@ -1,0 +1,43 @@
+.. -*- mode: rst -*-
+.. vim:ft=rst
+
+.. _changelog:
+
+###################
+Datarray change log
+###################
+
+The main authors of datarray are:
+
+* Fernando Perez (FP);
+* Matthew Brett (MB);
+* Mike Trumpis (MT);
+* Jonathan Terhorst (JT);
+* Keith Goodman (KG).
+
+********
+Releases
+********
+
+* 0.1.0 (TBA)
+
+  * Fixed bug in axis sorting leading to unpredictable errors slicing
+    DataArrays;
+  * Added 'any' and 'all' as reduction methods, fixing incorrect retention of
+    axes with these methods;
+  * Port to Python >= 3.3 in common codebase with Python 2;
+  * Move from fperez personal github account to BIDS github organization.
+
+* 0.0.6 (Wednesday November 10 2010)
+
+* 0.0.5 (Friday October 8 2010)
+
+* 0.0.4 (Wednesday October 6 2010)
+
+* 0.0.3 (Thursday July 29 2010)
+
+* 0.0.2 (Wednesday July 28 2010)
+
+* 0.0.1 (Tuesday July 27 2010)
+
+  * Initial release
