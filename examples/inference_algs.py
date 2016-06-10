@@ -67,7 +67,7 @@ def test_pearl_network():
 
     margs1,lik1 = calc_marginals_simple(cpts,evidence)
     p_burglary,lik2 = digraph_eliminate(cpts,evidence,["burglary"])
-    margs3,lik3 = calc_marginals_sumproduct(cpts,evidence)
+    margs3, lik3 = calc_marginals_sumproduct(cpts, evidence, 'burglary')
 
     # TODO: This version is disabled until I can dig up the reference to figure
     # out how it works. -jt
@@ -264,7 +264,7 @@ def cpts2digraph(cpts):
 
 ############# Sum-product #############
 
-def calc_marginals_sumproduct(cpts,evidence):
+def calc_marginals_sumproduct(cpts, evidence, target_node):
     """
     Construct the factor graph. Then use the sum-product algorithm to calculate
     marginals for all variables.
@@ -273,8 +273,9 @@ def calc_marginals_sumproduct(cpts,evidence):
     ------------
     cpts : a list of DataArray with variable names for axis labels
     evidence : a dictionary of observed variables (strings) -> values
-    query_list : a list of variables (strings)
-        
+    target_node : str
+        Target node from which to calculate likelihood
+
     Returns
     --------
     marginals : dictionary of variable -> prob_table
@@ -305,11 +306,13 @@ def calc_marginals_sumproduct(cpts,evidence):
 
     # calculate marginals
     marginals = {}
+    potentials = {}
     for node in G.nodes():
         potential = multiply_potentials(*[messages[(src,node)] for src in G.neighbors(node)])
         marginals[node] = normalize(potential)
-        
-    return marginals, potential.sum()
+        potentials[node] = potential
+
+    return marginals, potentials[target_node].sum()
         
 def make_message(src,targ,G,messages,names2tables):
     """
