@@ -53,9 +53,6 @@ In no particular order:
 * `scikits.timeseries <http://scikits.appspot.com/timeseries>`_ also has a
   time-series-specific object that's somewhat reminiscent of labeled arrays.
 
-* `pandas <http://pandas.pydata.org>`_ is based around a number of
-  DataFrame-esque datatypes.
-
 * `pydataframe <https://pypi.python.org/pypi/pydataframe>`_ is supposed to be a
   clone of R's data.frame.
 
